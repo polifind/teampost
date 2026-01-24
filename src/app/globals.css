@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Claude/Anthropic Design System Base Styles */
+@layer base {
+  :root {
+    --claude-bg: 250 249 247;
+    --claude-bg-secondary: 245 244 240;
+    --claude-bg-tertiary: 238 237 234;
+    --claude-text: 26 25 21;
+    --claude-text-secondary: 107 105 99;
+    --claude-text-tertiary: 157 155 148;
+    --claude-border: 229 228 224;
+    --claude-border-strong: 209 208 204;
+    --accent-coral: 218 119 86;
+    --accent-coral-hover: 201 106 74;
+    --accent-coral-light: 253 244 241;
+  }
+
+  * {
+    @apply border-claude-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-claude-bg text-claude-text font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Smooth focus styles like Claude */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-accent-coral ring-offset-2 ring-offset-claude-bg;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-accent-coral/20 text-claude-text;
+  }
+}
+
+@layer components {
+  /* Claude-style button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-accent-coral text-white font-medium rounded-claude
+           hover:bg-accent-coral-hover transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           bg-claude-bg-tertiary text-claude-text font-medium rounded-claude
+           border border-claude-border-strong
+           hover:bg-claude-border transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
+           text-claude-text-secondary font-medium rounded-claude
+           hover:bg-claude-bg-tertiary hover:text-claude-text
+           transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Claude-style card */
+  .card {
+    @apply bg-white rounded-claude-lg border border-claude-border
+           shadow-claude p-6;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-claude-md hover:border-claude-border-strong
+           transition-all duration-200 cursor-pointer;
+  }
+
+  /* Claude-style input */
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-claude-border
+           rounded-claude text-claude-text placeholder:text-claude-text-tertiary
+           focus:border-accent-coral focus:ring-1 focus:ring-accent-coral
+           transition-colors duration-150;
+  }
+
+  .input-error {
+    @apply input border-error focus:border-error focus:ring-error;
+  }
+
+  /* Claude-style label */
+  .label {
+    @apply block text-sm font-medium text-claude-text mb-1.5;
+  }
+
+  /* Claude-style link */
+  .link {
+    @apply text-accent-coral hover:text-accent-coral-hover
+           underline underline-offset-2 transition-colors duration-150;
+  }
+
+  /* Voice recorder pulse animation */
+  .recording-pulse {
+    @apply relative;
+  }
+
+  .recording-pulse::before {
+    content: "";
+    @apply absolute inset-0 rounded-full bg-error/30 animate-ping;
+  }
+
+  /* Progress stepper */
+  .stepper-dot {
+    @apply w-3 h-3 rounded-full bg-claude-border transition-all duration-300;
+  }
+
+  .stepper-dot-active {
+    @apply stepper-dot bg-accent-coral scale-125;
+  }
+
+  .stepper-dot-completed {
+    @apply stepper-dot bg-success;
+  }
+
+  /* LinkedIn post card style */
+  .post-card {
+    @apply card relative overflow-hidden;
+  }
+
+  .post-card::before {
+    content: "";
+    @apply absolute top-0 left-0 w-1 h-full bg-accent-coral;
+  }
+}
+
+@layer utilities {
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Animation utilities */
+  .animate-in {
+    @apply animate-fade-in;
+  }
+
+  .slide-in {
+    @apply animate-slide-up;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent-coral to-accent-amber
+           bg-clip-text text-transparent;
+  }
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-claude-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-claude-border-strong rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-claude-text-tertiary;
+}

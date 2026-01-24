@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?   // null for OAuth users
+  name          String?
+  image         String?
+  emailVerified DateTime?
+
+  // LinkedIn Integration (separate from OAuth sign-in)
+  linkedinAccessToken  String?
+  linkedinRefreshToken String?
+  linkedinTokenExpiry  DateTime?
+  linkedinUserId       String?
+
+  // Onboarding status
+  onboardingCompleted Boolean @default(false)
+
+  // LinkedIn Profile Context (extracted from screenshots)
+  linkedinProfileContext String? // AI-extracted summary of their professional background
+
+  // Relations
+  accounts               Account[]
+  sessions               Session[]
+  voiceNotes             VoiceNote[]
+  posts                  Post[]
+  schedules              Schedule[]
+  writingPreferences     WritingPreference[]
+  linkedinScreenshots    LinkedInScreenshot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model VoiceNote {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  questionIndex Int      // 0-9 for the 10 questions
+  questionText  String   // The actual question text
+  audioUrl      String?  // S3 URL (optional if using base64)
+  audioData     String? // Base64 audio data (for demo/testing)
+  transcription String?
+  duration      Int?     // seconds
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, questionIndex])
+}
+
+model Post {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content      String
+  sourceNoteId String?    // which voice note inspired this
+  weekNumber   Int        // 1-10 for scheduling
+
+  status         PostStatus @default(DRAFT)
+  linkedinPostId String?    // after posting to LinkedIn
+
+  // Engagement metrics (updated after posting)
+  likes    Int @default(0)
+  comments Int @default(0)
+  shares   Int @default(0)
+
+  schedule Schedule?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Schedule {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId       String         @unique
+  post         Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  scheduledFor DateTime
+  postedAt     DateTime?
+  status       ScheduleStatus @default(PENDING)
+  error        String? // Error message if posting failed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  POSTED
+  FAILED
+}
+
+enum ScheduleStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// Stores user's writing preferences learned from feedback
+model WritingPreference {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The preference/rule learned from feedback
+  preference String // e.g., "Don't use emojis", "Keep posts under 200 words"
+  category   String // e.g., "style", "tone", "length", "content", "avoid"
+
+  // Context about when this was learned
+  originalFeedback String? // The user's actual feedback that created this rule
+  exampleBefore    String? // What the post said before
+  exampleAfter     String? // What it was changed to
+
+  isActive Boolean @default(true) // User can disable preferences
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Stores LinkedIn profile screenshots for AI context
+model LinkedInScreenshot {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Screenshot data (base64 encoded)
+  imageData String // Base64 image data
+
+  // What section of LinkedIn this covers
+  sectionType String // "about", "experience", "education", "skills", "full_profile"
+
+  // AI-extracted content from this screenshot
+  extractedContent String? // Structured text extracted by AI
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
