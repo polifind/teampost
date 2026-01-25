@@ -673,7 +673,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <LogoIcon size={24} />
             <span className="text-sm text-claude-text-secondary">
-              © 2025 TeamPost. All rights reserved.
+              © 2026 TeamPost. All rights reserved.
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm text-claude-text-secondary">
