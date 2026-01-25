@@ -6,12 +6,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 
+interface Schedule {
+  id: string;
+  scheduledFor: string;
+  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+}
+
 interface Post {
   id: string;
   content: string;
+  imageUrl?: string;
   weekNumber: number;
   status: "DRAFT" | "SCHEDULED" | "POSTED" | "FAILED";
   createdAt: string;
+  schedule?: Schedule | null;
 }
 
 const EditIcon = () => (
@@ -44,6 +52,24 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const ClockIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+  </svg>
+);
+
+const XIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
 const LinkedInIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -61,6 +87,13 @@ export default function PostsPage() {
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [linkedInConnected, setLinkedInConnected] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<string | null>(null);
+  const [newScheduledDate, setNewScheduledDate] = useState("");
+  const [newScheduledTime, setNewScheduledTime] = useState("");
+  const [updatingSchedule, setUpdatingSchedule] = useState<string | null>(null);
+  const [deletingSchedule, setDeletingSchedule] = useState<string | null>(null);
+  const [regeneratePostId, setRegeneratePostId] = useState<string | null>(null);
+  const [regenerateFeedback, setRegenerateFeedback] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -113,11 +146,23 @@ export default function PostsPage() {
     }
   };
 
+  const handleStartRegenerate = (postId: string) => {
+    setRegeneratePostId(postId);
+    setRegenerateFeedback("");
+  };
+
+  const handleCancelRegenerate = () => {
+    setRegeneratePostId(null);
+    setRegenerateFeedback("");
+  };
+
   const handleRegenerate = async (postId: string) => {
     setRegenerating(postId);
     try {
       const response = await fetch(`/api/posts/${postId}/regenerate`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedback: regenerateFeedback }),
       });
 
       if (response.ok) {
@@ -125,6 +170,8 @@ export default function PostsPage() {
         setPosts((prev) =>
           prev.map((p) => (p.id === postId ? { ...p, content: data.content } : p))
         );
+        setRegeneratePostId(null);
+        setRegenerateFeedback("");
       }
     } catch (error) {
       console.error("Failed to regenerate post:", error);
@@ -137,6 +184,98 @@ export default function PostsPage() {
     await navigator.clipboard.writeText(post.content);
     setCopiedId(post.id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleEditSchedule = (post: Post) => {
+    if (post.schedule) {
+      const scheduledDate = new Date(post.schedule.scheduledFor);
+      setNewScheduledDate(scheduledDate.toISOString().split("T")[0]);
+      setNewScheduledTime(
+        scheduledDate.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      );
+      setEditingSchedule(post.schedule.id);
+    }
+  };
+
+  const handleSaveSchedule = async (scheduleId: string) => {
+    if (!newScheduledDate || !newScheduledTime) return;
+
+    setUpdatingSchedule(scheduleId);
+    try {
+      const scheduledFor = new Date(`${newScheduledDate}T${newScheduledTime}:00`);
+
+      const response = await fetch(`/api/schedule/${scheduleId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledFor: scheduledFor.toISOString() }),
+      });
+
+      if (response.ok) {
+        const { schedule } = await response.json();
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.schedule?.id === scheduleId
+              ? { ...p, schedule: { ...p.schedule, scheduledFor: schedule.scheduledFor } }
+              : p
+          )
+        );
+        setEditingSchedule(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to update schedule");
+      }
+    } catch (error) {
+      console.error("Failed to update schedule:", error);
+      alert("Failed to update schedule");
+    } finally {
+      setUpdatingSchedule(null);
+    }
+  };
+
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    if (!confirm("Are you sure you want to unschedule this post? It will be moved back to drafts.")) {
+      return;
+    }
+
+    setDeletingSchedule(scheduleId);
+    try {
+      const response = await fetch(`/api/schedule/${scheduleId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.schedule?.id === scheduleId
+              ? { ...p, status: "DRAFT", schedule: null }
+              : p
+          )
+        );
+      } else {
+        alert("Failed to delete schedule");
+      }
+    } catch (error) {
+      console.error("Failed to delete schedule:", error);
+      alert("Failed to delete schedule");
+    } finally {
+      setDeletingSchedule(null);
+    }
+  };
+
+  const formatScheduledTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const getStatusBadge = (status: Post["status"]) => {
@@ -245,7 +384,15 @@ export default function PostsPage() {
                     </div>
                     <div>
                       <p className="font-medium text-claude-text">Week {post.weekNumber}</p>
-                      {getStatusBadge(post.status)}
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(post.status)}
+                        {post.status === "SCHEDULED" && post.schedule && (
+                          <span className="text-xs text-claude-text-secondary flex items-center gap-1">
+                            <ClockIcon />
+                            {formatScheduledTime(post.schedule.scheduledFor)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -258,10 +405,14 @@ export default function PostsPage() {
                       {copiedId === post.id ? <CheckIcon /> : <CopyIcon />}
                     </button>
                     <button
-                      onClick={() => handleRegenerate(post.id)}
+                      onClick={() => handleStartRegenerate(post.id)}
                       disabled={regenerating === post.id}
-                      className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary hover:text-claude-text transition-colors disabled:opacity-50"
-                      title="Regenerate post"
+                      className={`p-2 rounded-claude transition-colors disabled:opacity-50 ${
+                        regeneratePostId === post.id
+                          ? "bg-accent-coral/10 text-accent-coral"
+                          : "text-claude-text-secondary hover:bg-claude-bg-tertiary hover:text-claude-text"
+                      }`}
+                      title="Regenerate post with feedback"
                     >
                       <RefreshIcon />
                     </button>
@@ -272,8 +423,114 @@ export default function PostsPage() {
                     >
                       <EditIcon />
                     </button>
+                    {post.status === "SCHEDULED" && post.schedule && (
+                      <>
+                        <button
+                          onClick={() => handleEditSchedule(post)}
+                          className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary hover:text-accent-coral transition-colors"
+                          title="Edit scheduled time"
+                        >
+                          <CalendarIcon />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSchedule(post.schedule!.id)}
+                          disabled={deletingSchedule === post.schedule.id}
+                          className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary hover:text-error transition-colors disabled:opacity-50"
+                          title="Unschedule post"
+                        >
+                          {deletingSchedule === post.schedule.id ? (
+                            <div className="w-4 h-4 border-2 border-error border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <TrashIcon />
+                          )}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
+
+                {/* Regenerate with feedback UI */}
+                {regeneratePostId === post.id && (
+                  <div className="mb-4 p-4 bg-accent-coral/5 border border-accent-coral/20 rounded-claude">
+                    <p className="text-sm font-medium text-claude-text mb-2">What would you like to improve?</p>
+                    <p className="text-xs text-claude-text-secondary mb-3">
+                      Your feedback will help improve this post and future posts
+                    </p>
+                    <textarea
+                      value={regenerateFeedback}
+                      onChange={(e) => setRegenerateFeedback(e.target.value)}
+                      placeholder="e.g., Make it more conversational, add a stronger hook, shorter sentences..."
+                      className="input text-sm min-h-[80px] resize-y mb-3"
+                      autoFocus
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleRegenerate(post.id)}
+                        disabled={regenerating === post.id || !regenerateFeedback.trim()}
+                        className="btn-primary text-sm py-2"
+                      >
+                        {regenerating === post.id ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            TeamPost AI is rewriting...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshIcon />
+                            Regenerate with TeamPost AI
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelRegenerate}
+                        className="btn-ghost text-sm py-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Schedule editing UI */}
+                {editingSchedule === post.schedule?.id && (
+                  <div className="mb-4 p-4 bg-accent-coral/5 border border-accent-coral/20 rounded-claude">
+                    <p className="text-sm font-medium text-claude-text mb-3">Edit Scheduled Time</p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <input
+                        type="date"
+                        value={newScheduledDate}
+                        onChange={(e) => setNewScheduledDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                        className="input text-sm py-2"
+                      />
+                      <input
+                        type="time"
+                        value={newScheduledTime}
+                        onChange={(e) => setNewScheduledTime(e.target.value)}
+                        className="input text-sm py-2"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSaveSchedule(post.schedule!.id)}
+                          disabled={updatingSchedule === post.schedule?.id}
+                          className="btn-primary text-sm py-2"
+                        >
+                          {updatingSchedule === post.schedule?.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            "Save"
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setEditingSchedule(null)}
+                          className="btn-ghost text-sm py-2"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {editingPost === post.id ? (
                   <div className="space-y-4">
@@ -312,7 +569,7 @@ export default function PostsPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Regenerating with AI...
+                    TeamPost AI is rewriting...
                   </div>
                 )}
               </div>

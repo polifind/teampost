@@ -94,17 +94,35 @@ Return exactly ${voiceNotes.length} posts, separated by "---POST---". No comment
   return posts;
 }
 
+interface WritingPreference {
+  preference: string;
+}
+
 export async function regeneratePost(
   originalPost: string,
-  feedback?: string
+  feedback?: string,
+  writingPreferences?: WritingPreference[]
 ): Promise<string> {
+  // Build writing preferences section
+  let preferencesSection = "";
+  if (writingPreferences && writingPreferences.length > 0) {
+    const preferencesList = writingPreferences
+      .map((p) => `- ${p.preference}`)
+      .join("\n");
+    preferencesSection = `
+
+**USER'S PERSONAL WRITING PREFERENCES (VERY IMPORTANT - apply these):**
+${preferencesList}
+`;
+  }
+
   const prompt = `You are a LinkedIn ghostwriter. Rewrite this post with a completely different angle while keeping the core story.
 
 **Original Post:**
 ${originalPost}
 
 ${feedback ? `**User Feedback:** ${feedback}` : "**Request:** Try a different hook, different structure, different angle. Same story, fresh take."}
-
+${preferencesSection}
 **CRITICAL STYLE REQUIREMENTS:**
 - Very short sentences. One thought per line. Many line breaks.
 - Tell the story with specific details: numbers, names, places, days

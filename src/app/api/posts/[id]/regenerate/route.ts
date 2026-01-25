@@ -45,8 +45,19 @@ export async function POST(
       // No body provided, that's fine
     }
 
-    // Regenerate the post
-    const newContent = await regeneratePost(post.content, feedback);
+    // Fetch user's writing preferences
+    const writingPreferences = await prisma.writingPreference.findMany({
+      where: {
+        userId: user.id,
+        isActive: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { preference: true },
+    });
+
+    // Regenerate the post with writing preferences
+    const newContent = await regeneratePost(post.content, feedback, writingPreferences);
 
     // Update the post
     await prisma.post.update({
@@ -56,6 +67,21 @@ export async function POST(
         updatedAt: new Date(),
       },
     });
+
+    // If feedback was provided, store it as a writing preference for future posts
+    if (feedback && feedback.trim()) {
+      await prisma.writingPreference.create({
+        data: {
+          userId: user.id,
+          preference: feedback.trim(),
+          category: "feedback",
+          originalFeedback: feedback.trim(),
+          exampleBefore: post.content,
+          exampleAfter: newContent,
+          isActive: true,
+        },
+      });
+    }
 
     return NextResponse.json({
       content: newContent,

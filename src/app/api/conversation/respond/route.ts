@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 
 const anthropic = new Anthropic({
@@ -11,17 +12,42 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { messages, hasDraft } = await request.json();
+
+    // Fetch user's writing preferences
+    const writingPreferences = await prisma.writingPreference.findMany({
+      where: {
+        userId: session.user.id,
+        isActive: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10, // Limit to most recent 10 preferences
+    });
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
         { error: "Messages are required" },
         { status: 400 }
       );
+    }
+
+    // Build writing preferences section if any exist
+    let preferencesSection = "";
+    if (writingPreferences.length > 0) {
+      const preferencesList = writingPreferences
+        .map((p) => `- ${p.preference}`)
+        .join("\n");
+      preferencesSection = `
+
+**USER'S PERSONAL WRITING PREFERENCES (VERY IMPORTANT - apply these to EVERY post):**
+${preferencesList}
+
+These are specific preferences this user has provided based on their feedback on previous posts. Always apply these preferences when drafting posts for them.
+`;
     }
 
     // Build the system prompt for the ghostwriter
@@ -64,6 +90,7 @@ POST STYLE (when drafting) - THIS IS CRITICAL:
 - End with a punchy takeaway, question, or mic-drop line
 - DON'T add any signature or tagline at the end
 - NO corporate jargon, NO hashtags, NO emojis, NO "I'm excited to announce"
+- NEVER use em-dashes (—). Use periods, commas, or line breaks instead. Em-dashes are associated with AI writing.
 - 150-250 words ideal
 - Write like someone telling a story at a bar, not a LinkedIn influencer
 
@@ -114,7 +141,8 @@ Even the guy who said I wasn't customer service material.
 
 </draft>
 
-What do you think?"`;
+What do you think?"
+${preferencesSection}`;
 
     // Convert messages to Anthropic format
     const anthropicMessages = messages.map((m: { role: string; content: string }) => ({

@@ -13,7 +13,20 @@
       "Bash(curl:*)",
       "Bash(pkill:*)",
       "Bash(npm run dev:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(psql:*)",
+      "Bash(npx vercel)",
+      "Bash(git config:*)",
+      "Bash(git -C /Users/rohanpavuluri/Desktop/companypost log --oneline -10)",
+      "Bash(git -C /Users/rohanpavuluri/Desktop/companypost status --short)",
+      "Bash(ls:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Stripe subscription integration with $20/month paywall\n\n- Add Stripe subscription fields to User model in Prisma schema\n- Create checkout, webhook, and billing portal API routes\n- Add subscription status API endpoint\n- Create SubscriptionPaywall component for when users hit 10 post limit\n- Add pricing section to landing page with Free and Unlimited tiers\n- Update schedule API to check subscription status before allowing scheduling\n- Fix TypeScript errors with Stripe SDK types\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

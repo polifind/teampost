@@ -17,11 +17,13 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         content: true,
+        imageUrl: true,
         weekNumber: true,
         status: true,
         createdAt: true,
         schedule: {
           select: {
+            id: true,
             scheduledFor: true,
             status: true,
           },
