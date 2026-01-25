@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasActiveSubscription, FREE_POST_LIMIT } from "@/lib/stripe";
 
 function getNextAvailableMonday(existingSchedules: Date[]): Date {
   const now = new Date();
@@ -34,13 +35,38 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: {
+        id: true,
+        stripeSubscriptionId: true,
+        stripeCurrentPeriodEnd: true,
+      },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { postId } = await request.json();
+    // Check subscription status
+    const scheduledPostCount = await prisma.schedule.count({
+      where: { userId: user.id },
+    });
+
+    const isSubscribed = hasActiveSubscription(user);
+
+    // If user has hit the free limit and isn't subscribed, block scheduling
+    if (scheduledPostCount >= FREE_POST_LIMIT && !isSubscribed) {
+      return NextResponse.json(
+        {
+          error: "subscription_required",
+          message: "You've used all 10 free posts. Please subscribe to continue.",
+          scheduledPostCount,
+          freePostLimit: FREE_POST_LIMIT,
+        },
+        { status: 402 }
+      );
+    }
+
+    const { postId, scheduledFor: customScheduledFor, imageUrl } = await request.json();
 
     if (!postId) {
       return NextResponse.json(
@@ -61,20 +87,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // Get existing scheduled dates for this user
-    const existingSchedules = await prisma.schedule.findMany({
-      where: {
-        userId: user.id,
-        status: "PENDING",
-      },
-      select: {
-        scheduledFor: true,
-      },
-    });
+    // Use custom scheduledFor if provided, otherwise calculate next available Monday
+    let scheduledForDate: Date;
 
-    const nextMonday = getNextAvailableMonday(
-      existingSchedules.map((s) => s.scheduledFor)
-    );
+    if (customScheduledFor) {
+      scheduledForDate = new Date(customScheduledFor);
+      // Validate the date is in the future
+      if (scheduledForDate <= new Date()) {
+        return NextResponse.json(
+          { error: "Scheduled time must be in the future" },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Get existing scheduled dates for this user
+      const existingSchedules = await prisma.schedule.findMany({
+        where: {
+          userId: user.id,
+          status: "PENDING",
+        },
+        select: {
+          scheduledFor: true,
+        },
+      });
+
+      scheduledForDate = getNextAvailableMonday(
+        existingSchedules.map((s) => s.scheduledFor)
+      );
+    }
 
     // Check if schedule already exists for this post
     const existingSchedule = await prisma.schedule.findUnique({
@@ -86,7 +126,7 @@ export async function POST(request: NextRequest) {
       await prisma.schedule.update({
         where: { postId },
         data: {
-          scheduledFor: nextMonday,
+          scheduledFor: scheduledForDate,
           status: "PENDING",
         },
       });
@@ -96,21 +136,29 @@ export async function POST(request: NextRequest) {
         data: {
           userId: user.id,
           postId,
-          scheduledFor: nextMonday,
+          scheduledFor: scheduledForDate,
           status: "PENDING",
         },
       });
     }
 
-    // Update post status
+    // Update post status and optionally the image
+    const postUpdateData: { status: "SCHEDULED"; imageUrl?: string } = {
+      status: "SCHEDULED"
+    };
+
+    if (imageUrl !== undefined) {
+      postUpdateData.imageUrl = imageUrl;
+    }
+
     await prisma.post.update({
       where: { id: postId },
-      data: { status: "SCHEDULED" },
+      data: postUpdateData,
     });
 
     return NextResponse.json({
       success: true,
-      scheduledFor: nextMonday.toISOString(),
+      scheduledFor: scheduledForDate.toISOString(),
     });
   } catch (error) {
     console.error("Error scheduling post:", error);

@@ -52,8 +52,8 @@ export default function LandingPage() {
     },
     {
       icon: <SparklesIcon />,
-      title: "AI Magic",
-      description: "Our AI transforms your voice notes into 10 polished LinkedIn posts optimized for engagement.",
+      title: "AI Agent Magic",
+      description: "Our AI Agent transforms your voice into 10 polished LinkedIn posts—learning your style with every interaction.",
     },
     {
       icon: <CalendarIcon />,
@@ -79,6 +79,9 @@ export default function LandingPage() {
             <Logo size="md" />
           </Link>
           <div className="flex items-center gap-4">
+            <a href="#pricing" className="text-sm text-claude-text-secondary hover:text-claude-text transition-colors">
+              Pricing
+            </a>
             <Link href="/login" className="btn-ghost text-sm">
               Log in
             </Link>
@@ -93,23 +96,23 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-coral-light text-accent-coral text-sm font-medium mb-6">
-            <LinkedInIcon />
-            <span>LinkedIn Content, Simplified</span>
+            <SparklesIcon />
+            <span>Your Personal AI Agent Ghostwriter</span>
           </div>
 
           <h1 className="text-5xl font-bold text-claude-text mb-6 leading-tight text-balance">
-            Turn your stories into
-            <span className="gradient-text"> 10 weeks </span>
-            of LinkedIn content
+            A $20,000 ghostwriter.
+            <span className="gradient-text"> Now an AI Agent. </span>
           </h1>
 
           <p className="text-xl text-claude-text-secondary mb-6 max-w-2xl mx-auto text-balance">
-            Just talk. Our AI listens to your experiences and creates engaging LinkedIn posts
-            that sound like you. Schedule them once, and you're done for 10 weeks.
+            Elite executives pay ghostwriters $20,000+ for LinkedIn content. TeamPost's AI Agent
+            delivers the same quality—learning your voice, crafting viral posts, and managing
+            your entire content calendar. Just talk, and watch the magic happen.
           </p>
 
           <p className="text-sm text-claude-text-tertiary mb-10">
-            Built by the most successful creators on LinkedIn.
+            Powered by the same strategies top creators use to go viral.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -124,61 +127,91 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo Visual */}
+      {/* What a Real Ghostwriter Does */}
       <section className="pb-20 px-6">
         <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              What does a $20,000 ghostwriter actually do?
+            </h2>
+            <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
+              They don't just write. They have conversations with you, help you brainstorm ideas,
+              keep your content organized, and manage the entire posting process.
+              <span className="text-accent-coral font-medium"> That's exactly what TeamPost does.</span>
+            </p>
+          </div>
+
+          {/* Conversation Demo */}
           <div className="card-hover p-8 bg-gradient-to-br from-white to-claude-bg-secondary">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              {/* Voice Recording Side */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-claude-text-secondary text-sm font-medium">
-                  <span className="w-6 h-6 rounded-full bg-accent-coral text-white flex items-center justify-center text-xs">1</span>
-                  Answer questions with your voice
+            <div className="max-w-2xl mx-auto space-y-4">
+              {/* AI Message */}
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-accent-coral flex items-center justify-center flex-shrink-0">
+                  <SparklesIcon />
                 </div>
-                <div className="bg-white rounded-claude-lg border border-claude-border p-6">
-                  <p className="text-lg text-claude-text mb-4">
-                    "{questions[0]}"
+                <div className="bg-claude-bg-secondary rounded-claude-lg rounded-tl-none p-4 max-w-md">
+                  <p className="text-sm text-claude-text">
+                    Hey! I'm your AI Agent ghostwriter. Tell me about a moment in your career that changed everything.
                   </p>
-                  <div className="flex items-center gap-4">
-                    <button className="w-14 h-14 rounded-full bg-accent-coral text-white flex items-center justify-center hover:bg-accent-coral-hover transition-colors">
-                      <MicIcon />
-                    </button>
-                    <div className="flex-1 h-12 bg-claude-bg-tertiary rounded-claude flex items-center px-4 gap-1">
-                      {[12, 18, 24, 16, 28, 20, 14, 26, 18, 22, 16, 30, 12, 24, 18, 20, 26, 14, 22, 16].map((height, i) => (
-                        <div
-                          key={i}
-                          className="w-1 bg-accent-coral rounded-full"
-                          style={{ height: `${height}px` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Generated Post Side */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-claude-text-secondary text-sm font-medium">
-                  <span className="w-6 h-6 rounded-full bg-success text-white flex items-center justify-center text-xs">2</span>
-                  Get polished LinkedIn posts
-                </div>
-                <div className="post-card">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-claude-bg-tertiary" />
-                    <div>
-                      <p className="font-medium text-claude-text text-sm">Your Name</p>
-                      <p className="text-xs text-claude-text-tertiary">CEO at Company</p>
-                    </div>
-                  </div>
-                  <p className="text-claude-text text-sm leading-relaxed">
-                    The best career decision I ever made was saying "yes" to something that terrified me.
-                    <br /><br />
-                    Three years ago, I was offered a role that felt way above my capabilities. Imposter syndrome hit hard...
+              {/* User Message */}
+              <div className="flex gap-3 justify-end">
+                <div className="bg-accent-coral text-white rounded-claude-lg rounded-tr-none p-4 max-w-md">
+                  <p className="text-sm">
+                    Well, I once got rejected from a job at a coffee shop. Now I run a company...
                   </p>
-                  <div className="flex items-center gap-4 mt-4 pt-4 border-t border-claude-border text-claude-text-tertiary text-xs">
-                    <span>👍 247 likes</span>
-                    <span>💬 34 comments</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-claude-bg-tertiary flex-shrink-0" />
+              </div>
+
+              {/* AI Follow-up */}
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-accent-coral flex items-center justify-center flex-shrink-0">
+                  <SparklesIcon />
+                </div>
+                <div className="bg-claude-bg-secondary rounded-claude-lg rounded-tl-none p-4 max-w-md">
+                  <p className="text-sm text-claude-text">
+                    That's a great hook! What coffee shop was it? What did they actually say when they rejected you?
+                    <span className="text-accent-coral"> Those specific details make posts go viral.</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* User Response */}
+              <div className="flex gap-3 justify-end">
+                <div className="bg-accent-coral text-white rounded-claude-lg rounded-tr-none p-4 max-w-md">
+                  <p className="text-sm">
+                    It was Starbucks! The manager said I "wasn't a good fit for customer service." I was 19.
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-claude-bg-tertiary flex-shrink-0" />
+              </div>
+
+              {/* AI Draft */}
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-accent-coral flex items-center justify-center flex-shrink-0">
+                  <SparklesIcon />
+                </div>
+                <div className="bg-claude-bg-secondary rounded-claude-lg rounded-tl-none p-4 max-w-md">
+                  <p className="text-sm text-claude-text mb-3">
+                    Perfect. Here's your draft:
+                  </p>
+                  <div className="bg-white rounded-lg p-4 border border-claude-border">
+                    <p className="text-sm text-claude-text leading-relaxed">
+                      I got rejected from Starbucks.
+                      <br /><br />
+                      The manager said I wasn't "a good fit for customer service."
+                      <br /><br />
+                      I was 19. Needed the job. Walked out embarrassed.
+                      <br /><br />
+                      15 years later, I run a company with 50 employees...
+                    </p>
                   </div>
+                  <p className="text-xs text-claude-text-tertiary mt-2">
+                    Want me to adjust anything? I'll remember your preferences for future posts.
+                  </p>
                 </div>
               </div>
             </div>
@@ -186,32 +219,77 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* The Full Ghostwriter Experience */}
       <section className="py-20 px-6 bg-claude-bg-secondary">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-claude-text mb-4">
-              How it works
+              The complete ghostwriter experience
             </h2>
             <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
-              Three simple steps to transform your expertise into consistent LinkedIn content
+              Everything a premium ghostwriter does—conversation, brainstorming, organization,
+              and publishing—all handled by your AI Agent
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="card text-center">
-                <div className="w-14 h-14 rounded-2xl bg-accent-coral-light text-accent-coral flex items-center justify-center mx-auto mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-semibold text-claude-text mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-claude-text-secondary">
-                  {feature.description}
-                </p>
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="card text-center">
+              <div className="w-14 h-14 rounded-2xl bg-accent-coral-light text-accent-coral flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
               </div>
-            ))}
+              <div className="text-xs text-accent-coral font-medium mb-2">STEP 1</div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">
+                Conversation
+              </h3>
+              <p className="text-claude-text-secondary text-sm">
+                Your AI Agent asks smart questions to draw out your best stories—just like a real ghostwriter would.
+              </p>
+            </div>
+
+            <div className="card text-center">
+              <div className="w-14 h-14 rounded-2xl bg-accent-coral-light text-accent-coral flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+                </svg>
+              </div>
+              <div className="text-xs text-accent-coral font-medium mb-2">STEP 2</div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">
+                Brainstorm
+              </h3>
+              <p className="text-claude-text-secondary text-sm">
+                Together, you refine angles, find the hook, and shape raw ideas into compelling narratives.
+              </p>
+            </div>
+
+            <div className="card text-center">
+              <div className="w-14 h-14 rounded-2xl bg-accent-coral-light text-accent-coral flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                </svg>
+              </div>
+              <div className="text-xs text-accent-coral font-medium mb-2">STEP 3</div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">
+                Organize
+              </h3>
+              <p className="text-claude-text-secondary text-sm">
+                Your posts are saved, organized by topic, and ready to review. Resume any conversation anytime.
+              </p>
+            </div>
+
+            <div className="card text-center">
+              <div className="w-14 h-14 rounded-2xl bg-accent-coral-light text-accent-coral flex items-center justify-center mx-auto mb-4">
+                <CalendarIcon />
+              </div>
+              <div className="text-xs text-accent-coral font-medium mb-2">STEP 4</div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">
+                Publish
+              </h3>
+              <p className="text-claude-text-secondary text-sm">
+                Approve your post and it's automatically scheduled. Your AI Agent handles the rest.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -253,6 +331,166 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* AI Agent Value Proposition */}
+      <section className="py-20 px-6 bg-gradient-to-br from-accent-coral/5 to-accent-coral/10">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-accent-coral text-sm font-medium mb-4">
+              <SparklesIcon />
+              <span>The AI Agent Advantage</span>
+            </div>
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Not just AI writing. A true ghostwriting relationship.
+            </h2>
+            <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
+              Most AI tools just generate generic content. TeamPost's AI Agent works <em>with</em> you—
+              having real conversations, learning your preferences, and getting better every time.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-claude-lg p-6 border border-claude-border">
+              <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">Remembers Everything</h3>
+              <p className="text-claude-text-secondary text-sm">
+                Like a real ghostwriter, your AI Agent learns your preferences. Say "shorter sentences" once—it remembers forever.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-claude-lg p-6 border border-claude-border">
+              <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">Asks the Right Questions</h3>
+              <p className="text-claude-text-secondary text-sm">
+                Great ghostwriters know what details make posts go viral. Your AI Agent digs for the specific moments that resonate.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-claude-lg p-6 border border-claude-border">
+              <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-claude-text mb-2">Iterates With You</h3>
+              <p className="text-claude-text-secondary text-sm">
+                Don't like the hook? Want a different angle? Your AI Agent refines drafts based on your feedback—unlimited revisions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              The ghostwriter experience, without the price tag
+            </h2>
+            <p className="text-lg text-claude-text-secondary">
+              Compare what you'd pay a human ghostwriter vs. TeamPost's AI Agent
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Traditional Ghostwriter */}
+            <div className="bg-claude-bg-secondary rounded-claude-lg p-8 border border-claude-border">
+              <div className="text-claude-text-tertiary text-sm font-medium mb-2">TRADITIONAL GHOSTWRITER</div>
+              <div className="text-4xl font-bold text-claude-text mb-6">$20,000+</div>
+              <ul className="space-y-3">
+                {[
+                  "Multiple discovery calls required",
+                  "Weeks of back-and-forth edits",
+                  "Limited to 10-20 posts",
+                  "No scheduling included",
+                  "Slow turnaround times",
+                  "One style, limited flexibility",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-claude-text-secondary">
+                    <svg className="w-5 h-5 text-claude-text-tertiary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* TeamPost AI Agent */}
+            <div className="bg-white rounded-claude-lg p-8 border-2 border-accent-coral relative">
+              <div className="absolute -top-3 left-6 px-3 py-1 bg-accent-coral text-white text-xs font-medium rounded-full">
+                RECOMMENDED
+              </div>
+              <div className="text-accent-coral text-sm font-medium mb-2">TEAMPOST AI AGENT</div>
+              <div className="text-4xl font-bold text-claude-text mb-6">Free to start</div>
+              <ul className="space-y-3">
+                {[
+                  "Just talk — no meetings needed",
+                  "Instant posts, instant edits",
+                  "Unlimited regenerations",
+                  "Auto-scheduling built in",
+                  "Posts ready in seconds",
+                  "Learns and adapts to your style",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-claude-text">
+                    <div className="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center">
+                      <CheckIcon />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof / Results */}
+      <section className="py-20 px-6 bg-claude-bg-secondary">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Real results from real professionals
+            </h2>
+            <p className="text-lg text-claude-text-secondary">
+              See what happens when you let an AI Agent handle your LinkedIn
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-claude-lg p-6 border border-claude-border">
+              <div className="text-4xl font-bold text-accent-coral mb-2">10x</div>
+              <div className="text-claude-text font-medium mb-2">More Engagement</div>
+              <p className="text-sm text-claude-text-secondary">
+                Average increase in post engagement after switching to AI Agent-written content
+              </p>
+            </div>
+            <div className="bg-white rounded-claude-lg p-6 border border-claude-border">
+              <div className="text-4xl font-bold text-accent-coral mb-2">30 min</div>
+              <div className="text-claude-text font-medium mb-2">For 10 Weeks</div>
+              <p className="text-sm text-claude-text-secondary">
+                That's all it takes to create and schedule 10 weeks of professional content
+              </p>
+            </div>
+            <div className="bg-white rounded-claude-lg p-6 border border-claude-border">
+              <div className="text-4xl font-bold text-accent-coral mb-2">$0</div>
+              <div className="text-claude-text font-medium mb-2">To Get Started</div>
+              <p className="text-sm text-claude-text-secondary">
+                No credit card required. Start creating content with your AI Agent today
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Why Companies Love It */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
@@ -272,9 +510,9 @@ export default function LandingPage() {
               "Boost visibility with candidates and make hiring easier",
               "Build credibility and trust with investors and partners",
               "Employee content gets 8x more engagement than company pages",
-              "Give every team member a personal LinkedIn strategist",
+              "Give every team member their own AI Agent ghostwriter",
               "Win-win: company gets free marketing, employees build their brand",
-              "Turn your team into thought leaders in your industry",
+              "Turn your team into thought leaders with AI Agent assistance",
             ].map((benefit, index) => (
               <div key={index} className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -292,14 +530,17 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-claude-text mb-4">
-              Why employees love it
+              Why employees love their AI Agent
             </h2>
+            <p className="text-lg text-claude-text-secondary">
+              It's like having a personal content strategist in your pocket
+            </p>
           </div>
 
           <div className="grid sm:grid-cols-2 gap-6">
             {[
               "No writing skills needed — just talk naturally",
-              "Posts sound like you, not generic AI content",
+              "Your AI Agent captures your authentic voice",
               "Build your personal brand effortlessly",
               "10 weeks of content in under 30 minutes",
               "Automated scheduling — set it and forget it",
@@ -316,18 +557,111 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-coral-light text-accent-coral text-sm font-medium mb-4">
+              <SparklesIcon />
+              <span>Simple Pricing</span>
+            </div>
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Start free. Upgrade when you're ready.
+            </h2>
+            <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
+              Your first 10 posts are completely free. No credit card required.
+              Only pay when you want to keep the magic going.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Tier */}
+            <div className="bg-white rounded-claude-lg p-8 border border-claude-border">
+              <div className="text-claude-text-secondary text-sm font-medium mb-2">FREE FOREVER</div>
+              <div className="text-4xl font-bold text-claude-text mb-2">$0</div>
+              <p className="text-claude-text-secondary mb-6">First 10 posts on us</p>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  "10 AI-generated posts",
+                  "Full conversation experience",
+                  "AI Agent learns your voice",
+                  "Auto-scheduling included",
+                  "No credit card required",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-claude-text">
+                    <div className="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/signup" className="btn-ghost w-full justify-center">
+                Get Started Free
+              </Link>
+            </div>
+
+            {/* Pro Tier */}
+            <div className="bg-white rounded-claude-lg p-8 border-2 border-accent-coral relative">
+              <div className="absolute -top-3 left-6 px-3 py-1 bg-accent-coral text-white text-xs font-medium rounded-full">
+                BEST VALUE
+              </div>
+              <div className="text-accent-coral text-sm font-medium mb-2">UNLIMITED</div>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-4xl font-bold text-claude-text">$20</span>
+                <span className="text-claude-text-secondary">/month</span>
+              </div>
+              <p className="text-claude-text-secondary mb-6">After your first 10 posts</p>
+
+              <ul className="space-y-3 mb-8">
+                {[
+                  "Unlimited AI-generated posts",
+                  "Priority AI processing",
+                  "Advanced voice learning",
+                  "Unlimited regenerations",
+                  "Full conversation history",
+                  "Cancel anytime",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-claude-text">
+                    <div className="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/signup" className="btn-primary w-full justify-center">
+                Start Free Trial
+                <ArrowRightIcon />
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-center text-claude-text-tertiary text-sm mt-8">
+            That's less than the cost of a single coffee per week for unlimited professional content.
+          </p>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-claude-bg-secondary">
         <div className="max-w-2xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-accent-coral text-sm font-medium mb-4">
+            <SparklesIcon />
+            <span>Start Free Today</span>
+          </div>
           <h2 className="text-3xl font-bold text-claude-text mb-4">
-            Ready to build your LinkedIn presence?
+            Ready to meet your AI Agent ghostwriter?
           </h2>
           <p className="text-lg text-claude-text-secondary mb-8">
-            Join thousands of professionals who've transformed their LinkedIn game.
-            It's completely free.
+            Join thousands of professionals who've replaced expensive ghostwriters
+            with TeamPost's AI Agent. Your first 10 posts are completely free.
           </p>
           <Link href="/signup" className="btn-primary text-lg px-8 py-3">
-            Get Started for Free
+            Get Your AI Agent
             <ArrowRightIcon />
           </Link>
         </div>

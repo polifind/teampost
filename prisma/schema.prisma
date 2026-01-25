@@ -54,6 +54,12 @@ model User {
   // LinkedIn Profile Context (extracted from screenshots)
   linkedinProfileContext String? // AI-extracted summary of their professional background
 
+  // Stripe subscription
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
   // Relations
   accounts               Account[]
   sessions               Session[]
@@ -62,6 +68,7 @@ model User {
   schedules              Schedule[]
   writingPreferences     WritingPreference[]
   linkedinScreenshots    LinkedInScreenshot[]
+  conversations          Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,6 +106,7 @@ model Post {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   content      String
+  imageUrl     String?    // S3 URL for post image
   sourceNoteId String?    // which voice note inspired this
   weekNumber   Int        // 1-10 for scheduling
 
@@ -188,4 +196,35 @@ model LinkedInScreenshot {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// Stores in-progress conversations for post creation
+model Conversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Conversation title (auto-generated from first message)
+  title    String
+
+  // Messages stored as JSON array
+  messages String // JSON: [{role, content, timestamp}]
+
+  // Current draft if one was generated
+  draftContent String?
+  draftImageUrl String?
+
+  // Status
+  status ConversationStatus @default(IN_PROGRESS)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum ConversationStatus {
+  IN_PROGRESS
+  COMPLETED // Post was created from this conversation
+  ABANDONED // User explicitly deleted/abandoned
 }
