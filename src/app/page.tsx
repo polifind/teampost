@@ -59,6 +59,34 @@ const UsersIcon = () => (
   </svg>
 );
 
+const ChevronDownIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+  </svg>
+);
+
+const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border-b border-claude-border last:border-b-0 px-6">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between py-5 text-left hover:text-accent-coral transition-colors"
+      >
+        <span className="font-medium text-claude-text pr-4">{question}</span>
+        <span className={`text-claude-text-secondary transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
+          <ChevronDownIcon />
+        </span>
+      </button>
+      {isOpen && (
+        <div className="pb-5 text-claude-text-secondary">
+          {answer}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [showPhone, setShowPhone] = useState(false);
@@ -90,7 +118,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-coral-light text-accent-coral text-sm font-medium mb-6">
             <SparklesIcon />
-            <span>An AI Ghostwriter for Every Employee</span>
+            <span>A $20,000/year Ghostwriter for Every Employee</span>
           </div>
 
           <h1 className="text-5xl font-bold text-claude-text mb-6 leading-tight text-balance">
@@ -98,13 +126,9 @@ export default function LandingPage() {
             <span className="gradient-text"> LinkedIn Content Machine</span>
           </h1>
 
-          <p className="text-xl text-claude-text-secondary mb-4 max-w-2xl mx-auto text-balance">
+          <p className="text-xl text-claude-text-secondary mb-8 max-w-2xl mx-auto text-balance">
             Give every employee an AI ghostwriter. Generate more pipeline, amplify your brand,
             and attract top talent. All through authentic employee content that posts automatically.
-          </p>
-
-          <p className="text-sm text-claude-text-tertiary mb-8 max-w-2xl mx-auto">
-            Turn every SDR, AE, recruiter, marketer, CS rep, and exec into a LinkedIn content creator. Even engineers and PMs.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 text-sm text-claude-text-tertiary mb-10">
@@ -135,22 +159,54 @@ export default function LandingPage() {
       </section>
 
       {/* Social Proof - Why LinkedIn Matters */}
-      <section className="py-16 px-6 bg-claude-bg-secondary border-y border-claude-border">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-lg text-claude-text leading-relaxed mb-6">
-            Ever wonder why you keep seeing <span className="font-semibold">Lovable</span>, <span className="font-semibold">Clay</span>, and <span className="font-semibold">Cursor</span> all over LinkedIn?
-          </p>
-          <p className="text-claude-text-secondary mb-6">
-            The fastest-growing B2B companies have figured it out: employees posting about the journey,
-            product launches, and company wins is the most effective way to generate leads.
-            Every B2B founder will tell you LinkedIn is a top 3 channel. Yet it's 100x underutilized by almost every company.
-          </p>
-          <p className="text-claude-text-secondary mb-8">
-            In an ideal world, every employee posts every week. TeamPost makes that possible.
-          </p>
-          <p className="text-accent-coral font-semibold text-lg">
-            Be the next Lovable, Clay, and Cursor on LinkedIn.
-          </p>
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-gradient-to-br from-claude-bg-secondary to-white rounded-claude-lg border border-claude-border p-10 md:p-14">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-claude-text mb-2">
+                Ever wonder why you keep seeing these companies all over LinkedIn?
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
+              {[
+                { name: "Lovable", description: "AI app builder", logo: "https://lovable.dev/img/logo/lovable-icon-bg-light.png" },
+                { name: "Clay", description: "Data enrichment", logo: "https://cdn.prod.website-files.com/61477f2c24a826836f969afe/677c0a6767557563354e34a3_Clay%20icon.png" },
+                { name: "Cursor", description: "AI code editor", logo: "https://cursor.com/favicon.ico" },
+              ].map((company) => (
+                <div key={company.name} className="bg-white rounded-claude-lg p-6 border border-claude-border text-center">
+                  <img src={company.logo} alt={company.name} className="w-12 h-12 mx-auto mb-3 object-contain" />
+                  <div className="text-xl font-bold text-claude-text mb-1">{company.name}</div>
+                  <div className="text-sm text-claude-text-tertiary">{company.description}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="max-w-2xl mx-auto text-center space-y-4">
+              <p className="text-claude-text">
+                The fastest-growing B2B companies have figured it out: <span className="font-semibold">employees posting about the journey, product launches, and company wins</span> is the most effective way to generate leads.
+              </p>
+              <p className="text-claude-text-secondary">
+                Every B2B founder will tell you LinkedIn is a top 3 channel. Yet it's 100x underutilized by almost every company.
+              </p>
+            </div>
+
+            <div className="mt-10 pt-8 border-t border-claude-border text-center">
+              <p className="text-lg text-claude-text mb-2">
+                In an ideal world, every employee posts every week.
+              </p>
+              <p className="text-xl font-semibold text-accent-coral">
+                TeamPost makes that possible.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-coral/10 text-accent-coral font-medium">
+              <SparklesIcon />
+              Be the next Lovable, Clay, and Cursor on LinkedIn
+            </p>
+          </div>
         </div>
       </section>
 
@@ -325,8 +381,118 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Why Not Just Use Buffer? */}
+      {/* Why Not ChatGPT/Claude */}
       <section className="py-20 px-6 bg-claude-bg-secondary">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Why not just use ChatGPT or Claude?
+            </h2>
+            <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
+              You could ask every employee to prompt engineer their own LinkedIn posts.
+              Good luck getting consistent output from 500 people.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* DIY AI */}
+            <div className="bg-white rounded-claude-lg p-8 border border-claude-border">
+              <div className="text-claude-text-tertiary text-sm font-medium mb-4">DIY WITH CHATGPT / CLAUDE</div>
+              <div className="text-2xl font-bold text-claude-text mb-6">Hope Everyone Figures It Out</div>
+              <ul className="space-y-4">
+                {[
+                  "Every employee prompts differently",
+                  "Most give up after 2 bad outputs",
+                  "No voice consistency across the org",
+                  "Zero visibility into who's posting",
+                  "Copy/paste into LinkedIn manually",
+                  "No scheduling, no automation",
+                  "Marketing has no control",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-claude-text-secondary">
+                    <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* TeamPost */}
+            <div className="bg-white rounded-claude-lg p-8 border-2 border-accent-coral relative">
+              <div className="absolute -top-3 left-6 px-3 py-1 bg-accent-coral text-white text-xs font-medium rounded-full">
+                BUILT FOR SCALE
+              </div>
+              <div className="text-accent-coral text-sm font-medium mb-4">TEAMPOST</div>
+              <div className="text-2xl font-bold text-claude-text mb-6">Structure, Strategy & Accountability</div>
+              <ul className="space-y-4">
+                {[
+                  "Weekly structure keeps employees posting consistently",
+                  "Proven LinkedIn strategies built into every post",
+                  "Accountability through scheduled content calendar",
+                  "Admins draft posts for hundreds of employees",
+                  "Dashboard shows every scheduled post",
+                  "Auto-posts directly to LinkedIn",
+                  "One marketer can run 1,000 accounts",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-claude-text">
+                    <div className="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckIcon />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-12 bg-accent-coral/5 rounded-claude-lg p-8">
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-claude-text mb-2">LinkedIn-Native AI</h3>
+                <p className="text-sm text-claude-text-secondary">
+                  Trained specifically on high-performing LinkedIn content. Knows what hooks, formats, and CTAs actually drive engagement.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-claude-text mb-2">Full Visibility</h3>
+                <p className="text-sm text-claude-text-secondary">
+                  See every post before it goes live. Track engagement across the org. Know exactly what your employees are saying.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mx-auto mb-4">
+                  <UsersIcon />
+                </div>
+                <h3 className="font-semibold text-claude-text mb-2">Scale Without Headcount</h3>
+                <p className="text-sm text-claude-text-secondary">
+                  One social media manager can generate content for your entire company. No need to hire an army of ghostwriters.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-claude-text-secondary mt-8">
+            ChatGPT is a blank canvas. TeamPost is a turnkey content engine for your entire workforce.
+          </p>
+        </div>
+      </section>
+
+      {/* Why Not Just Use Buffer? */}
+      <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-claude-text mb-4">
@@ -391,110 +557,6 @@ export default function LandingPage() {
             The hardest part of LinkedIn isn't scheduling. It's knowing what to write.
             <span className="text-accent-coral font-medium"> TeamPost solves that.</span>
           </p>
-        </div>
-      </section>
-
-      {/* Why Not ChatGPT/Claude */}
-      <section className="py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-claude-text mb-4">
-              Why not just use ChatGPT or Claude?
-            </h2>
-            <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
-              Generic AI tools can write. But they don't know LinkedIn, they don't scale across teams,
-              and they definitely don't post for you.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* DIY AI */}
-            <div className="bg-white rounded-claude-lg p-8 border border-claude-border">
-              <div className="text-claude-text-tertiary text-sm font-medium mb-4">DIY WITH CHATGPT / CLAUDE</div>
-              <div className="text-2xl font-bold text-claude-text mb-6">Generic AI Chat</div>
-              <ul className="space-y-4">
-                {[
-                  "Generic output that sounds like AI",
-                  "You have to prompt engineer every time",
-                  "No memory of your voice or preferences",
-                  "Copy/paste into LinkedIn manually",
-                  "No scheduling, no automation",
-                  "Can't scale across a team",
-                  "Every employee figures it out alone",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-claude-text-secondary">
-                    <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* TeamPost */}
-            <div className="bg-white rounded-claude-lg p-8 border-2 border-accent-coral relative">
-              <div className="absolute -top-3 left-6 px-3 py-1 bg-accent-coral text-white text-xs font-medium rounded-full">
-                PURPOSE-BUILT
-              </div>
-              <div className="text-accent-coral text-sm font-medium mb-4">TEAMPOST</div>
-              <div className="text-2xl font-bold text-claude-text mb-6">LinkedIn-Specific AI Ghostwriter</div>
-              <ul className="space-y-4">
-                {[
-                  "Trained on top LinkedIn writers for max engagement",
-                  "Guided conversation extracts your best stories",
-                  "Learns and remembers your voice over time",
-                  "Auto-posts directly to LinkedIn",
-                  "Built-in scheduling and automation",
-                  "Admins can draft posts for entire teams",
-                  "One click to generate 100 employee posts",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3 text-claude-text">
-                    <div className="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckIcon />
-                    </div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="bg-claude-bg-secondary rounded-claude-lg p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
-                </svg>
-              </div>
-              <h3 className="font-semibold text-claude-text mb-2">Trained on the Best</h3>
-              <p className="text-sm text-claude-text-secondary">
-                Our AI learned from top LinkedIn creators. It knows what hooks work, what formats engage, and what makes people share.
-              </p>
-            </div>
-
-            <div className="bg-claude-bg-secondary rounded-claude-lg p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                </svg>
-              </div>
-              <h3 className="font-semibold text-claude-text mb-2">Ghostwriter Workflow</h3>
-              <p className="text-sm text-claude-text-secondary">
-                Like a $20k ghostwriter, we know what questions to ask. The guided conversation pulls out your best material naturally.
-              </p>
-            </div>
-
-            <div className="bg-claude-bg-secondary rounded-claude-lg p-6 text-center">
-              <div className="w-12 h-12 rounded-xl bg-accent-coral/10 text-accent-coral flex items-center justify-center mx-auto mb-4">
-                <UsersIcon />
-              </div>
-              <h3 className="font-semibold text-claude-text mb-2">Team-Wide Control</h3>
-              <p className="text-sm text-claude-text-secondary">
-                Marketing can draft and schedule posts across 100 employee accounts. Coordinate launches, announcements, and campaigns.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -1041,6 +1103,92 @@ export default function LandingPage() {
             Start Your Free Trial
             <ArrowRightIcon />
           </Link>
+        </div>
+      </section>
+
+      {/* Our Story Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-claude-text mb-2">Our Story</h2>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-claude-lg border border-amber-200 p-8 md:p-12 relative">
+            <div className="absolute top-6 right-8 text-6xl text-amber-200 font-serif">"</div>
+
+            <div className="space-y-6 text-claude-text leading-relaxed" style={{ fontFamily: 'Georgia, serif' }}>
+              <p className="text-lg">
+                I started TeamPost because I was overseeing my company's LinkedIn channel. I realized three things.
+              </p>
+
+              <p>
+                <span className="font-semibold">First,</span> nobody wants to follow a LinkedIn brand account. They only want to follow people.
+              </p>
+
+              <p>
+                <span className="font-semibold">Second,</span> despite ChatGPT and Claude, I found a crazy amount of value in having my own ghostwriter who would meet with me each week, ask me open-ended questions, and then draft posts. He knew how to get eyeballs on LinkedIn. He also held me accountable to regular posts. I started to get so much inbound from customers and candidates when I started posting.
+              </p>
+
+              <p>
+                <span className="font-semibold">Third,</span> I realized that I wanted everyone at my company to post every week on LinkedIn. It would be amazing for our recruiting (every engineer is connected to other engineers), sales & marketing, and even press and investors. I felt like I was always seeing a small number of companies like Lovable show up in my feed. And I wanted to be able to share talking points every couple of months for big launches.
+              </p>
+
+              <p>
+                So I built TeamPost to make this possible.
+              </p>
+
+              <p>
+                I think employee content creation is 100x underutilized as a company tool. Most employees want to build their own professional brand but just aren't good at it. It's a massive, untapped win-win.
+              </p>
+
+              <div className="pt-6 border-t border-amber-200 mt-8">
+                <p className="font-semibold text-lg">— Rohan Pavuluri</p>
+                <p className="text-claude-text-secondary text-sm">Founder, TeamPost</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 px-6 bg-claude-bg-secondary">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Frequently Asked Questions
+            </h2>
+          </div>
+
+          <div className="bg-white rounded-claude-lg border border-claude-border divide-y divide-claude-border">
+            <FAQItem
+              question="Who should be on the platform?"
+              answer="Everyone at your company. Yes, everyone. Most companies start with SDRs, AEs, recruiters, marketers, CS reps, and execs, but engineers and PMs are also important. The more employees posting, the more reach and pipeline you generate."
+            />
+            <FAQItem
+              question="How long does it take to get started?"
+              answer="Each employee spends about 30 minutes answering questions in a guided conversation. From that single session, they get 10 weeks of scheduled LinkedIn content. No writing required."
+            />
+            <FAQItem
+              question="Will the posts actually sound like me?"
+              answer="Yes. TeamPost learns your voice through the conversation. It picks up on your tone, word choices, and storytelling style. Posts come out sounding authentically you, not generic AI slop."
+            />
+            <FAQItem
+              question="Can employees edit posts before they go live?"
+              answer="Absolutely. Every post is reviewed and approved before scheduling. Employees can edit, regenerate, or request a different angle. Nothing posts without their approval."
+            />
+            <FAQItem
+              question="How does the LinkedIn auto-posting work?"
+              answer="Employees connect their LinkedIn account once through a secure OAuth flow. After that, approved posts go live automatically on their chosen schedule. No copy-pasting required."
+            />
+            <FAQItem
+              question="What if we want to coordinate a company-wide announcement?"
+              answer="Enterprise plans include admin controls. Marketing can share talking points, draft posts for employees, and coordinate timing for product launches, funding announcements, or hiring pushes."
+            />
+            <FAQItem
+              question="Is there a free trial?"
+              answer="Every employee gets their first 10 posts completely free. No credit card required. Try it with your team and see the results before upgrading."
+            />
+          </div>
         </div>
       </section>
 
