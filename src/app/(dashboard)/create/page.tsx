@@ -28,6 +28,23 @@ interface SavedConversation {
   updatedAt: string;
 }
 
+interface LibraryPhoto {
+  id: string;
+  imageUrl: string;
+  filename: string | null;
+  usageCount: number;
+}
+
+interface LibraryItem {
+  id: string;
+  type: "LINK" | "YOUTUBE" | "PDF" | "DOCX";
+  title: string | null;
+  sourceUrl: string | null;
+  fileName: string | null;
+  extractedSummary: string | null;
+  processingStatus: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+}
+
 const SparklesIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -99,6 +116,47 @@ const ChevronRightIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
   </svg>
 );
+
+const WandIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+  </svg>
+);
+
+const BookOpenIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+  </svg>
+);
+
+const VideoIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
+  </svg>
+);
+
+const DocumentIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+  </svg>
+);
+
+// Helper to get next Monday at 8:55 AM
+const getNextMonday = (): Date => {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 7 : 8 - dayOfWeek;
+  const nextMonday = new Date(now);
+  nextMonday.setDate(now.getDate() + daysUntilMonday);
+  nextMonday.setHours(8, 55, 0, 0);
+  return nextMonday;
+};
 
 // Animated loading indicator component
 const ThinkingIndicator = () => {
@@ -220,6 +278,8 @@ export default function CreatePostPage() {
   const [showScheduleSuccess, setShowScheduleSuccess] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [scheduledTime, setScheduledTime] = useState<string | null>(null);
+  const [selectedScheduleDate, setSelectedScheduleDate] = useState<string>("");
+  const [selectedScheduleTime, setSelectedScheduleTime] = useState<string>("08:55");
 
   // Conversation persistence state
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -230,6 +290,18 @@ export default function CreatePostPage() {
   // Subscription paywall state
   const [showPaywall, setShowPaywall] = useState(false);
   const [scheduledPostCount, setScheduledPostCount] = useState(0);
+
+  // Photo library state
+  const [libraryPhotos, setLibraryPhotos] = useState<LibraryPhoto[]>([]);
+  const [showPhotoLibrary, setShowPhotoLibrary] = useState(false);
+
+  // Magic Draft state
+  const [magicDraftAvailable, setMagicDraftAvailable] = useState(false);
+  const [magicDraftCount, setMagicDraftCount] = useState(0);
+  const [showMagicDraftModal, setShowMagicDraftModal] = useState(false);
+  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
+  const [selectedLibraryItems, setSelectedLibraryItems] = useState<string[]>([]);
+  const [generatingMagicDraft, setGeneratingMagicDraft] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -245,8 +317,130 @@ export default function CreatePostPage() {
   useEffect(() => {
     if (session?.user) {
       fetchSavedConversations();
+      fetchLibraryPhotos();
+      checkMagicDraftAvailability();
     }
   }, [session]);
+
+  const checkMagicDraftAvailability = async () => {
+    try {
+      const response = await fetch("/api/posts/magic-draft");
+      if (response.ok) {
+        const data = await response.json();
+        setMagicDraftAvailable(data.available);
+        setMagicDraftCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error("Failed to check magic draft availability:", error);
+    }
+  };
+
+  const fetchLibraryItems = async () => {
+    try {
+      const response = await fetch("/api/personalization/library");
+      if (response.ok) {
+        const data = await response.json();
+        setLibraryItems(data.items.filter((i: LibraryItem) => i.processingStatus === "COMPLETED"));
+      }
+    } catch (error) {
+      console.error("Failed to fetch library items:", error);
+    }
+  };
+
+  const handleOpenMagicDraft = async () => {
+    await fetchLibraryItems();
+    setSelectedLibraryItems([]);
+    setShowMagicDraftModal(true);
+  };
+
+  const handleGenerateMagicDraft = async () => {
+    setGeneratingMagicDraft(true);
+    try {
+      const response = await fetch("/api/posts/magic-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemIds: selectedLibraryItems.length > 0 ? selectedLibraryItems : undefined,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDraftPost({
+          content: data.draft,
+          isApproved: false,
+        });
+        setShowMagicDraftModal(false);
+
+        // Add a message about the magic draft
+        const sourceNames = data.sourcedFrom.map((s: { title: string }) => s.title).join(", ");
+        const message: Message = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `I've created a draft based on your library content${sourceNames ? ` (sourced from: ${sourceNames})` : ""}. Take a look and let me know if you'd like any changes!`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, message]);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to generate magic draft");
+      }
+    } catch (error) {
+      console.error("Magic draft error:", error);
+      alert("Failed to generate magic draft. Please try again.");
+    } finally {
+      setGeneratingMagicDraft(false);
+    }
+  };
+
+  const toggleLibraryItemSelection = (id: string) => {
+    setSelectedLibraryItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const getLibraryItemIcon = (type: string) => {
+    switch (type) {
+      case "YOUTUBE":
+        return <VideoIcon />;
+      case "PDF":
+      case "DOCX":
+        return <DocumentIcon />;
+      default:
+        return <LinkIcon />;
+    }
+  };
+
+  const fetchLibraryPhotos = async () => {
+    try {
+      const response = await fetch("/api/photos");
+      if (response.ok) {
+        const data = await response.json();
+        setLibraryPhotos(data.photos || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch photos:", error);
+    }
+  };
+
+  const handleSelectLibraryPhoto = (photo: LibraryPhoto) => {
+    if (draftPost) {
+      setDraftPost({
+        ...draftPost,
+        imageUrl: photo.imageUrl,
+      });
+    }
+    setShowPhotoLibrary(false);
+  };
+
+  // Initialize schedule date/time when draft is created
+  useEffect(() => {
+    if (draftPost && !selectedScheduleDate) {
+      const nextMonday = getNextMonday();
+      setSelectedScheduleDate(nextMonday.toISOString().split("T")[0]);
+      setSelectedScheduleTime("08:55");
+    }
+  }, [draftPost, selectedScheduleDate]);
 
   const fetchSavedConversations = async () => {
     try {
@@ -508,8 +702,23 @@ You can type or record a voice note - whatever feels more natural.`,
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Client-side validation
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      alert("Please select an image file (JPEG, PNG, GIF, or WebP)");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      alert("Image is too large. Maximum size is 10MB.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (file.size === 0) {
+      alert("The selected file appears to be empty. Please try another image.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -524,21 +733,26 @@ You can type or record a voice note - whatever feels more natural.`,
         body: formData,
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to upload image");
+        throw new Error(result.error || "Failed to upload image");
       }
 
-      const { imageUrl } = await response.json();
+      if (!result.imageUrl) {
+        throw new Error("No image URL returned from upload");
+      }
 
       if (draftPost) {
         setDraftPost({
           ...draftPost,
-          imageUrl,
+          imageUrl: result.imageUrl,
         });
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload image. Please try again.");
+      const message = error instanceof Error ? error.message : "Failed to upload image";
+      alert(`Upload failed: ${message}`);
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) {
@@ -557,7 +771,7 @@ You can type or record a voice note - whatever feels more natural.`,
   };
 
   const handleSchedulePost = async () => {
-    if (!draftPost) return;
+    if (!draftPost || !selectedScheduleDate || !selectedScheduleTime) return;
 
     setIsScheduling(true);
     try {
@@ -580,18 +794,22 @@ You can type or record a voice note - whatever feels more natural.`,
 
       const { postId } = await saveResponse.json();
 
+      // Use the user-selected date/time
+      const scheduledFor = new Date(`${selectedScheduleDate}T${selectedScheduleTime}:00`);
+
       const scheduleResponse = await fetch("/api/schedule/next", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           postId,
+          scheduledFor: scheduledFor.toISOString(),
           imageUrl: draftPost.imageUrl,
         }),
       });
 
       if (scheduleResponse.ok) {
         const scheduleData = await scheduleResponse.json();
-        setScheduledTime(scheduleData.scheduledFor);
+        setScheduledTime(scheduleData.scheduledFor || scheduledFor.toISOString());
         setShowScheduleSuccess(true);
         setDraftPost({ ...draftPost, isApproved: true });
 
@@ -699,7 +917,7 @@ You can type or record a voice note - whatever feels more natural.`,
           } border-r border-claude-border bg-claude-bg-secondary transition-all duration-300 overflow-hidden flex-shrink-0`}
         >
           <div className="w-64 h-full flex flex-col">
-            <div className="p-4 border-b border-claude-border">
+            <div className="p-4 border-b border-claude-border space-y-2">
               <button
                 onClick={handleStartNew}
                 className="btn-primary w-full text-sm"
@@ -707,6 +925,19 @@ You can type or record a voice note - whatever feels more natural.`,
                 <PlusIcon />
                 New Post
               </button>
+
+              {magicDraftAvailable && (
+                <button
+                  onClick={handleOpenMagicDraft}
+                  className="w-full text-sm px-4 py-2.5 rounded-claude font-medium transition-colors flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500/10 to-accent-coral/10 text-purple-600 border border-purple-500/20 hover:from-purple-500/20 hover:to-accent-coral/20"
+                >
+                  <WandIcon />
+                  Magic Draft
+                  <span className="text-xs bg-purple-500/20 px-1.5 py-0.5 rounded-full">
+                    {magicDraftCount}
+                  </span>
+                </button>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -806,6 +1037,46 @@ You can type or record a voice note - whatever feels more natural.`,
 
               {isLoading && <ThinkingIndicator />}
 
+              {/* Draft ready indicator - shows inline when draft exists */}
+              {draftPost && !draftPost.isApproved && (
+                <div className="bg-gradient-to-r from-accent-coral/10 to-accent-coral/5 border border-accent-coral/30 rounded-claude-lg p-4 my-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-accent-coral/20 flex items-center justify-center flex-shrink-0">
+                      <SparklesIcon />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-claude-text">Your draft is ready!</p>
+                      <p className="text-sm text-claude-text-secondary">
+                        Check the preview panel on the right to review, edit, or schedule your post.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        // Scroll to top of draft panel on mobile or highlight it
+                        const draftPanel = document.querySelector('[data-draft-panel]');
+                        if (draftPanel) {
+                          draftPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
+                      className="btn-primary text-sm px-4 py-2 flex-shrink-0"
+                    >
+                      View Draft
+                    </button>
+                  </div>
+
+                  {/* Inline draft preview for quick view */}
+                  <div className="mt-4 p-3 bg-white rounded-claude border border-claude-border">
+                    <p className="text-xs text-claude-text-tertiary mb-2 font-medium">PREVIEW</p>
+                    <p className="text-sm text-claude-text line-clamp-4 whitespace-pre-wrap">
+                      {draftPost.content}
+                    </p>
+                    {draftPost.content.length > 200 && (
+                      <p className="text-xs text-accent-coral mt-2">...see full draft in panel</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -826,7 +1097,7 @@ You can type or record a voice note - whatever feels more natural.`,
 
           {/* Draft preview sidebar */}
           {draftPost && (
-            <div className="w-96 border-l border-claude-border p-6 overflow-y-auto">
+            <div data-draft-panel className="w-96 border-l border-claude-border p-6 overflow-y-auto">
               <div className="sticky top-0">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-semibold text-claude-text flex items-center gap-2">
@@ -890,7 +1161,7 @@ You can type or record a voice note - whatever feels more natural.`,
                           )}
                         </div>
                       ) : !draftPost.isApproved && (
-                        <div className="border-2 border-dashed border-claude-border rounded-lg p-4 text-center">
+                        <div className="border-2 border-dashed border-accent-coral/30 bg-accent-coral/5 rounded-lg p-4">
                           <input
                             ref={fileInputRef}
                             type="file"
@@ -898,23 +1169,86 @@ You can type or record a voice note - whatever feels more natural.`,
                             onChange={handleImageUpload}
                             className="hidden"
                           />
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingImage}
-                            className="flex items-center justify-center gap-2 w-full text-sm text-claude-text-secondary hover:text-claude-text transition-colors"
-                          >
-                            {uploadingImage ? (
-                              <>
-                                <div className="animate-spin w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <ImageIcon />
-                                Add an image to your post
-                              </>
-                            )}
-                          </button>
+
+                          {showPhotoLibrary ? (
+                            <div>
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-medium text-claude-text">Your Photo Library</p>
+                                <button
+                                  onClick={() => setShowPhotoLibrary(false)}
+                                  className="text-xs text-claude-text-tertiary hover:text-claude-text"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+
+                              {libraryPhotos.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                                  {libraryPhotos.map((photo) => (
+                                    <button
+                                      key={photo.id}
+                                      onClick={() => handleSelectLibraryPhoto(photo)}
+                                      className="aspect-square rounded overflow-hidden border-2 border-transparent hover:border-accent-coral transition-colors"
+                                    >
+                                      <img
+                                        src={photo.imageUrl}
+                                        alt={photo.filename || "Photo"}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-claude-text-tertiary text-center py-4">
+                                  No photos in your library yet. Upload some from your dashboard.
+                                </p>
+                              )}
+
+                              <div className="mt-3 pt-3 border-t border-claude-border">
+                                <button
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="text-xs text-accent-coral hover:underline"
+                                >
+                                  Or upload a new photo
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              {uploadingImage ? (
+                                <div className="flex items-center justify-center gap-2 text-claude-text-secondary py-2">
+                                  <div className="animate-spin w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full" />
+                                  Uploading...
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="text-xs text-claude-text-secondary mb-2">
+                                    Posts with photos perform <span className="font-semibold text-accent-coral">2x better</span>
+                                  </p>
+                                  <div className="flex gap-2 justify-center">
+                                    {libraryPhotos.length > 0 && (
+                                      <button
+                                        onClick={() => setShowPhotoLibrary(true)}
+                                        className="px-3 py-1.5 text-xs font-medium text-accent-coral bg-white border border-accent-coral/30 rounded-claude hover:bg-accent-coral/5 transition-colors"
+                                      >
+                                        From Library ({libraryPhotos.length})
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="px-3 py-1.5 text-xs font-medium text-white bg-accent-coral rounded-claude hover:bg-accent-coral/90 transition-colors flex items-center gap-1"
+                                    >
+                                      <ImageIcon />
+                                      Upload Photo
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-claude-text-tertiary mt-2">
+                                    Raw, authentic photos work best
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -923,7 +1257,7 @@ You can type or record a voice note - whatever feels more natural.`,
 
                 {/* Actions */}
                 {!draftPost.isApproved && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {isEditingDraft ? (
                       <div className="flex gap-2">
                         <button onClick={handleSaveEdit} className="btn-primary flex-1 text-sm">
@@ -938,9 +1272,32 @@ You can type or record a voice note - whatever feels more natural.`,
                       </div>
                     ) : (
                       <>
+                        {/* Schedule date/time picker */}
+                        <div className="p-3 bg-claude-bg-secondary rounded-claude border border-claude-border">
+                          <p className="text-xs font-medium text-claude-text mb-2 flex items-center gap-1">
+                            <CalendarIcon />
+                            Schedule for
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              type="date"
+                              value={selectedScheduleDate}
+                              onChange={(e) => setSelectedScheduleDate(e.target.value)}
+                              min={new Date().toISOString().split("T")[0]}
+                              className="flex-1 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                            />
+                            <input
+                              type="time"
+                              value={selectedScheduleTime}
+                              onChange={(e) => setSelectedScheduleTime(e.target.value)}
+                              className="w-24 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                            />
+                          </div>
+                        </div>
+
                         <button
                           onClick={handleSchedulePost}
-                          disabled={isScheduling}
+                          disabled={isScheduling || !selectedScheduleDate || !selectedScheduleTime}
                           className="btn-primary w-full"
                         >
                           {isScheduling ? (
@@ -1032,6 +1389,121 @@ You can type or record a voice note - whatever feels more natural.`,
           scheduledPostCount={scheduledPostCount}
           onClose={() => setShowPaywall(false)}
         />
+      )}
+
+      {/* Magic Draft Modal */}
+      {showMagicDraftModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-claude-lg max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-claude-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500/20 to-accent-coral/20 flex items-center justify-center">
+                    <WandIcon />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-claude-text">Magic Draft</h2>
+                    <p className="text-sm text-claude-text-secondary">
+                      Generate a post from your library
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowMagicDraftModal(false)}
+                  className="p-2 text-claude-text-tertiary hover:text-claude-text rounded-claude hover:bg-claude-bg-secondary"
+                >
+                  <XIcon />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {libraryItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <BookOpenIcon />
+                  <p className="text-claude-text-secondary mt-2">No library items available</p>
+                  <p className="text-sm text-claude-text-tertiary mt-1">
+                    Add content to your library from the dashboard to use Magic Draft
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-claude-text-secondary mb-4">
+                    Select specific items to draw from, or leave unselected for a random mix:
+                  </p>
+                  <div className="space-y-2">
+                    {libraryItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => toggleLibraryItemSelection(item.id)}
+                        className={`w-full p-3 rounded-claude border text-left transition-all ${
+                          selectedLibraryItems.includes(item.id)
+                            ? "border-purple-500 bg-purple-500/5"
+                            : "border-claude-border hover:border-claude-border-hover"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              selectedLibraryItems.includes(item.id)
+                                ? "bg-purple-500 text-white"
+                                : "bg-claude-bg-tertiary text-claude-text-secondary"
+                            }`}
+                          >
+                            {getLibraryItemIcon(item.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-claude-text text-sm truncate">
+                              {item.title || item.fileName || item.sourceUrl || "Untitled"}
+                            </p>
+                            {item.extractedSummary && (
+                              <p className="text-xs text-claude-text-tertiary mt-1 line-clamp-2">
+                                {item.extractedSummary}
+                              </p>
+                            )}
+                            <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full bg-claude-bg-secondary text-claude-text-tertiary">
+                              {item.type}
+                            </span>
+                          </div>
+                          {selectedLibraryItems.includes(item.id) && (
+                            <CheckIcon />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-claude-border bg-claude-bg-secondary">
+              <button
+                onClick={handleGenerateMagicDraft}
+                disabled={generatingMagicDraft || libraryItems.length === 0}
+                className="btn-primary w-full"
+              >
+                {generatingMagicDraft ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <WandIcon />
+                    {selectedLibraryItems.length > 0
+                      ? `Generate from ${selectedLibraryItems.length} item${selectedLibraryItems.length > 1 ? "s" : ""}`
+                      : "Generate Random Draft"}
+                  </>
+                )}
+              </button>
+              {selectedLibraryItems.length === 0 && libraryItems.length > 0 && (
+                <p className="text-xs text-claude-text-tertiary text-center mt-2">
+                  Will randomly select from your {libraryItems.length} library items
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

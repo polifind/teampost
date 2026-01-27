@@ -150,10 +150,15 @@ If no clear preferences can be extracted, return: {"preferences": []}`;
       // If parsing fails, just continue without saving preferences
     }
 
-    // Save new preferences to database
+    // Save new preferences to database (WritingPreference for internal use)
+    // and GhostwriterGuideline for dashboard visibility
     if (extractedPreferences.length > 0) {
-      await Promise.all(
-        extractedPreferences.map((pref) =>
+      // Style-related categories that should be saved as guidelines
+      const styleCategories = ["style", "tone", "structure", "avoid"];
+
+      await Promise.all([
+        // Save to WritingPreference (internal learning)
+        ...extractedPreferences.map((pref) =>
           prisma.writingPreference.create({
             data: {
               userId: session.user.id,
@@ -164,8 +169,20 @@ If no clear preferences can be extracted, return: {"preferences": []}`;
               exampleAfter: newPostContent.substring(0, 500),
             },
           })
-        )
-      );
+        ),
+        // Save style-related preferences to GhostwriterGuideline (visible in dashboard)
+        ...extractedPreferences
+          .filter((pref) => styleCategories.includes(pref.category || "style"))
+          .map((pref) =>
+            prisma.ghostwriterGuideline.create({
+              data: {
+                userId: session.user.id,
+                content: pref.preference,
+                isActive: true,
+              },
+            })
+          ),
+      ]);
     }
 
     return NextResponse.json({
