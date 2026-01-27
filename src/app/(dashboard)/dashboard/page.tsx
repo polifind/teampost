@@ -1179,7 +1179,7 @@ export default function DashboardPage() {
               {/* Upload area and photos grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {/* Upload button/drop zone */}
-                <div
+                <label
                   onDragEnter={handlePhotoDrag}
                   onDragLeave={handlePhotoDrag}
                   onDragOver={handlePhotoDrag}
@@ -1190,24 +1190,22 @@ export default function DashboardPage() {
                       : "border-claude-border hover:border-claude-border-strong hover:bg-claude-bg-secondary"
                   }`}
                 >
-                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                    {photoUploading ? (
-                      <div className="animate-spin w-6 h-6 border-2 border-accent-coral border-t-transparent rounded-full" />
-                    ) : (
-                      <>
-                        <PlusIcon />
-                        <span className="text-xs text-claude-text-secondary mt-1">Add photos</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
+                  {photoUploading ? (
+                    <div className="animate-spin w-6 h-6 border-2 border-accent-coral border-t-transparent rounded-full" />
+                  ) : (
+                    <>
+                      <PlusIcon />
+                      <span className="text-xs text-claude-text-secondary mt-1">Add photos</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
+                    className="hidden"
+                  />
+                </label>
 
                 {/* Photos */}
                 {photosLoading ? (
