@@ -112,11 +112,59 @@ export default function OnboardingPage() {
     }
   }, [status, router]);
 
-  // Auto-stop recording when changing questions
+  // Load existing posts on mount to show completion state
+  useEffect(() => {
+    const loadExistingPosts = async () => {
+      if (status !== "authenticated") return;
+
+      try {
+        const response = await fetch("/api/posts");
+        if (response.ok) {
+          const data = await response.json();
+          const posts = data.posts || [];
+
+          // Convert existing posts to answers format
+          const existingAnswers: AnswerData[] = posts
+            .filter((post: { weekNumber: number; status: string }) =>
+              post.weekNumber >= 1 && post.weekNumber <= 5 &&
+              (post.status === "SCHEDULED" || post.status === "POSTED")
+            )
+            .map((post: { weekNumber: number; content: string }) => ({
+              questionIndex: post.weekNumber - 1,
+              content: "", // Original content not stored, but we have the generated post
+              isVoice: false,
+              generatedPost: post.content,
+            }));
+
+          if (existingAnswers.length > 0) {
+            setAnswers(existingAnswers);
+
+            // Find first unanswered question and navigate to it
+            const answeredIndices = new Set(existingAnswers.map((a: AnswerData) => a.questionIndex));
+            for (let i = 0; i < 5; i++) {
+              if (!answeredIndices.has(i)) {
+                setCurrentQuestion(i);
+                break;
+              }
+            }
+            // If all 5 are done, stay on question 0 (they can redo)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load existing posts:", error);
+      }
+    };
+
+    loadExistingPosts();
+  }, [status]);
+
+  // Auto-stop recording and reset when changing questions
   const handleQuestionChange = (newIndex: number) => {
     if (voiceRecorderRef.current?.isRecording) {
       voiceRecorderRef.current.stopRecording();
     }
+    // Reset the voice recorder for new question
+    voiceRecorderRef.current?.reset();
     setCurrentQuestion(newIndex);
     setTextInput('');
   };
@@ -244,11 +292,36 @@ export default function OnboardingPage() {
     setEditingPost(null);
   };
 
-  const handleApproveAndContinue = () => {
+  const handleApproveAndContinue = async () => {
+    // Save the post to the database
+    if (currentPreview) {
+      try {
+        const currentAnswer = answers.find(a => a.questionIndex === currentPreview.questionIndex);
+        const postContent = editingPost !== null ? editingPost : currentPreview.content;
+
+        await fetch("/api/posts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: postContent,
+            weekNumber: currentPreview.questionIndex + 1,
+            sourceNoteContent: currentAnswer?.content,
+            autoSchedule: true,
+          }),
+        });
+      } catch (error) {
+        console.error("Error saving post:", error);
+        // Continue anyway - the post is in local state
+      }
+    }
+
     setShowPostPreview(false);
     setCurrentPreview(null);
     setEditingPost(null);
     setTextInput('');
+
+    // Reset the voice recorder for the next question
+    voiceRecorderRef.current?.reset();
 
     // Check if this completes the batch
     const updatedAnswers = [...answers];
@@ -381,7 +454,7 @@ export default function OnboardingPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>AI is crafting your post...</span>
+                    <span>TeamPost is crafting your post...</span>
                   </div>
                 </div>
               ) : currentPreview ? (
@@ -633,7 +706,7 @@ export default function OnboardingPage() {
             }`}
           >
             <KeyboardIcon />
-            Type
+            Typing
           </button>
         </div>
 
