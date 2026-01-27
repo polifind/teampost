@@ -9,6 +9,15 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "im
 
 export async function POST(request: NextRequest) {
   try {
+    // Check for Blob token early
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error("BLOB_READ_WRITE_TOKEN is not configured");
+      return NextResponse.json(
+        { error: "Photo storage is not configured. Please contact support." },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
