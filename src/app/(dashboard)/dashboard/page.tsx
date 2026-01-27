@@ -1184,7 +1184,7 @@ export default function DashboardPage() {
                   onDragLeave={handlePhotoDrag}
                   onDragOver={handlePhotoDrag}
                   onDrop={handlePhotoDrop}
-                  className={`aspect-square border-2 border-dashed rounded-claude flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  className={`relative aspect-square border-2 border-dashed rounded-claude flex flex-col items-center justify-center cursor-pointer transition-colors ${
                     photoDragActive
                       ? "border-accent-coral bg-accent-coral/10"
                       : "border-claude-border hover:border-claude-border-strong hover:bg-claude-bg-secondary"
@@ -1203,7 +1203,7 @@ export default function DashboardPage() {
                     accept="image/*"
                     multiple
                     onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
-                    className="hidden"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                 </label>
 
