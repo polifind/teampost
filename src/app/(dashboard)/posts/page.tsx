@@ -104,6 +104,12 @@ const LinkedInIcon = () => (
   </svg>
 );
 
+const SendIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+  </svg>
+);
+
 export default function PostsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -129,6 +135,7 @@ export default function PostsPage() {
   const [updatingImage, setUpdatingImage] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoDragActive, setPhotoDragActive] = useState(false);
+  const [postingNow, setPostingNow] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -173,6 +180,40 @@ export default function PostsPage() {
   const handleEdit = (post: Post) => {
     setEditingPost(post.id);
     setEditContent(post.content);
+  };
+
+  const handlePostNow = async (postId: string) => {
+    if (!confirm("Post this to LinkedIn right now?")) return;
+
+    setPostingNow(postId);
+    try {
+      const response = await fetch("/api/posts/post-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update the post status in the UI
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? { ...p, status: "POSTED" as const, schedule: p.schedule ? { ...p.schedule, status: "COMPLETED" as const } : null }
+              : p
+          )
+        );
+        alert("Posted to LinkedIn successfully!");
+      } else {
+        alert(`Failed to post: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to post:", error);
+      alert("Failed to post to LinkedIn. Please try again.");
+    } finally {
+      setPostingNow(null);
+    }
   };
 
   const handleSaveEdit = async (postId: string) => {
@@ -676,6 +717,18 @@ export default function PostsPage() {
                     {post.status === "SCHEDULED" && post.schedule && (
                       <>
                         <button
+                          onClick={() => handlePostNow(post.id)}
+                          disabled={postingNow === post.id}
+                          className="p-2 rounded-claude text-white bg-accent-coral hover:bg-accent-coral/90 transition-colors disabled:opacity-50"
+                          title="Post to LinkedIn now"
+                        >
+                          {postingNow === post.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <SendIcon />
+                          )}
+                        </button>
+                        <button
                           onClick={() => handleEditSchedule(post)}
                           className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary hover:text-accent-coral transition-colors"
                           title="Edit scheduled time"
@@ -751,13 +804,13 @@ export default function PostsPage() {
                         value={newScheduledDate}
                         onChange={(e) => setNewScheduledDate(e.target.value)}
                         min={new Date().toISOString().split("T")[0]}
-                        className="input text-sm py-2"
+                        className="px-4 py-2 bg-white border border-claude-border rounded-claude text-claude-text text-sm focus:border-accent-coral focus:ring-1 focus:ring-accent-coral transition-colors duration-150"
                       />
                       <input
                         type="time"
                         value={newScheduledTime}
                         onChange={(e) => setNewScheduledTime(e.target.value)}
-                        className="input text-sm py-2"
+                        className="min-w-[140px] px-4 py-2 bg-white border border-claude-border rounded-claude text-claude-text text-sm focus:border-accent-coral focus:ring-1 focus:ring-accent-coral transition-colors duration-150"
                       />
                       <div className="flex gap-2">
                         <button

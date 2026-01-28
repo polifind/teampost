@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
       select: {
         name: true,
         email: true,
+        timezone: true,
         linkedinAccessToken: true,
         linkedinUserId: true,
         organizationMemberships: {
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       name: user.name,
       email: user.email,
+      timezone: user.timezone,
       linkedInConnected: !!user.linkedinAccessToken,
       linkedInUserId: user.linkedinUserId,
       organizations,
@@ -68,11 +70,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name } = body;
+    const { name, timezone } = body;
+
+    const updateData: { name?: string; timezone?: string } = {};
+    if (name !== undefined) updateData.name = name;
+    if (timezone !== undefined) updateData.timezone = timezone;
 
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { name },
+      data: updateData,
     });
 
     return NextResponse.json({ message: "Settings updated successfully" });

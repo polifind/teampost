@@ -51,6 +51,9 @@ model User {
   // Onboarding status
   onboardingCompleted Boolean @default(false)
 
+  // User timezone for scheduling (IANA timezone identifier)
+  timezone String @default("America/New_York")
+
   // LinkedIn Profile Context (extracted from screenshots)
   linkedinProfileContext String? // AI-extracted summary of their professional background
 
@@ -76,6 +79,7 @@ model User {
   invitesSent            OrganizationMember[] @relation("InvitedMembers")
   ghostwriterGuidelines  GhostwriterGuideline[]
   lifeLibraryItems       LifeLibraryItem[]
+  linkedinContacts       LinkedInContact[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -134,6 +138,9 @@ model Post {
   // Bulk draft tracking (for bulk variations requiring approval)
   bulkDraftGroupId String?
   bulkDraftStatus  BulkDraftStatus?
+
+  // LinkedIn tagging - stores JSON array of contact IDs
+  taggedContactIds String?  // JSON array of LinkedInContact IDs
 
   schedule Schedule?
 
@@ -429,4 +436,39 @@ enum ProcessingStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+// LinkedIn contacts for tagging in posts
+model LinkedInContact {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Contact type
+  type      LinkedInContactType
+
+  // LinkedIn identifiers
+  linkedinUrl     String    // The LinkedIn profile/company URL
+  linkedinUrn     String?   // The URN (urn:li:person:xxx or urn:li:organization:xxx)
+
+  // Display info
+  name            String    // Person's name or company name
+  headline        String?   // Job title or company tagline
+  profileImageUrl String?   // Profile picture URL
+
+  // Usage tracking
+  usageCount    Int @default(0)
+  lastUsedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, linkedinUrl])
+  @@index([userId])
+  @@index([type])
+}
+
+enum LinkedInContactType {
+  PERSON
+  COMPANY
 }

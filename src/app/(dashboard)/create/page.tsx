@@ -7,6 +7,7 @@ import Link from "next/link";
 import ContentInput from "@/components/ContentInput";
 import Logo from "@/components/Logo";
 import SubscriptionPaywall from "@/components/SubscriptionPaywall";
+import LinkedInTagPicker from "@/components/LinkedInTagPicker";
 
 interface Message {
   id: string;
@@ -45,6 +46,17 @@ interface LibraryItem {
   processingStatus: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 }
 
+interface LinkedInContact {
+  id: string;
+  type: "PERSON" | "COMPANY";
+  linkedinUrl: string;
+  linkedinUrn: string | null;
+  name: string;
+  headline: string | null;
+  profileImageUrl: string | null;
+  usageCount: number;
+}
+
 const SparklesIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
@@ -60,6 +72,12 @@ const CheckIcon = () => (
 const RefreshIcon = () => (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+  </svg>
+);
+
+const UndoIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
   </svg>
 );
 
@@ -294,6 +312,7 @@ export default function CreatePostPage() {
   // Photo library state
   const [libraryPhotos, setLibraryPhotos] = useState<LibraryPhoto[]>([]);
   const [showPhotoLibrary, setShowPhotoLibrary] = useState(false);
+  const [photoDragActive, setPhotoDragActive] = useState(false);
 
   // Magic Draft state
   const [magicDraftAvailable, setMagicDraftAvailable] = useState(false);
@@ -302,6 +321,15 @@ export default function CreatePostPage() {
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [selectedLibraryItems, setSelectedLibraryItems] = useState<string[]>([]);
   const [generatingMagicDraft, setGeneratingMagicDraft] = useState(false);
+
+  // Undo/revert state
+  const [previousDraftContent, setPreviousDraftContent] = useState<string | null>(null);
+
+  // LinkedIn tagging state
+  const [selectedTags, setSelectedTags] = useState<LinkedInContact[]>([]);
+
+  // Timezone state
+  const [userTimezone, setUserTimezone] = useState<string>("America/New_York");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -319,8 +347,43 @@ export default function CreatePostPage() {
       fetchSavedConversations();
       fetchLibraryPhotos();
       checkMagicDraftAvailability();
+      fetchUserTimezone();
     }
   }, [session]);
+
+  const fetchUserTimezone = async () => {
+    try {
+      const response = await fetch("/api/user/settings");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.timezone) {
+          setUserTimezone(data.timezone);
+        } else {
+          // Auto-detect from browser if not set
+          const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          setUserTimezone(browserTimezone);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch user timezone:", error);
+      // Fallback to browser timezone
+      const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setUserTimezone(browserTimezone);
+    }
+  };
+
+  const handleTimezoneChange = async (newTimezone: string) => {
+    setUserTimezone(newTimezone);
+    try {
+      await fetch("/api/user/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timezone: newTimezone }),
+      });
+    } catch (error) {
+      console.error("Failed to save timezone:", error);
+    }
+  };
 
   const checkMagicDraftAvailability = async () => {
     try {
@@ -546,6 +609,8 @@ export default function CreatePostPage() {
 
         setShowScheduleSuccess(false);
         setScheduledTime(null);
+        setPreviousDraftContent(null);
+        setSelectedTags([]);
       }
     } catch (error) {
       console.error("Failed to load conversation:", error);
@@ -654,6 +719,9 @@ You can type or record a voice note - whatever feels more natural.`,
   const handleRegenerateDraft = async () => {
     if (!draftPost) return;
 
+    // Save current content before regenerating for undo functionality
+    setPreviousDraftContent(draftPost.content);
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/conversation/regenerate", {
@@ -680,12 +748,37 @@ You can type or record a voice note - whatever feels more natural.`,
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, message]);
+      } else {
+        // Clear previous version if regeneration failed
+        setPreviousDraftContent(null);
       }
     } catch (error) {
       console.error("Error regenerating:", error);
+      // Clear previous version if regeneration failed
+      setPreviousDraftContent(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRevertToPrevious = () => {
+    if (!previousDraftContent || !draftPost) return;
+
+    setDraftPost({
+      ...draftPost,
+      content: previousDraftContent,
+    });
+
+    // Clear the previous version after reverting
+    setPreviousDraftContent(null);
+
+    const message: Message = {
+      id: Date.now().toString(),
+      role: "assistant",
+      content: "I've restored the previous version of your draft.",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, message]);
   };
 
   const handleSaveEdit = () => {
@@ -770,6 +863,74 @@ You can type or record a voice note - whatever feels more natural.`,
     }
   };
 
+  const uploadPhotoFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file (JPEG, PNG, GIF, or WebP)");
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      alert("Image is too large. Maximum size is 10MB.");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to upload image");
+      }
+
+      if (!result.imageUrl) {
+        throw new Error("No image URL returned from upload");
+      }
+
+      if (draftPost) {
+        setDraftPost({
+          ...draftPost,
+          imageUrl: result.imageUrl,
+        });
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      const message = error instanceof Error ? error.message : "Failed to upload image";
+      alert(`Upload failed: ${message}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handlePhotoDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setPhotoDragActive(true);
+    } else if (e.type === "dragleave") {
+      setPhotoDragActive(false);
+    }
+  };
+
+  const handlePhotoDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPhotoDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await uploadPhotoFile(e.dataTransfer.files[0]);
+    }
+  };
+
   const handleSchedulePost = async () => {
     if (!draftPost || !selectedScheduleDate || !selectedScheduleTime) return;
 
@@ -785,6 +946,7 @@ You can type or record a voice note - whatever feels more natural.`,
             role: m.role,
             content: m.content,
           })),
+          taggedContacts: selectedTags.map((t) => t.id),
         }),
       });
 
@@ -859,6 +1021,8 @@ You can type or record a voice note - whatever feels more natural.`,
     setShowScheduleSuccess(false);
     setScheduledTime(null);
     setConversationId(null);
+    setPreviousDraftContent(null);
+    setSelectedTags([]);
   };
 
   if (status === "loading") {
@@ -1141,6 +1305,17 @@ You can type or record a voice note - whatever feels more natural.`,
                     </div>
                   )}
 
+                  {/* LinkedIn tagging section */}
+                  {!isEditingDraft && !draftPost.isApproved && (
+                    <div className="mt-4 pt-4 border-t border-claude-border">
+                      <LinkedInTagPicker
+                        selectedTags={selectedTags}
+                        onTagsChange={setSelectedTags}
+                        disabled={draftPost.isApproved}
+                      />
+                    </div>
+                  )}
+
                   {/* Image preview/upload section */}
                   {!isEditingDraft && (
                     <div className="mt-4">
@@ -1161,7 +1336,17 @@ You can type or record a voice note - whatever feels more natural.`,
                           )}
                         </div>
                       ) : !draftPost.isApproved && (
-                        <div className="border-2 border-dashed border-accent-coral/30 bg-accent-coral/5 rounded-lg p-4">
+                        <div
+                          onDragEnter={handlePhotoDrag}
+                          onDragLeave={handlePhotoDrag}
+                          onDragOver={handlePhotoDrag}
+                          onDrop={handlePhotoDrop}
+                          className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
+                            photoDragActive
+                              ? "border-accent-coral bg-accent-coral/10"
+                              : "border-accent-coral/30 bg-accent-coral/5"
+                          }`}
+                        >
                           <input
                             ref={fileInputRef}
                             type="file"
@@ -1170,7 +1355,11 @@ You can type or record a voice note - whatever feels more natural.`,
                             className="hidden"
                           />
 
-                          {showPhotoLibrary ? (
+                          {photoDragActive ? (
+                            <div className="flex items-center justify-center py-4">
+                              <p className="text-accent-coral font-medium">Drop your photo here</p>
+                            </div>
+                          ) : showPhotoLibrary ? (
                             <div>
                               <div className="flex items-center justify-between mb-3">
                                 <p className="text-sm font-medium text-claude-text">Your Photo Library</p>
@@ -1243,7 +1432,7 @@ You can type or record a voice note - whatever feels more natural.`,
                                     </button>
                                   </div>
                                   <p className="text-xs text-claude-text-tertiary mt-2">
-                                    Raw, authentic photos work best
+                                    Raw, authentic photos work best. You can also drag & drop.
                                   </p>
                                 </>
                               )}
@@ -1290,7 +1479,7 @@ You can type or record a voice note - whatever feels more natural.`,
                               type="time"
                               value={selectedScheduleTime}
                               onChange={(e) => setSelectedScheduleTime(e.target.value)}
-                              className="w-24 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                              className="min-w-[120px] px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
                             />
                           </div>
                         </div>
@@ -1333,6 +1522,17 @@ You can type or record a voice note - whatever feels more natural.`,
                             New Version
                           </button>
                         </div>
+
+                        {/* Undo button - shows after regeneration */}
+                        {previousDraftContent && (
+                          <button
+                            onClick={handleRevertToPrevious}
+                            className="w-full text-sm px-4 py-2.5 rounded-claude font-medium transition-colors flex items-center justify-center gap-2 bg-accent-coral/10 text-accent-coral border border-accent-coral/20 hover:bg-accent-coral/20"
+                          >
+                            <UndoIcon />
+                            Undo - Restore Previous Version
+                          </button>
+                        )}
                       </>
                     )}
                   </div>

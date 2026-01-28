@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const { content, imageUrl } = await request.json();
+    const { content, imageUrl, taggedContacts } = await request.json();
 
     if (!content) {
       return NextResponse.json(
@@ -33,11 +33,17 @@ export async function POST(request: NextRequest) {
       where: { userId: user.id },
     });
 
+    // Store tagged contact IDs as JSON if provided
+    const taggedContactIds = taggedContacts && taggedContacts.length > 0
+      ? JSON.stringify(taggedContacts)
+      : null;
+
     const post = await prisma.post.create({
       data: {
         userId: user.id,
         content,
         imageUrl,
+        taggedContactIds,
         weekNumber: existingPosts + 1,
         status: "DRAFT",
       },

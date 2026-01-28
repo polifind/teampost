@@ -1085,7 +1085,7 @@ export default function OrganizationDetailPage() {
                         type="time"
                         value={postScheduleTime}
                         onChange={(e) => setPostScheduleTime(e.target.value)}
-                        className="w-24 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                        className="min-w-[120px] px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
                       />
                     </div>
                   </div>
@@ -1326,7 +1326,7 @@ export default function OrganizationDetailPage() {
                     type="time"
                     value={bulkScheduleTime}
                     onChange={(e) => setBulkScheduleTime(e.target.value)}
-                    className="w-24 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                    className="min-w-[120px] px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
                   />
                 </div>
               </div>

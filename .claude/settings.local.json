@@ -35,7 +35,9 @@
       "Bash(npx vercel:*)",
       "Bash(git revert:*)",
       "Bash(npm ls:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx next lint:*)",
+      "Bash(npm run lint:*)"
     ]
   }
 }

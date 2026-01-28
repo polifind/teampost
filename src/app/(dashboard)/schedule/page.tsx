@@ -477,7 +477,7 @@ export default function SchedulePage() {
                             type="time"
                             value={editTime}
                             onChange={(e) => setEditTime(e.target.value)}
-                            className="input"
+                            className="w-full min-w-[140px] px-4 py-2.5 bg-white border border-claude-border rounded-claude text-claude-text focus:border-accent-coral focus:ring-1 focus:ring-accent-coral transition-colors duration-150"
                           />
                         </div>
                       </div>
