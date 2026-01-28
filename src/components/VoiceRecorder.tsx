@@ -9,6 +9,7 @@ interface VoiceRecorderProps {
 
 export interface VoiceRecorderRef {
   stopRecording: () => void;
+  reset: () => void;
   isRecording: boolean;
 }
 
@@ -82,9 +83,22 @@ const VoiceRecorder = forwardRef<VoiceRecorderRef, VoiceRecorderProps>(
       }
     };
 
+    const reset = () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      setAudioBlob(null);
+      setAudioUrl(null);
+      setDuration(0);
+      setIsPlaying(false);
+      setIsRecording(false);
+      setVisualizerData(new Array(30).fill(8));
+    };
+
     // Expose methods to parent
     useImperativeHandle(ref, () => ({
       stopRecording,
+      reset,
       isRecording,
     }));
 
@@ -253,7 +267,7 @@ const VoiceRecorder = forwardRef<VoiceRecorderRef, VoiceRecorderProps>(
                 disabled={disabled}
                 className="px-6 py-3 rounded-claude bg-accent-coral text-white font-medium hover:bg-accent-coral-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Post
+                Create Draft
               </button>
             </>
           )}
@@ -274,7 +288,7 @@ const VoiceRecorder = forwardRef<VoiceRecorderRef, VoiceRecorderProps>(
           {isRecording
             ? "Click the stop button when you're done speaking"
             : audioBlob
-            ? "Listen to your recording, then click 'Create Post' to generate a LinkedIn post"
+            ? "Listen to your recording, then click 'Create Draft' to generate a draft (won't post yet)"
             : "Click the microphone to start recording your answer"}
         </p>
       </div>

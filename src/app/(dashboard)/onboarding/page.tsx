@@ -169,6 +169,20 @@ export default function OnboardingPage() {
     setTextInput('');
   };
 
+  // Skip current question and move to next
+  const handleSkip = () => {
+    if (voiceRecorderRef.current?.isRecording) {
+      voiceRecorderRef.current.stopRecording();
+    }
+    voiceRecorderRef.current?.reset();
+    setTextInput('');
+
+    // Move to next question if not at end
+    if (currentQuestion < batchEnd - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
   // Handle voice recording completion
   const handleRecordingComplete = async (audioBlob: Blob, duration: number) => {
     setIsProcessing(true);
@@ -555,52 +569,57 @@ export default function OnboardingPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          if (editingPost !== null) {
-                            handleSavePost();
-                          } else {
-                            setEditingPost(currentPreview.content);
-                          }
-                        }}
-                        className="btn-ghost text-sm"
-                      >
-                        <EditIcon />
-                        {editingPost !== null ? "Save Changes" : "Edit Post"}
-                      </button>
-
-                      {!showFeedbackInput && editingPost === null && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setShowFeedbackInput(true)}
+                          onClick={() => {
+                            if (editingPost !== null) {
+                              handleSavePost();
+                            } else {
+                              setEditingPost(currentPreview.content);
+                            }
+                          }}
                           className="btn-ghost text-sm"
                         >
-                          <ChatBubbleIcon />
-                          Feedback & Regenerate
+                          <EditIcon />
+                          {editingPost !== null ? "Save Changes" : "Edit Post"}
                         </button>
-                      )}
-                    </div>
 
-                    <div className="flex gap-3">
-                      {currentQuestion === batchEnd - 1 && completedInBatch >= BATCH_SIZE - 1 ? (
-                        <button
-                          onClick={handleFinishAndReview}
-                          className="btn-primary"
-                        >
-                          <SparklesIcon />
-                          Review Posts
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleApproveAndContinue}
-                          className="btn-primary"
-                        >
-                          <CheckIcon />
-                          Approve & Continue
-                        </button>
-                      )}
+                        {!showFeedbackInput && editingPost === null && (
+                          <button
+                            onClick={() => setShowFeedbackInput(true)}
+                            className="btn-ghost text-sm"
+                          >
+                            <ChatBubbleIcon />
+                            Feedback & Regenerate
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        {currentQuestion === batchEnd - 1 && completedInBatch >= BATCH_SIZE - 1 ? (
+                          <button
+                            onClick={handleFinishAndReview}
+                            className="btn-primary"
+                          >
+                            <SparklesIcon />
+                            Review Posts
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleApproveAndContinue}
+                            className="btn-primary"
+                          >
+                            <CheckIcon />
+                            Save to Schedule
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    <p className="text-xs text-claude-text-tertiary text-center">
+                      This saves your draft to Scheduled Posts. Nothing will be posted until you review and publish.
+                    </p>
                   </div>
                 </>
               ) : (
@@ -757,7 +776,7 @@ export default function OnboardingPage() {
                 ) : (
                   <>
                     <SparklesIcon />
-                    Generate Post
+                    Create Draft
                   </>
                 )}
               </button>
@@ -777,11 +796,11 @@ export default function OnboardingPage() {
           </button>
 
           <button
-            onClick={() => handleQuestionChange(Math.min(batchEnd - 1, currentQuestion + 1))}
+            onClick={handleSkip}
             disabled={currentQuestion === batchEnd - 1}
-            className="btn-ghost disabled:opacity-30"
+            className="btn-ghost text-claude-text-tertiary disabled:opacity-30"
           >
-            Next
+            Skip
             <ArrowRightIcon />
           </button>
         </div>
