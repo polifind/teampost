@@ -23,26 +23,6 @@ interface Photo {
   createdAt: string;
 }
 
-interface Guideline {
-  id: string;
-  content: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-interface LibraryItem {
-  id: string;
-  type: "LINK" | "YOUTUBE" | "PDF" | "DOCX";
-  sourceUrl: string | null;
-  fileName: string | null;
-  title: string | null;
-  extractedSummary: string | null;
-  processingStatus: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  processingError: string | null;
-  usageCount: number;
-  createdAt: string;
-}
-
 // Icons
 const MicIcon = () => (
   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -122,69 +102,17 @@ const TrashIcon = () => (
   </svg>
 );
 
-const PencilIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-  </svg>
-);
-
-const BookOpenIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-  </svg>
-);
-
-const VideoIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-  </svg>
-);
-
-const FileIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-  </svg>
-);
-
 const SparklesIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
   </svg>
 );
 
-type PersonalizationTab = "guidelines" | "library" | "photos";
-
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Personalization section state
-  const [activeTab, setActiveTab] = useState<PersonalizationTab>("guidelines");
-
-  // Guidelines state
-  const [guidelines, setGuidelines] = useState<Guideline[]>([]);
-  const [guidelinesLoading, setGuidelinesLoading] = useState(true);
-  const [newGuideline, setNewGuideline] = useState("");
-  const [addingGuideline, setAddingGuideline] = useState(false);
-  const [editingGuidelineId, setEditingGuidelineId] = useState<string | null>(null);
-  const [editingGuidelineContent, setEditingGuidelineContent] = useState("");
-
-  // Library state
-  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
-  const [libraryLoading, setLibraryLoading] = useState(true);
-  const [urlInput, setUrlInput] = useState("");
-  const [addingUrl, setAddingUrl] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [libraryDragActive, setLibraryDragActive] = useState(false);
 
   // Photo library state
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -225,48 +153,6 @@ export default function DashboardPage() {
     }
   }, [session]);
 
-  // Fetch guidelines
-  useEffect(() => {
-    const fetchGuidelines = async () => {
-      try {
-        const response = await fetch("/api/personalization/guidelines");
-        if (response.ok) {
-          const result = await response.json();
-          setGuidelines(result.guidelines || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch guidelines:", error);
-      } finally {
-        setGuidelinesLoading(false);
-      }
-    };
-
-    if (session?.user) {
-      fetchGuidelines();
-    }
-  }, [session]);
-
-  // Fetch library items
-  useEffect(() => {
-    const fetchLibrary = async () => {
-      try {
-        const response = await fetch("/api/personalization/library");
-        if (response.ok) {
-          const result = await response.json();
-          setLibraryItems(result.items || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch library:", error);
-      } finally {
-        setLibraryLoading(false);
-      }
-    };
-
-    if (session?.user) {
-      fetchLibrary();
-    }
-  }, [session]);
-
   // Fetch photos
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -297,142 +183,6 @@ export default function DashboardPage() {
   }
 
   const firstName = session?.user?.name?.split(" ")[0] || "there";
-
-  // Guidelines handlers
-  const handleAddGuideline = async () => {
-    if (!newGuideline.trim()) return;
-    setAddingGuideline(true);
-    try {
-      const response = await fetch("/api/personalization/guidelines", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: newGuideline.trim() }),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setGuidelines((prev) => [result.guideline, ...prev]);
-        setNewGuideline("");
-      }
-    } catch (error) {
-      console.error("Failed to add guideline:", error);
-    } finally {
-      setAddingGuideline(false);
-    }
-  };
-
-  const handleUpdateGuideline = async (id: string) => {
-    if (!editingGuidelineContent.trim()) return;
-    try {
-      const response = await fetch("/api/personalization/guidelines", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, content: editingGuidelineContent.trim() }),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setGuidelines((prev) =>
-          prev.map((g) => (g.id === id ? result.guideline : g))
-        );
-        setEditingGuidelineId(null);
-        setEditingGuidelineContent("");
-      }
-    } catch (error) {
-      console.error("Failed to update guideline:", error);
-    }
-  };
-
-  const handleDeleteGuideline = async (id: string) => {
-    try {
-      const response = await fetch("/api/personalization/guidelines", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (response.ok) {
-        setGuidelines((prev) => prev.filter((g) => g.id !== id));
-      }
-    } catch (error) {
-      console.error("Failed to delete guideline:", error);
-    }
-  };
-
-  // Library handlers
-  const handleAddUrl = async () => {
-    if (!urlInput.trim()) return;
-    setAddingUrl(true);
-    try {
-      const response = await fetch("/api/personalization/library", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: urlInput.trim() }),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setLibraryItems((prev) => [result.item, ...prev]);
-        setUrlInput("");
-      }
-    } catch (error) {
-      console.error("Failed to add URL:", error);
-    } finally {
-      setAddingUrl(false);
-    }
-  };
-
-  const handleLibraryFileUpload = async (files: FileList) => {
-    setUploadingFile(true);
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const response = await fetch("/api/personalization/library", {
-          method: "POST",
-          body: formData,
-        });
-        if (response.ok) {
-          const result = await response.json();
-          setLibraryItems((prev) => [result.item, ...prev]);
-        }
-      } catch (error) {
-        console.error("Failed to upload file:", error);
-      }
-    }
-    setUploadingFile(false);
-  };
-
-  const handleDeleteLibraryItem = async (id: string) => {
-    try {
-      const response = await fetch("/api/personalization/library", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (response.ok) {
-        setLibraryItems((prev) => prev.filter((item) => item.id !== id));
-      }
-    } catch (error) {
-      console.error("Failed to delete library item:", error);
-    }
-  };
-
-  const handleLibraryDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setLibraryDragActive(true);
-    } else if (e.type === "dragleave") {
-      setLibraryDragActive(false);
-    }
-  };
-
-  const handleLibraryDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLibraryDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleLibraryFileUpload(e.dataTransfer.files);
-    }
-  };
 
   // Photo handlers
   const handlePhotoUpload = async (files: FileList) => {
@@ -595,27 +345,6 @@ export default function DashboardPage() {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       handleFileUpload(e.target.files[0]);
-    }
-  };
-
-  const getLibraryTypeIcon = (type: string) => {
-    switch (type) {
-      case "YOUTUBE": return <VideoIcon />;
-      case "PDF": case "DOCX": return <FileIcon />;
-      default: return <LinkIcon />;
-    }
-  };
-
-  const getProcessingBadge = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return <span className="px-2 py-0.5 bg-success/10 text-success text-xs rounded-full">Ready</span>;
-      case "PROCESSING":
-        return <span className="px-2 py-0.5 bg-warning/10 text-warning text-xs rounded-full animate-pulse">Processing...</span>;
-      case "FAILED":
-        return <span className="px-2 py-0.5 bg-error/10 text-error text-xs rounded-full">Failed</span>;
-      default:
-        return <span className="px-2 py-0.5 bg-claude-bg-tertiary text-claude-text-tertiary text-xs rounded-full">Pending</span>;
     }
   };
 
@@ -861,385 +590,108 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Unified Personalization Section */}
-        <div className="card p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center">
+        {/* Simplified Personalization Section */}
+        <div className="card p-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center flex-shrink-0">
               <SparklesIcon />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-claude-text">Personalize Your Ghostwriter</h2>
-              <p className="text-sm text-claude-text-secondary">Make your AI writer truly understand your voice</p>
+            {!data?.hasLinkedInProfile ? (
+              // Show LinkedIn upload prompt for new users
+              <>
+                <div className="flex-1">
+                  <p className="font-medium text-claude-text">Personalize your ghostwriter</p>
+                  <p className="text-sm text-claude-text-secondary">Upload your LinkedIn profile to help your ghostwriter understand your voice</p>
+                </div>
+                <button onClick={() => setShowUploadModal(true)} className="btn-primary text-sm">
+                  <UploadIcon /> Upload Profile
+                </button>
+              </>
+            ) : (
+              // Show simple settings link for users who have already personalized
+              <>
+                <div className="flex-1">
+                  <p className="font-medium text-claude-text">Your ghostwriter is personalized</p>
+                  <p className="text-sm text-claude-text-secondary">Manage guidelines and content library</p>
+                </div>
+                <Link href="/settings#personalization" className="btn-secondary text-sm flex items-center gap-1">
+                  Settings
+                  <ArrowRightIcon />
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Separate Photos Section */}
+        <div className="card p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center">
+              <PhotoIcon />
             </div>
-            {data?.hasLinkedInProfile && (
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="ml-auto text-sm text-[#0077B5] hover:underline flex items-center gap-1"
-              >
-                <UserCircleIcon />
-                Update LinkedIn Profile
-              </button>
+            <div>
+              <h2 className="font-semibold text-claude-text">Your Photos</h2>
+              <p className="text-sm text-claude-text-secondary">Posts with photos perform <span className="font-medium text-accent-coral">2x better</span></p>
+            </div>
+          </div>
+
+          {/* Photo grid */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            {/* Upload button */}
+            <label
+              onDragEnter={handlePhotoDrag}
+              onDragLeave={handlePhotoDrag}
+              onDragOver={handlePhotoDrag}
+              onDrop={handlePhotoDrop}
+              className={`relative aspect-square border-2 border-dashed rounded-claude flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                photoDragActive
+                  ? "border-accent-coral bg-accent-coral/10"
+                  : "border-claude-border hover:border-claude-border-strong hover:bg-claude-bg-secondary"
+              }`}
+            >
+              {photoUploading ? (
+                <div className="animate-spin w-5 h-5 border-2 border-accent-coral border-t-transparent rounded-full" />
+              ) : (
+                <>
+                  <PlusIcon />
+                  <span className="text-xs text-claude-text-secondary mt-1">Add</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </label>
+
+            {/* Photos */}
+            {photosLoading ? (
+              <div className="aspect-square bg-claude-bg-secondary rounded-claude animate-pulse" />
+            ) : (
+              photos.map((photo) => (
+                <div key={photo.id} className="relative group aspect-square">
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.filename || "Photo"}
+                    className="w-full h-full object-cover rounded-claude"
+                  />
+                  <button
+                    onClick={() => handlePhotoDelete(photo.id)}
+                    className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              ))
             )}
           </div>
 
-          {/* LinkedIn Profile Upload Card - shown if no profile context yet */}
-          {!data?.hasLinkedInProfile && (
-            <div className="p-4 mb-6 border border-[#0077B5]/30 bg-[#0077B5]/5 rounded-claude">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#0077B5]/10 text-[#0077B5] flex items-center justify-center flex-shrink-0">
-                  <UserCircleIcon />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-claude-text">Upload your LinkedIn profile</p>
-                  <p className="text-xs text-claude-text-secondary">Help your ghostwriter understand your professional background</p>
-                </div>
-                <button onClick={() => setShowUploadModal(true)} className="btn-secondary text-sm">
-                  <UploadIcon /> Upload
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 border-b border-claude-border">
-            <button
-              onClick={() => setActiveTab("guidelines")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                activeTab === "guidelines"
-                  ? "border-accent-coral text-accent-coral"
-                  : "border-transparent text-claude-text-secondary hover:text-claude-text"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <PencilIcon /> Guidelines
-                {guidelines.length > 0 && (
-                  <span className="px-1.5 py-0.5 bg-accent-coral/10 text-accent-coral text-xs rounded-full">
-                    {guidelines.length}
-                  </span>
-                )}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("library")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                activeTab === "library"
-                  ? "border-accent-coral text-accent-coral"
-                  : "border-transparent text-claude-text-secondary hover:text-claude-text"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <BookOpenIcon /> My Library
-                {libraryItems.length > 0 && (
-                  <span className="px-1.5 py-0.5 bg-accent-coral/10 text-accent-coral text-xs rounded-full">
-                    {libraryItems.length}
-                  </span>
-                )}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("photos")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                activeTab === "photos"
-                  ? "border-accent-coral text-accent-coral"
-                  : "border-transparent text-claude-text-secondary hover:text-claude-text"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <PhotoIcon /> Photos
-                {photos.length > 0 && (
-                  <span className="px-1.5 py-0.5 bg-accent-coral/10 text-accent-coral text-xs rounded-full">
-                    {photos.length}
-                  </span>
-                )}
-              </span>
-            </button>
-          </div>
-
-          {/* Guidelines Tab Content */}
-          {activeTab === "guidelines" && (
-            <div>
-              <p className="text-sm text-claude-text-secondary mb-4">
-                Running notes that apply to <strong>every</strong> post your ghostwriter creates. These guidelines are always in context.
-              </p>
-
-              {/* Add new guideline */}
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={newGuideline}
-                  onChange={(e) => setNewGuideline(e.target.value)}
-                  placeholder="e.g., Always mention I'm a founder at Acme Corp"
-                  className="input flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddGuideline()}
-                />
-                <button
-                  onClick={handleAddGuideline}
-                  disabled={addingGuideline || !newGuideline.trim()}
-                  className="btn-primary"
-                >
-                  {addingGuideline ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <PlusIcon />
-                  )}
-                  Add
-                </button>
-              </div>
-
-              {/* Guidelines list */}
-              {guidelinesLoading ? (
-                <div className="py-8 text-center text-claude-text-tertiary">Loading...</div>
-              ) : guidelines.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-claude-text-tertiary mb-2">No guidelines yet</p>
-                  <p className="text-xs text-claude-text-tertiary">
-                    Add guidelines like &quot;Don&apos;t use corporate jargon&quot; or &quot;Always include a personal story&quot;
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {guidelines.map((guideline) => (
-                    <div key={guideline.id} className="flex items-start gap-3 p-3 bg-claude-bg-secondary rounded-claude group">
-                      {editingGuidelineId === guideline.id ? (
-                        <>
-                          <input
-                            type="text"
-                            value={editingGuidelineContent}
-                            onChange={(e) => setEditingGuidelineContent(e.target.value)}
-                            className="input flex-1 text-sm"
-                            autoFocus
-                          />
-                          <button onClick={() => handleUpdateGuideline(guideline.id)} className="btn-primary text-xs px-2 py-1">
-                            Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingGuidelineId(null);
-                              setEditingGuidelineContent("");
-                            }}
-                            className="btn-ghost text-xs px-2 py-1"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex-1">
-                            <p className="text-sm text-claude-text">{guideline.content}</p>
-                          </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                setEditingGuidelineId(guideline.id);
-                                setEditingGuidelineContent(guideline.content);
-                              }}
-                              className="p-1 text-claude-text-tertiary hover:text-claude-text"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteGuideline(guideline.id)}
-                              className="p-1 text-claude-text-tertiary hover:text-error"
-                            >
-                              <TrashIcon />
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Library Tab Content */}
-          {activeTab === "library" && (
-            <div>
-              <p className="text-sm text-claude-text-secondary mb-4">
-                Upload your content - articles, YouTube videos, PDFs, documents. Your ghostwriter will use these to create <strong>Magic Drafts</strong>.
-              </p>
-
-              {/* Add URL */}
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Paste a URL (article, YouTube video, etc.)"
-                  className="input flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                />
-                <button
-                  onClick={handleAddUrl}
-                  disabled={addingUrl || !urlInput.trim()}
-                  className="btn-primary"
-                >
-                  {addingUrl ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <PlusIcon />
-                  )}
-                  Add
-                </button>
-              </div>
-
-              {/* File upload zone */}
-              <div
-                onDragEnter={handleLibraryDrag}
-                onDragLeave={handleLibraryDrag}
-                onDragOver={handleLibraryDrag}
-                onDrop={handleLibraryDrop}
-                className={`border-2 border-dashed rounded-claude p-4 text-center mb-4 transition-colors ${
-                  libraryDragActive
-                    ? "border-accent-coral bg-accent-coral/5"
-                    : "border-claude-border hover:border-claude-border-strong"
-                }`}
-              >
-                {uploadingFile ? (
-                  <div className="flex items-center justify-center gap-2 py-2">
-                    <div className="w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-claude-text-secondary">Uploading...</span>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer">
-                    <span className="text-sm text-claude-text-secondary">
-                      Drag & drop PDF or DOCX files here, or <span className="text-accent-coral">browse</span>
-                    </span>
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      multiple
-                      onChange={(e) => e.target.files && handleLibraryFileUpload(e.target.files)}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-
-              {/* Library items list */}
-              {libraryLoading ? (
-                <div className="py-8 text-center text-claude-text-tertiary">Loading...</div>
-              ) : libraryItems.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-claude-text-tertiary mb-2">Your library is empty</p>
-                  <p className="text-xs text-claude-text-tertiary">
-                    Add links to articles about you, YouTube videos you&apos;ve been in, or upload documents like your book or presentations.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {libraryItems.map((item) => (
-                    <div key={item.id} className="flex items-start gap-3 p-3 bg-claude-bg-secondary rounded-claude group">
-                      <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${
-                        item.type === "YOUTUBE" ? "bg-red-100 text-red-600" :
-                        item.type === "PDF" ? "bg-orange-100 text-orange-600" :
-                        item.type === "DOCX" ? "bg-blue-100 text-blue-600" :
-                        "bg-claude-bg-tertiary text-claude-text-secondary"
-                      }`}>
-                        {getLibraryTypeIcon(item.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-claude-text font-medium truncate">
-                          {item.title || item.fileName || item.sourceUrl || "Untitled"}
-                        </p>
-                        {item.extractedSummary && (
-                          <p className="text-xs text-claude-text-tertiary mt-1 line-clamp-2">
-                            {item.extractedSummary}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          {getProcessingBadge(item.processingStatus)}
-                          {item.usageCount > 0 && (
-                            <span className="text-xs text-claude-text-tertiary">Used {item.usageCount}x</span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteLibraryItem(item.id)}
-                        className="p-1 text-claude-text-tertiary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Photos Tab Content */}
-          {activeTab === "photos" && (
-            <div>
-              <p className="text-sm text-claude-text-secondary mb-4">
-                Posts with photos perform <span className="font-semibold text-accent-coral">2x better</span> on LinkedIn.
-                Raw, authentic photos work best.
-              </p>
-
-              {/* Upload area and photos grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {/* Upload button/drop zone */}
-                <label
-                  onDragEnter={handlePhotoDrag}
-                  onDragLeave={handlePhotoDrag}
-                  onDragOver={handlePhotoDrag}
-                  onDrop={handlePhotoDrop}
-                  className={`relative aspect-square border-2 border-dashed rounded-claude flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                    photoDragActive
-                      ? "border-accent-coral bg-accent-coral/10"
-                      : "border-claude-border hover:border-claude-border-strong hover:bg-claude-bg-secondary"
-                  }`}
-                >
-                  {photoUploading ? (
-                    <div className="animate-spin w-6 h-6 border-2 border-accent-coral border-t-transparent rounded-full" />
-                  ) : (
-                    <>
-                      <PlusIcon />
-                      <span className="text-xs text-claude-text-secondary mt-1">Add photos</span>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </label>
-
-                {/* Photos */}
-                {photosLoading ? (
-                  <div className="aspect-square bg-claude-bg-secondary rounded-claude animate-pulse" />
-                ) : (
-                  photos.map((photo) => (
-                    <div key={photo.id} className="relative group aspect-square">
-                      <img
-                        src={photo.imageUrl}
-                        alt={photo.filename || "Photo"}
-                        className="w-full h-full object-cover rounded-claude"
-                      />
-                      <button
-                        onClick={() => handlePhotoDelete(photo.id)}
-                        className="absolute top-1 right-1 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
-                      >
-                        <TrashIcon />
-                      </button>
-                      {photo.usageCount > 0 && (
-                        <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/60 text-white text-xs rounded">
-                          Used {photo.usageCount}x
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {photos.length === 0 && !photosLoading && (
-                <p className="text-center text-sm text-claude-text-tertiary mt-4">
-                  Upload photos now and they&apos;ll be ready to use when you create posts.
-                </p>
-              )}
-            </div>
+          {photos.length === 0 && !photosLoading && (
+            <p className="text-center text-sm text-claude-text-tertiary mt-3">
+              Upload photos now and they&apos;ll be ready to use when you create posts.
+            </p>
           )}
         </div>
       </main>
