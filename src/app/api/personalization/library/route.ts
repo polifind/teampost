@@ -134,11 +134,22 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Trigger extraction asynchronously (don't await)
-      fetch(
-        `${request.nextUrl.origin}/api/personalization/library/${item.id}/extract`,
-        { method: "POST" }
-      ).catch(console.error);
+      // Trigger extraction synchronously
+      try {
+        const extractRes = await fetch(
+          `${request.nextUrl.origin}/api/personalization/library/${item.id}/extract`,
+          { method: "POST", headers: { "Content-Type": "application/json" } }
+        );
+
+        if (extractRes.ok) {
+          const updatedItem = await prisma.lifeLibraryItem.findUnique({
+            where: { id: item.id }
+          });
+          return NextResponse.json({ item: updatedItem || item });
+        }
+      } catch (extractError) {
+        console.error("Extraction error:", extractError);
+      }
 
       return NextResponse.json({ item });
     }
@@ -186,11 +197,25 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Trigger extraction asynchronously
-    fetch(
-      `${request.nextUrl.origin}/api/personalization/library/${item.id}/extract`,
-      { method: "POST" }
-    ).catch(console.error);
+    // Trigger extraction synchronously - serverless doesn't support fire-and-forget well
+    try {
+      const extractionUrl = `${request.nextUrl.origin}/api/personalization/library/${item.id}/extract`;
+      const extractRes = await fetch(extractionUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (extractRes.ok) {
+        // Get updated item with extracted content
+        const updatedItem = await prisma.lifeLibraryItem.findUnique({
+          where: { id: item.id }
+        });
+        return NextResponse.json({ item: updatedItem || item });
+      }
+    } catch (extractError) {
+      console.error("Extraction error:", extractError);
+      // Item is still created, just not extracted yet
+    }
 
     return NextResponse.json({ item });
   } catch (error) {
