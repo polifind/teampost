@@ -20,6 +20,16 @@ interface Post {
   status: "DRAFT" | "SCHEDULED" | "POSTED" | "FAILED";
   createdAt: string;
   schedule?: Schedule | null;
+  createdByAdmin?: {
+    name: string | null;
+    email: string;
+  } | null;
+}
+
+interface LibraryPhoto {
+  id: string;
+  imageUrl: string;
+  filename: string | null;
 }
 
 const EditIcon = () => (
@@ -70,6 +80,24 @@ const XIcon = () => (
   </svg>
 );
 
+const ImageIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+);
+
+const UndoIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+  </svg>
+);
+
 const LinkedInIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -94,6 +122,12 @@ export default function PostsPage() {
   const [deletingSchedule, setDeletingSchedule] = useState<string | null>(null);
   const [regeneratePostId, setRegeneratePostId] = useState<string | null>(null);
   const [regenerateFeedback, setRegenerateFeedback] = useState("");
+  const [previousVersions, setPreviousVersions] = useState<Record<string, string>>({});
+  const [libraryPhotos, setLibraryPhotos] = useState<LibraryPhoto[]>([]);
+  const [showPhotoLibraryFor, setShowPhotoLibraryFor] = useState<string | null>(null);
+  const [deletingPost, setDeletingPost] = useState<string | null>(null);
+  const [updatingImage, setUpdatingImage] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -117,8 +151,21 @@ export default function PostsPage() {
       }
     };
 
+    const fetchLibraryPhotos = async () => {
+      try {
+        const response = await fetch("/api/photos");
+        if (response.ok) {
+          const data = await response.json();
+          setLibraryPhotos(data.photos || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch photos:", error);
+      }
+    };
+
     if (session?.user) {
       fetchPosts();
+      fetchLibraryPhotos();
     }
   }, [session]);
 
@@ -157,6 +204,15 @@ export default function PostsPage() {
   };
 
   const handleRegenerate = async (postId: string) => {
+    // Save the current content as previous version before regenerating
+    const currentPost = posts.find(p => p.id === postId);
+    if (currentPost) {
+      setPreviousVersions(prev => ({
+        ...prev,
+        [postId]: currentPost.content,
+      }));
+    }
+
     setRegenerating(postId);
     try {
       const response = await fetch(`/api/posts/${postId}/regenerate`, {
@@ -175,8 +231,41 @@ export default function PostsPage() {
       }
     } catch (error) {
       console.error("Failed to regenerate post:", error);
+      // Clear the previous version if regeneration failed
+      setPreviousVersions(prev => {
+        const next = { ...prev };
+        delete next[postId];
+        return next;
+      });
     } finally {
       setRegenerating(null);
+    }
+  };
+
+  const handleRevertToPrevious = async (postId: string) => {
+    const previousContent = previousVersions[postId];
+    if (!previousContent) return;
+
+    try {
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: previousContent }),
+      });
+
+      if (response.ok) {
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, content: previousContent } : p))
+        );
+        // Clear the previous version after reverting
+        setPreviousVersions(prev => {
+          const next = { ...prev };
+          delete next[postId];
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to revert post:", error);
     }
   };
 
@@ -184,6 +273,109 @@ export default function PostsPage() {
     await navigator.clipboard.writeText(post.content);
     setCopiedId(post.id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSelectPhoto = async (postId: string, imageUrl: string) => {
+    setUpdatingImage(postId);
+    try {
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl }),
+      });
+
+      if (response.ok) {
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, imageUrl } : p))
+        );
+        setShowPhotoLibraryFor(null);
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to update post image:", errorData);
+        alert("Failed to attach photo. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to update post image:", error);
+      alert("Failed to attach photo. Please try again.");
+    } finally {
+      setUpdatingImage(null);
+    }
+  };
+
+  const handleRemoveImage = async (postId: string) => {
+    try {
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: null }),
+      });
+
+      if (response.ok) {
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, imageUrl: undefined } : p))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to remove post image:", error);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, postId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/photos", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Add to library photos
+        setLibraryPhotos((prev) => [data.photo, ...prev]);
+        // Attach to post
+        await handleSelectPhoto(postId, data.photo.imageUrl);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to upload photo");
+      }
+    } catch (error) {
+      console.error("Failed to upload photo:", error);
+      alert("Failed to upload photo. Please try again.");
+    } finally {
+      setUploadingPhoto(false);
+      // Reset the input
+      e.target.value = "";
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Are you sure you want to delete this post? This cannot be undone.")) {
+      return;
+    }
+
+    setDeletingPost(postId);
+    try {
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setPosts((prev) => prev.filter((p) => p.id !== postId));
+      } else {
+        alert("Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+      alert("Failed to delete post");
+    } finally {
+      setDeletingPost(null);
+    }
   };
 
   const handleEditSchedule = (post: Post) => {
@@ -384,8 +576,13 @@ export default function PostsPage() {
                     </div>
                     <div>
                       <p className="font-medium text-claude-text">Week {post.weekNumber}</p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {getStatusBadge(post.status)}
+                        {post.createdByAdmin && (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                            From {post.createdByAdmin.name || "Admin"}
+                          </span>
+                        )}
                         {post.status === "SCHEDULED" && post.schedule && (
                           <span className="text-xs text-claude-text-secondary flex items-center gap-1">
                             <ClockIcon />
@@ -423,6 +620,29 @@ export default function PostsPage() {
                     >
                       <EditIcon />
                     </button>
+                    {previousVersions[post.id] && (
+                      <button
+                        onClick={() => handleRevertToPrevious(post.id)}
+                        className="p-2 rounded-claude text-accent-coral bg-accent-coral/10 hover:bg-accent-coral/20 transition-colors"
+                        title="Undo - revert to previous version"
+                      >
+                        <UndoIcon />
+                      </button>
+                    )}
+                    {post.status === "DRAFT" && (
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        disabled={deletingPost === post.id}
+                        className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary hover:text-error transition-colors disabled:opacity-50"
+                        title="Delete post"
+                      >
+                        {deletingPost === post.id ? (
+                          <div className="w-4 h-4 border-2 border-error border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <TrashIcon />
+                        )}
+                      </button>
+                    )}
                     {post.status === "SCHEDULED" && post.schedule && (
                       <>
                         <button
@@ -562,6 +782,95 @@ export default function PostsPage() {
                     </p>
                   </div>
                 )}
+
+                {/* Image section */}
+                <div className="mt-4 pt-4 border-t border-claude-border">
+                  {post.imageUrl ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={post.imageUrl}
+                        alt="Post image"
+                        className="max-h-48 rounded-lg border border-claude-border"
+                      />
+                      {post.status !== "POSTED" && (
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          <button
+                            onClick={() => setShowPhotoLibraryFor(post.id)}
+                            className="p-1.5 bg-white/90 rounded-full text-claude-text-secondary hover:text-claude-text shadow-sm"
+                            title="Change image"
+                          >
+                            <ImageIcon />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveImage(post.id)}
+                            className="p-1.5 bg-white/90 rounded-full text-error hover:text-error/80 shadow-sm"
+                            title="Remove image"
+                          >
+                            <XIcon />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : post.status !== "POSTED" && (
+                    <button
+                      onClick={() => setShowPhotoLibraryFor(post.id)}
+                      className="flex items-center gap-2 text-sm text-accent-coral hover:underline"
+                    >
+                      <ImageIcon />
+                      Add photo (posts with photos perform 2x better)
+                    </button>
+                  )}
+
+                  {/* Photo library picker */}
+                  {showPhotoLibraryFor === post.id && (
+                    <div className="mt-3 p-4 bg-claude-bg-secondary rounded-claude border border-claude-border">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-medium text-claude-text">Select from your photo library</p>
+                        <button
+                          onClick={() => setShowPhotoLibraryFor(null)}
+                          className="text-xs text-claude-text-tertiary hover:text-claude-text"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      {updatingImage === post.id || uploadingPhoto ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="flex items-center gap-2 text-sm text-accent-coral">
+                            <div className="w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full animate-spin" />
+                            {uploadingPhoto ? "Uploading..." : "Attaching photo..."}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                          {/* Upload button */}
+                          <label className="aspect-square rounded border-2 border-dashed border-claude-border hover:border-accent-coral transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 bg-white">
+                            <PlusIcon />
+                            <span className="text-xs text-claude-text-tertiary">Upload</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handlePhotoUpload(e, post.id)}
+                            />
+                          </label>
+                          {libraryPhotos.map((photo) => (
+                            <button
+                              key={photo.id}
+                              onClick={() => handleSelectPhoto(post.id, photo.imageUrl)}
+                              className="aspect-square rounded overflow-hidden border-2 border-transparent hover:border-accent-coral transition-colors"
+                            >
+                              <img
+                                src={photo.imageUrl}
+                                alt={photo.filename || "Photo"}
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {regenerating === post.id && (
                   <div className="mt-4 flex items-center gap-2 text-sm text-accent-coral">

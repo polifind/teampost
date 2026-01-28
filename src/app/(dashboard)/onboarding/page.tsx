@@ -82,6 +82,12 @@ const LightBulbIcon = () => (
   </svg>
 );
 
+const CalendarIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+  </svg>
+);
+
 export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -181,6 +187,19 @@ export default function OnboardingPage() {
     if (currentQuestion < batchEnd - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
+  };
+
+  // Move to a new batch of questions
+  const handleNewBatch = () => {
+    if (voiceRecorderRef.current?.isRecording) {
+      voiceRecorderRef.current.stopRecording();
+    }
+    voiceRecorderRef.current?.reset();
+    setTextInput('');
+
+    // Move to next batch, or loop back to first batch
+    const nextBatchStart = batchEnd < TOTAL_QUESTIONS ? batchEnd : 0;
+    setCurrentQuestion(nextBatchStart);
   };
 
   // Handle voice recording completion
@@ -729,6 +748,11 @@ export default function OnboardingPage() {
           </button>
         </div>
 
+        {/* Reassurance */}
+        <p className="text-sm text-claude-text-tertiary text-center mb-4 max-w-md mx-auto">
+          Just talk naturally — ramble, go off on tangents, be yourself. The best posts come from real stories.
+        </p>
+
         {/* Input area */}
         <div className="card max-w-lg mx-auto">
           {inputMode === 'voice' ? (
@@ -805,12 +829,35 @@ export default function OnboardingPage() {
           </button>
         </div>
 
+        {/* New batch option */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-claude-text-tertiary mb-1">
+            Want different questions?
+          </p>
+          <button
+            onClick={handleNewBatch}
+            className="text-sm text-accent-coral hover:underline"
+          >
+            Try different questions →
+          </button>
+        </div>
+
         {/* Completed questions summary - only show current batch */}
         {completedInBatch > 0 && (
           <div className="mt-12">
-            <h2 className="text-lg font-semibold text-claude-text mb-4 text-center">
-              Your answers
-            </h2>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <CalendarIcon />
+              <h2 className="text-lg font-semibold text-claude-text">
+                Saved to Scheduled Posts
+              </h2>
+            </div>
+            <p className="text-sm text-claude-text-tertiary text-center mb-4">
+              These drafts will appear in your{" "}
+              <Link href="/dashboard" className="text-accent-coral hover:underline">
+                Scheduled Posts
+              </Link>{" "}
+              on the dashboard — nothing posts until you publish
+            </p>
             <div className="grid gap-3 max-w-lg mx-auto">
               {answers
                 .filter(a => a.questionIndex >= batchStart && a.questionIndex < batchEnd)

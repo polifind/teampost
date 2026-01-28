@@ -49,11 +49,32 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { content } = body;
+    const { content, imageUrl } = body;
 
-    if (!content || typeof content !== "string") {
+    // Build update data object - at least one field must be provided
+    const updateData: { content?: string; imageUrl?: string | null; updatedAt: Date } = {
+      updatedAt: new Date(),
+    };
+
+    if (content !== undefined) {
+      if (typeof content !== "string") {
+        return NextResponse.json(
+          { error: "Content must be a string" },
+          { status: 400 }
+        );
+      }
+      updateData.content = content;
+    }
+
+    if (imageUrl !== undefined) {
+      // imageUrl can be a string (to set) or null (to remove)
+      updateData.imageUrl = imageUrl;
+    }
+
+    // Check that at least one field is being updated
+    if (updateData.content === undefined && updateData.imageUrl === undefined) {
       return NextResponse.json(
-        { error: "Content is required" },
+        { error: "Content or imageUrl is required" },
         { status: 400 }
       );
     }
@@ -63,10 +84,7 @@ export async function PATCH(
         id,
         userId: session.user.id,
       },
-      data: {
-        content,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
 
     if (post.count === 0) {

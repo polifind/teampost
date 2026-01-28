@@ -101,6 +101,24 @@ function LoginForm() {
           <div className="card">
             {/* OAuth Buttons */}
             <div className="space-y-3 mb-6">
+              {/* LinkedIn - Recommended */}
+              <div className="relative">
+                <span className="absolute -top-2 left-4 px-2 py-0.5 text-xs font-medium bg-accent-coral text-white rounded-full">
+                  Recommended
+                </span>
+                <button
+                  onClick={() => handleOAuthSignIn("linkedin")}
+                  className="w-full btn-primary border-2 border-accent-coral"
+                  type="button"
+                >
+                  <LinkedInIcon />
+                  Continue with LinkedIn
+                </button>
+              </div>
+              <p className="text-xs text-claude-text-tertiary text-center -mt-1">
+                Sign in with LinkedIn to post directly — no extra setup needed
+              </p>
+
               <button
                 onClick={() => handleOAuthSignIn("google")}
                 className="w-full btn-secondary"
@@ -108,14 +126,6 @@ function LoginForm() {
               >
                 <GoogleIcon />
                 Continue with Google
-              </button>
-              <button
-                onClick={() => handleOAuthSignIn("linkedin")}
-                className="w-full btn-secondary"
-                type="button"
-              >
-                <LinkedInIcon />
-                Continue with LinkedIn
               </button>
             </div>
 
