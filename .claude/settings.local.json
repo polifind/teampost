@@ -33,7 +33,9 @@
       "Bash(npm run test:run:*)",
       "Bash(npx vercel env:*)",
       "Bash(npx vercel:*)",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(npm ls:*)",
+      "Bash(node:*)"
     ]
   }
 }

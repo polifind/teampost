@@ -750,7 +750,7 @@ export default function OnboardingPage() {
 
         {/* Reassurance */}
         <p className="text-sm text-claude-text-tertiary text-center mb-4 max-w-md mx-auto">
-          Just talk naturally — ramble, go off on tangents, be yourself. The best posts come from real stories.
+          Just talk naturally. Ramble, go off on tangents, be yourself. The best posts come from real stories.
         </p>
 
         {/* Input area */}
@@ -856,7 +856,7 @@ export default function OnboardingPage() {
               <Link href="/dashboard" className="text-accent-coral hover:underline">
                 Scheduled Posts
               </Link>{" "}
-              on the dashboard — nothing posts until you publish
+              on the dashboard. Nothing posts until you publish
             </p>
             <div className="grid gap-3 max-w-lg mx-auto">
               {answers

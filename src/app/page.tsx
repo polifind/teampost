@@ -1134,7 +1134,7 @@ export default function LandingPage() {
               </p>
 
               <div className="pt-6 border-t border-amber-200 mt-8">
-                <p className="font-semibold text-lg">— Rohan Pavuluri</p>
+                <p className="font-semibold text-lg">Rohan Pavuluri</p>
                 <p className="text-claude-text-secondary text-sm">Founder, TeamPost</p>
               </div>
             </div>

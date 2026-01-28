@@ -116,7 +116,7 @@ function LoginForm() {
                 </button>
               </div>
               <p className="text-xs text-claude-text-tertiary text-center -mt-1">
-                Sign in with LinkedIn to post directly — no extra setup needed
+                Sign in with LinkedIn to post directly. No extra setup needed
               </p>
 
               <button

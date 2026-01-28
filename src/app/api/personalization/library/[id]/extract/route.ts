@@ -32,21 +32,66 @@ async function extractYouTube(url: string): Promise<{ title: string; content: st
     throw new Error("Invalid YouTube URL");
   }
 
-  // Get transcript
-  const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-  const fullText = transcript.map((t) => t.text).join(" ");
-
-  // Get video info via oEmbed
+  // Get video info via oEmbed first
   let title = `YouTube Video: ${videoId}`;
+  let authorName = "";
   try {
     const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
     const response = await fetch(oembedUrl);
     if (response.ok) {
       const data = await response.json();
       title = data.title || title;
+      authorName = data.author_name || "";
     }
   } catch {
     // Keep default title
+  }
+
+  // Try to get transcript
+  let fullText = "";
+  try {
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    if (transcript && transcript.length > 0) {
+      fullText = transcript.map((t) => t.text).join(" ");
+    }
+  } catch (transcriptError) {
+    console.log("Transcript not available for video:", videoId, transcriptError);
+    // Continue without transcript - we'll use video metadata
+  }
+
+  // If no transcript, create content from video metadata
+  if (!fullText) {
+    // Fetch video page to get description
+    try {
+      const pageResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; TeamPostBot/1.0)",
+        },
+      });
+      if (pageResponse.ok) {
+        const html = await pageResponse.text();
+        // Try to extract description from meta tags
+        const descMatch = html.match(/<meta name="description" content="([^"]*)"/) ||
+                          html.match(/<meta property="og:description" content="([^"]*)"/);
+        if (descMatch && descMatch[1]) {
+          fullText = `Video: ${title}\n\nDescription: ${descMatch[1]}`;
+          if (authorName) {
+            fullText += `\n\nChannel: ${authorName}`;
+          }
+        }
+      }
+    } catch {
+      // Ignore page fetch errors
+    }
+
+    // If still no content, use just the title and metadata
+    if (!fullText) {
+      fullText = `YouTube Video Title: ${title}`;
+      if (authorName) {
+        fullText += `\nChannel: ${authorName}`;
+      }
+      fullText += `\n\nNote: This video does not have a transcript available. The ghostwriter will use the video title and metadata to understand the topic.`;
+    }
   }
 
   return { title, content: fullText };
