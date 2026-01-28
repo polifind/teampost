@@ -852,10 +852,10 @@ export default function OnboardingPage() {
             </div>
             <p className="text-sm text-claude-text-tertiary text-center mb-4">
               These drafts will appear in your{" "}
-              <Link href="/dashboard" className="text-accent-coral hover:underline">
-                Scheduled Posts
-              </Link>{" "}
-              on the dashboard. Nothing posts until you publish
+              <Link href="/posts" className="text-accent-coral hover:underline">
+                Posts
+              </Link>
+              . Nothing posts until you publish.
             </p>
             <div className="grid gap-3 max-w-lg mx-auto">
               {answers
