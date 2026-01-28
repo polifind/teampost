@@ -855,7 +855,6 @@ export default function OnboardingPage() {
               <Link href="/posts" className="text-accent-coral hover:underline">
                 Posts
               </Link>
-              . Nothing posts until you publish.
             </p>
             <div className="grid gap-3 max-w-lg mx-auto">
               {answers
