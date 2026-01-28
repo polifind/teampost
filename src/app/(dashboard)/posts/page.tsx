@@ -128,6 +128,7 @@ export default function PostsPage() {
   const [deletingPost, setDeletingPost] = useState<string | null>(null);
   const [updatingImage, setUpdatingImage] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoDragActive, setPhotoDragActive] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -324,6 +325,17 @@ export default function PostsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    await uploadPhotoFile(file, postId);
+    // Reset the input
+    e.target.value = "";
+  };
+
+  const uploadPhotoFile = async (file: File, postId: string) => {
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file");
+      return;
+    }
+
     setUploadingPhoto(true);
     try {
       const formData = new FormData();
@@ -349,8 +361,26 @@ export default function PostsPage() {
       alert("Failed to upload photo. Please try again.");
     } finally {
       setUploadingPhoto(false);
-      // Reset the input
-      e.target.value = "";
+    }
+  };
+
+  const handlePhotoDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setPhotoDragActive(true);
+    } else if (e.type === "dragleave") {
+      setPhotoDragActive(false);
+    }
+  };
+
+  const handlePhotoDrop = async (e: React.DragEvent, postId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPhotoDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await uploadPhotoFile(e.dataTransfer.files[0], postId);
     }
   };
 
@@ -823,7 +853,17 @@ export default function PostsPage() {
 
                   {/* Photo library picker */}
                   {showPhotoLibraryFor === post.id && (
-                    <div className="mt-3 p-4 bg-claude-bg-secondary rounded-claude border border-claude-border">
+                    <div
+                      className={`mt-3 p-4 rounded-claude border-2 transition-colors ${
+                        photoDragActive
+                          ? "bg-accent-coral/5 border-accent-coral border-dashed"
+                          : "bg-claude-bg-secondary border-claude-border"
+                      }`}
+                      onDragEnter={handlePhotoDrag}
+                      onDragLeave={handlePhotoDrag}
+                      onDragOver={handlePhotoDrag}
+                      onDrop={(e) => handlePhotoDrop(e, post.id)}
+                    >
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-sm font-medium text-claude-text">Select from your photo library</p>
                         <button
@@ -839,6 +879,10 @@ export default function PostsPage() {
                             <div className="w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full animate-spin" />
                             {uploadingPhoto ? "Uploading..." : "Attaching photo..."}
                           </div>
+                        </div>
+                      ) : photoDragActive ? (
+                        <div className="flex items-center justify-center py-8">
+                          <p className="text-accent-coral font-medium">Drop your photo here</p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -867,6 +911,11 @@ export default function PostsPage() {
                             </button>
                           ))}
                         </div>
+                      )}
+                      {!photoDragActive && !uploadingPhoto && (
+                        <p className="text-xs text-claude-text-tertiary text-center mt-3">
+                          Or drag and drop a photo anywhere in this area
+                        </p>
                       )}
                     </div>
                   )}

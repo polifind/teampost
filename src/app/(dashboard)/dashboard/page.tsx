@@ -60,11 +60,6 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-const UploadIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-  </svg>
-);
 
 const PhotoIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -72,23 +67,6 @@ const PhotoIcon = () => (
   </svg>
 );
 
-const UserCircleIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
 
 const PlusIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -120,12 +98,6 @@ export default function DashboardPage() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoDragActive, setPhotoDragActive] = useState(false);
 
-  // LinkedIn profile upload modal state
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -282,148 +254,9 @@ export default function DashboardPage() {
     }
   };
 
-  // LinkedIn profile handlers
-  const handleFileUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Please upload an image file (PNG, JPG, etc.)");
-      return;
-    }
-    setUploading(true);
-    setUploadError("");
-    setUploadSuccess(false);
-    try {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const imageData = await base64Promise;
-      const response = await fetch("/api/profile/upload-linkedin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageData, sectionType: "full_profile" }),
-      });
-      if (!response.ok) throw new Error("Failed to process screenshot");
-      setUploadSuccess(true);
-      const dashResponse = await fetch("/api/dashboard");
-      if (dashResponse.ok) {
-        const result = await dashResponse.json();
-        setData(result);
-      }
-      setTimeout(() => {
-        setShowUploadModal(false);
-        setUploadSuccess(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Upload error:", error);
-      setUploadError("Failed to process screenshot. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileUpload(e.target.files[0]);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-claude-bg">
-      {/* LinkedIn Profile Upload Modal */}
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-claude-lg max-w-lg w-full shadow-xl">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-claude-text">
-                  Upload LinkedIn Profile Screenshots
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowUploadModal(false);
-                    setUploadError("");
-                    setUploadSuccess(false);
-                  }}
-                  className="p-2 hover:bg-claude-bg-tertiary rounded-claude"
-                >
-                  <CloseIcon />
-                </button>
-              </div>
-              <p className="text-sm text-claude-text-secondary mb-4">
-                Upload screenshots of your LinkedIn profile to help your AI ghostwriter understand your professional background.
-              </p>
-              {uploadSuccess ? (
-                <div className="py-8 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 text-success flex items-center justify-center">
-                    <CheckIcon />
-                  </div>
-                  <p className="text-success font-medium">Profile information extracted!</p>
-                </div>
-              ) : (
-                <div
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-claude-lg p-8 text-center transition-colors ${
-                    dragActive ? "border-accent-coral bg-accent-coral/5" : "border-claude-border hover:border-claude-border-strong"
-                  }`}
-                >
-                  {uploading ? (
-                    <div className="py-4">
-                      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-accent-coral/10 flex items-center justify-center">
-                        <div className="animate-spin w-6 h-6 border-2 border-accent-coral border-t-transparent rounded-full" />
-                      </div>
-                      <p className="text-claude-text font-medium">Analyzing your profile...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-claude-bg-tertiary text-claude-text-tertiary flex items-center justify-center">
-                        <PhotoIcon />
-                      </div>
-                      <p className="text-claude-text font-medium mb-2">
-                        Drag and drop your screenshot here
-                      </p>
-                      <label className="btn-secondary cursor-pointer">
-                        <UploadIcon />
-                        Choose File
-                        <input type="file" accept="image/*" onChange={handleFileInput} className="hidden" />
-                      </label>
-                    </>
-                  )}
-                </div>
-              )}
-              {uploadError && (
-                <div className="mt-4 p-3 rounded-claude bg-error/10 text-error text-sm">
-                  {uploadError}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <header className="sticky top-0 bg-claude-bg/80 backdrop-blur-md border-b border-claude-border z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -596,30 +429,14 @@ export default function DashboardPage() {
             <div className="w-10 h-10 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center flex-shrink-0">
               <SparklesIcon />
             </div>
-            {!data?.hasLinkedInProfile ? (
-              // Show LinkedIn upload prompt for new users
-              <>
-                <div className="flex-1">
-                  <p className="font-medium text-claude-text">Personalize your ghostwriter</p>
-                  <p className="text-sm text-claude-text-secondary">Upload your LinkedIn profile to help your ghostwriter understand your voice</p>
-                </div>
-                <button onClick={() => setShowUploadModal(true)} className="btn-primary text-sm">
-                  <UploadIcon /> Upload Profile
-                </button>
-              </>
-            ) : (
-              // Show simple settings link for users who have already personalized
-              <>
-                <div className="flex-1">
-                  <p className="font-medium text-claude-text">Your ghostwriter is personalized</p>
-                  <p className="text-sm text-claude-text-secondary">Manage guidelines and content library</p>
-                </div>
-                <Link href="/settings#personalization" className="btn-secondary text-sm flex items-center gap-1">
-                  Settings
-                  <ArrowRightIcon />
-                </Link>
-              </>
-            )}
+            <div className="flex-1">
+              <p className="font-medium text-claude-text">Personalize your ghostwriter</p>
+              <p className="text-sm text-claude-text-secondary">Add content to your library for Magic Drafts</p>
+            </div>
+            <Link href="/settings#personalization" className="btn-secondary text-sm flex items-center gap-1">
+              My Library
+              <ArrowRightIcon />
+            </Link>
           </div>
         </div>
 

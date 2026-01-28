@@ -40,6 +40,12 @@ interface LibraryItem {
   createdAt: string;
 }
 
+interface LinkedInScreenshot {
+  id: string;
+  sectionType: string;
+  createdAt: string;
+}
+
 const LinkedInIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -125,6 +131,18 @@ const FileIcon = () => (
   </svg>
 );
 
+const UserCircleIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const PhotoIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+  </svg>
+);
+
 function SettingsForm() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -151,6 +169,11 @@ function SettingsForm() {
   const [addingUrl, setAddingUrl] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [libraryDragActive, setLibraryDragActive] = useState(false);
+
+  // LinkedIn screenshot state
+  const [linkedInScreenshots, setLinkedInScreenshots] = useState<LinkedInScreenshot[]>([]);
+  const [linkedInUploading, setLinkedInUploading] = useState(false);
+  const [linkedInDragActive, setLinkedInDragActive] = useState(false);
 
   // Check for LinkedIn connection status from URL params
   useEffect(() => {
@@ -230,6 +253,25 @@ function SettingsForm() {
 
     if (session?.user) {
       fetchLibrary();
+    }
+  }, [session]);
+
+  // Fetch LinkedIn screenshots
+  useEffect(() => {
+    const fetchLinkedInProfile = async () => {
+      try {
+        const response = await fetch("/api/profile/upload-linkedin");
+        if (response.ok) {
+          const result = await response.json();
+          setLinkedInScreenshots(result.screenshots || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch LinkedIn profile:", error);
+      }
+    };
+
+    if (session?.user) {
+      fetchLinkedInProfile();
     }
   }, [session]);
 
@@ -420,6 +462,82 @@ function SettingsForm() {
       case "YOUTUBE": return <VideoIcon />;
       case "PDF": case "DOCX": return <FileIcon />;
       default: return <LinkIcon />;
+    }
+  };
+
+  // LinkedIn screenshot handlers
+  const handleLinkedInScreenshotUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setMessage("Please upload an image file (PNG, JPG, etc.)");
+      return;
+    }
+
+    setLinkedInUploading(true);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const imageData = await base64Promise;
+
+      const response = await fetch("/api/profile/upload-linkedin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageData, sectionType: "full_profile" }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Refresh the screenshots list
+        const profileRes = await fetch("/api/profile/upload-linkedin");
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setLinkedInScreenshots(profileData.screenshots || []);
+        }
+        setMessage("LinkedIn profile information extracted!");
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("Failed to process screenshot. Please try again.");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setMessage("Failed to process screenshot. Please try again.");
+    } finally {
+      setLinkedInUploading(false);
+    }
+  };
+
+  const handleLinkedInDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setLinkedInDragActive(true);
+    } else if (e.type === "dragleave") {
+      setLinkedInDragActive(false);
+    }
+  };
+
+  const handleLinkedInDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLinkedInDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleLinkedInScreenshotUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDeleteLinkedInScreenshot = async (id: string) => {
+    try {
+      const response = await fetch(`/api/profile/upload-linkedin?id=${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setLinkedInScreenshots((prev) => prev.filter((s) => s.id !== id));
+      }
+    } catch (error) {
+      console.error("Failed to delete screenshot:", error);
     }
   };
 
@@ -787,6 +905,70 @@ function SettingsForm() {
                 </label>
               )}
             </div>
+
+            {/* LinkedIn screenshot upload */}
+            <div
+              onDragEnter={handleLinkedInDrag}
+              onDragLeave={handleLinkedInDrag}
+              onDragOver={handleLinkedInDrag}
+              onDrop={handleLinkedInDrop}
+              className={`border-2 border-dashed rounded-claude p-4 text-center mb-4 transition-colors ${
+                linkedInDragActive
+                  ? "border-[#0077B5] bg-[#0077B5]/5"
+                  : "border-claude-border hover:border-claude-border-strong"
+              }`}
+            >
+              {linkedInUploading ? (
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <div className="w-4 h-4 border-2 border-[#0077B5] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-claude-text-secondary">Analyzing your LinkedIn profile...</span>
+                </div>
+              ) : (
+                <label className="cursor-pointer flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <UserCircleIcon />
+                    <span className="text-sm text-claude-text-secondary">
+                      Upload LinkedIn profile screenshot, or <span className="text-[#0077B5]">browse</span>
+                    </span>
+                  </div>
+                  <span className="text-xs text-claude-text-tertiary">
+                    Screenshot your LinkedIn profile to help your ghostwriter understand your background
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleLinkedInScreenshotUpload(e.target.files[0])}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* LinkedIn screenshots list */}
+            {linkedInScreenshots.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {linkedInScreenshots.map((screenshot) => (
+                  <div key={screenshot.id} className="flex items-center gap-3 p-3 bg-claude-bg-secondary rounded-claude group">
+                    <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 bg-[#0077B5]/10 text-[#0077B5]">
+                      <UserCircleIcon />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-claude-text font-medium">LinkedIn Profile Screenshot</p>
+                      <p className="text-xs text-claude-text-tertiary">
+                        Uploaded {new Date(screenshot.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-success/10 text-success text-xs rounded-full">Ready</span>
+                    <button
+                      onClick={() => handleDeleteLinkedInScreenshot(screenshot.id)}
+                      className="p-1 text-claude-text-tertiary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Library items list */}
             {libraryLoading ? (
