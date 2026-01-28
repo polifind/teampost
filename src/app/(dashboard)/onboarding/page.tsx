@@ -829,18 +829,17 @@ export default function OnboardingPage() {
           </button>
         </div>
 
-        {/* New batch option */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-claude-text-tertiary mb-1">
-            Want different questions?
-          </p>
-          <button
-            onClick={handleNewBatch}
-            className="text-sm text-accent-coral hover:underline"
-          >
-            Try different questions →
-          </button>
-        </div>
+        {/* New batch option - only show on 5th question */}
+        {currentQuestion === batchEnd - 1 && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={handleNewBatch}
+              className="text-sm text-claude-text-tertiary hover:text-accent-coral"
+            >
+              Try different questions
+            </button>
+          </div>
+        )}
 
         {/* Completed questions summary - only show current batch */}
         {completedInBatch > 0 && (
