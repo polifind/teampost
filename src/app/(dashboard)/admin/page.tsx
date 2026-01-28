@@ -191,7 +191,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (status === "authenticated" && session?.user?.email !== ADMIN_EMAIL) {
+    if (status === "authenticated" && session?.user?.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
       router.push("/dashboard");
       return;
     }
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
       }
     };
 
-    if (session?.user?.email === ADMIN_EMAIL) {
+    if (session?.user?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
       fetchStats();
     }
   }, [session, router]);

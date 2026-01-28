@@ -9,12 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TeamPost - Turn Your Stories Into LinkedIn Content",
+  title: "TeamPost - Turn Your Entire Company Into a LinkedIn Content Machine",
   description: "Transform voice notes into engaging LinkedIn posts. Help your team build their personal brand with AI-powered content creation.",
   keywords: ["LinkedIn", "content creation", "AI", "voice notes", "personal branding", "employee advocacy"],
   authors: [{ name: "TeamPost" }],
   openGraph: {
-    title: "TeamPost - Turn Your Stories Into LinkedIn Content",
+    title: "TeamPost - Turn Your Entire Company Into a LinkedIn Content Machine",
     description: "Transform voice notes into engaging LinkedIn posts with AI.",
     type: "website",
   },

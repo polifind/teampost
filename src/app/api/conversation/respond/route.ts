@@ -28,6 +28,21 @@ export async function POST(request: NextRequest) {
       take: 10, // Limit to most recent 10 preferences
     });
 
+    // Fetch user's ghostwriter guidelines
+    const guidelines = await prisma.ghostwriterGuideline.findMany({
+      where: {
+        userId: session.user.id,
+        isActive: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Fetch user's LinkedIn profile context
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { linkedinProfileContext: true },
+    });
+
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
         { error: "Messages are required" },
@@ -47,6 +62,31 @@ export async function POST(request: NextRequest) {
 ${preferencesList}
 
 These are specific preferences this user has provided based on their feedback on previous posts. Always apply these preferences when drafting posts for them.
+`;
+    }
+
+    // Build ghostwriter guidelines section
+    let guidelinesSection = "";
+    if (guidelines.length > 0) {
+      const guidelinesList = guidelines.map((g) => `- ${g.content}`).join("\n");
+      guidelinesSection = `
+
+**USER'S GHOSTWRITER GUIDELINES (ALWAYS FOLLOW THESE):**
+${guidelinesList}
+
+These are persistent instructions the user has set for their ghostwriter. Always follow these guidelines when drafting posts.
+`;
+    }
+
+    // Build profile context section
+    let profileSection = "";
+    if (user?.linkedinProfileContext) {
+      profileSection = `
+
+**USER'S PROFESSIONAL BACKGROUND:**
+${user.linkedinProfileContext}
+
+Use this background to make posts more personalized and authentic to their professional identity.
 `;
     }
 
@@ -142,7 +182,7 @@ Even the guy who said I wasn't customer service material.
 </draft>
 
 What do you think?"
-${preferencesSection}`;
+${preferencesSection}${guidelinesSection}${profileSection}`;
 
     // Convert messages to Anthropic format
     const anthropicMessages = messages.map((m: { role: string; content: string }) => ({

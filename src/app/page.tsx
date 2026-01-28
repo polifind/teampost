@@ -89,7 +89,6 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
-  const [showPhone, setShowPhone] = useState(false);
 
   return (
     <div className="min-h-screen bg-claude-bg">
@@ -127,7 +126,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl text-claude-text-secondary mb-8 max-w-2xl mx-auto text-balance">
-            Give every employee an AI ghostwriter. Generate more pipeline, amplify your brand,
+            Give every employee the white-glove ghostwriting experience. Generate more pipeline, amplify your brand,
             and attract top talent. All through authentic employee content that posts automatically.
           </p>
 
@@ -313,7 +312,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-claude-text mb-4">
-              From zero to 10 weeks of content in 30 minutes
+              From zero to 5 weeks of content in 15 minutes
             </h2>
             <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
               Each employee gets their own AI ghostwriter that learns their voice,
@@ -539,7 +538,7 @@ export default function LandingPage() {
                   { text: "AI ghostwriter creates posts for you", good: true },
                   { text: "Just answer questions about your experience", good: true },
                   { text: "Learns your voice and improves over time", good: true },
-                  { text: "10 weeks of content in 30 minutes", good: true },
+                  { text: "5 weeks of content in 15 minutes", good: true },
                   { text: "Auto-posts to LinkedIn on schedule", good: true },
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-claude-text">
@@ -827,10 +826,10 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="bg-white rounded-claude-lg p-6 border border-claude-border text-center">
-              <div className="text-4xl font-bold text-accent-coral mb-2">30 min</div>
+              <div className="text-4xl font-bold text-accent-coral mb-2">15 min</div>
               <div className="text-claude-text font-medium mb-2">Per Employee</div>
               <p className="text-sm text-claude-text-secondary">
-                Creates 10 weeks of scheduled content
+                Creates 5 weeks of scheduled content
               </p>
             </div>
             <div className="bg-white rounded-claude-lg p-6 border border-claude-border text-center">
@@ -1051,7 +1050,9 @@ export default function LandingPage() {
                   "Amplify hiring campaigns",
                   "Fundraising announcements",
                   "Volume discounts",
-                  "Dedicated support",
+                  "Weekly coaching from LinkedIn expert",
+                  "White-glove onboarding",
+                  "Same-day support",
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-claude-text text-sm">
                     <div className="w-5 h-5 rounded-full bg-success/10 text-success flex items-center justify-center flex-shrink-0">
@@ -1062,24 +1063,15 @@ export default function LandingPage() {
                 ))}
               </ul>
 
-              {showPhone ? (
-                <a
-                  href="tel:312-613-6004"
-                  className="btn-ghost w-full justify-center text-accent-coral border-accent-coral hover:bg-accent-coral-light"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-                  </svg>
-                  312-613-6004
-                </a>
-              ) : (
-                <button
-                  onClick={() => setShowPhone(true)}
-                  className="btn-ghost w-full justify-center"
-                >
-                  Contact Us
-                </button>
-              )}
+              <a
+                href="mailto:rohan.pavuluri@gmail.com?subject=TeamPost%20Enterprise%20Inquiry"
+                className="btn-ghost w-full justify-center text-accent-coral border-accent-coral hover:bg-accent-coral-light"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                Contact
+              </a>
             </div>
           </div>
         </div>
@@ -1166,7 +1158,7 @@ export default function LandingPage() {
             />
             <FAQItem
               question="How long does it take to get started?"
-              answer="Each employee spends about 30 minutes answering questions in a guided conversation. From that single session, they get 10 weeks of scheduled LinkedIn content. No writing required."
+              answer="Each employee spends about 15 minutes answering questions in a guided conversation. From that single session, they get 5 weeks of scheduled LinkedIn content. No writing required."
             />
             <FAQItem
               question="Will the posts actually sound like me?"

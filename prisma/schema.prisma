@@ -69,6 +69,13 @@ model User {
   writingPreferences     WritingPreference[]
   linkedinScreenshots    LinkedInScreenshot[]
   conversations          Conversation[]
+  photoLibrary           PhotoLibrary[]
+  organizationMemberships OrganizationMember[]
+  organizationNotes      OrganizationNote[]
+  adminCreatedPosts      Post[]    @relation("AdminCreatedPosts")
+  invitesSent            OrganizationMember[] @relation("InvitedMembers")
+  ghostwriterGuidelines  GhostwriterGuideline[]
+  lifeLibraryItems       LifeLibraryItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,10 +125,24 @@ model Post {
   comments Int @default(0)
   shares   Int @default(0)
 
+  // Admin creation tracking (for org admin scheduled posts)
+  createdByAdminId String?
+  createdByAdmin   User?        @relation("AdminCreatedPosts", fields: [createdByAdminId], references: [id])
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+
+  // Bulk draft tracking (for bulk variations requiring approval)
+  bulkDraftGroupId String?
+  bulkDraftStatus  BulkDraftStatus?
+
   schedule Schedule?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([createdByAdminId])
+  @@index([organizationId])
+  @@index([bulkDraftGroupId])
 }
 
 model Schedule {
@@ -152,6 +173,12 @@ enum ScheduleStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum BulkDraftStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
 }
 
 // Stores user's writing preferences learned from feedback
@@ -227,4 +254,179 @@ enum ConversationStatus {
   IN_PROGRESS
   COMPLETED // Post was created from this conversation
   ABANDONED // User explicitly deleted/abandoned
+}
+
+// Photo library for storing user's photos
+model PhotoLibrary {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  imageUrl  String  // Vercel Blob URL
+  filename  String? // Original filename
+
+  // Usage tracking
+  usageCount Int @default(0) // How many times used in posts
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Organization for company teams
+model Organization {
+  id          String @id @default(cuid())
+  name        String
+  slug        String @unique // URL-friendly identifier
+  description String?
+  logoUrl     String?
+
+  // Domain for auto-join (e.g., "speechify.com")
+  // Users with emails @domain will automatically join this org
+  domain      String? @unique
+
+  // Organization members
+  members     OrganizationMember[]
+
+  // Organization-wide notes for employees
+  notes       OrganizationNote[]
+
+  // Posts created by admins for org members
+  posts       Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Organization membership with roles
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?      // null if user hasn't signed up yet
+  user           User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Email is stored separately for inviting users who haven't signed up
+  email          String
+  role           OrgMemberRole @default(MEMBER)
+
+  // Invitation status
+  invitedAt      DateTime @default(now())
+  joinedAt       DateTime? // When they actually signed up/accepted
+
+  // Invite token for link-based invites
+  inviteToken       String?   @unique
+  inviteTokenExpiry DateTime?
+  inviteStatus      InviteStatus @default(PENDING)
+  invitedById       String?   // Who sent the invite
+  invitedBy         User?     @relation("InvitedMembers", fields: [invitedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, email])
+  @@index([userId])
+  @@index([email])
+  @@index([inviteToken])
+}
+
+enum InviteStatus {
+  PENDING   // Invite sent, not yet accepted
+  ACCEPTED  // User accepted the invite
+  EXPIRED   // Invite token expired
+}
+
+enum OrgMemberRole {
+  ADMIN  // Can manage members and create notes
+  MEMBER // Regular employee
+}
+
+// Organization-wide notes/suggestions for employees
+model OrganizationNote {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Note content
+  title          String       // e.g., "Company-Wide Notes for Week of Jan 27"
+  content        String       // The actual suggestions/guidance
+
+  // Which week this is for (optional)
+  weekStart      DateTime?    // Start of the week this applies to
+
+  // Who created this
+  createdById    String
+  createdBy      User         @relation(fields: [createdById], references: [id])
+
+  // Pinned notes show at the top
+  isPinned       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
+// Ghostwriter guidelines - persistent instructions for all posts
+model GhostwriterGuideline {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String   // The guideline text (e.g., "Always mention I'm a founder", "Avoid talking about competitors")
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Life Library - content repository for Magic Draft
+model LifeLibraryItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Content type
+  type      LifeLibraryType
+
+  // Source info
+  sourceUrl     String?   // URL for links/youtube
+  fileName      String?   // Original filename for uploads
+  fileUrl       String?   // Vercel Blob URL for uploaded files
+
+  // Extracted content
+  title             String?   // Extracted or provided title
+  extractedContent  String?   // AI-extracted text/summary (can be long)
+  extractedSummary  String?   // Short summary for display
+
+  // Processing status
+  processingStatus  ProcessingStatus @default(PENDING)
+  processingError   String?
+
+  // Usage tracking
+  usageCount    Int @default(0)
+  lastUsedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+}
+
+enum LifeLibraryType {
+  LINK
+  YOUTUBE
+  PDF
+  DOCX
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }

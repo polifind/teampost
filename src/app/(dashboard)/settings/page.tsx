@@ -728,7 +728,7 @@ function SettingsForm() {
               <h3 className="font-medium text-claude-text">My Library</h3>
             </div>
             <p className="text-sm text-claude-text-secondary mb-4">
-              Upload your content - articles, YouTube videos, PDFs, documents. Your ghostwriter will use these to create <strong>Magic Drafts</strong>.
+              Upload your content - articles, YouTube videos, PDFs, resume, documents. Your ghostwriter will use these to create <strong>Magic Drafts</strong>.
             </p>
 
             {/* Add URL */}
@@ -775,7 +775,7 @@ function SettingsForm() {
               ) : (
                 <label className="cursor-pointer">
                   <span className="text-sm text-claude-text-secondary">
-                    Drag & drop PDF or DOCX files here, or <span className="text-accent-coral">browse</span>
+                    Drag & drop PDF, resume, or DOCX files here, or <span className="text-accent-coral">browse</span>
                   </span>
                   <input
                     type="file"

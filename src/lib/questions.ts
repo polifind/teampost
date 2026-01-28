@@ -318,4 +318,4 @@ export const QUESTIONS: Question[] = [
 ];
 
 export const TOTAL_QUESTIONS = QUESTIONS.length;
-export const BATCH_SIZE = 10;
+export const BATCH_SIZE = 5;

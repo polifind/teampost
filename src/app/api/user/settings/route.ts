@@ -18,6 +18,17 @@ export async function GET(request: NextRequest) {
         email: true,
         linkedinAccessToken: true,
         linkedinUserId: true,
+        organizationMemberships: {
+          where: { inviteStatus: "ACCEPTED" },
+          include: {
+            organization: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -25,11 +36,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Get organization memberships with role info
+    const organizations = user.organizationMemberships.map((membership) => ({
+      id: membership.organization.id,
+      name: membership.organization.name,
+      role: membership.role,
+    }));
+
     return NextResponse.json({
       name: user.name,
       email: user.email,
       linkedInConnected: !!user.linkedinAccessToken,
       linkedInUserId: user.linkedinUserId,
+      organizations,
     });
   } catch (error) {
     console.error("Settings fetch error:", error);

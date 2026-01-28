@@ -630,7 +630,7 @@ export default function DashboardPage() {
               <PhotoIcon />
             </div>
             <div>
-              <h2 className="font-semibold text-claude-text">Your Photos</h2>
+              <h2 className="font-semibold text-claude-text">Photo Library</h2>
               <p className="text-sm text-claude-text-secondary">Posts with photos perform <span className="font-medium text-accent-coral">2x better</span></p>
             </div>
           </div>

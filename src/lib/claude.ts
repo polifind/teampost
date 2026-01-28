@@ -23,29 +23,25 @@ export async function generateLinkedInPosts(
 
   const prompt = `You are a LinkedIn ghostwriter who writes viral, authentic posts. Transform these voice notes into ${voiceNotes.length} LinkedIn posts.
 
-**CRITICAL STYLE REQUIREMENTS - follow these exactly:**
+**MOST IMPORTANT RULE - NO HALLUCINATION:**
+- ONLY use facts, details, numbers, names, places, and stories that the user EXPLICITLY mentioned in their voice notes
+- DO NOT invent or fabricate ANY specific details (dates, dollar amounts, company names, statistics, locations, etc.)
+- If the user said something vague, keep it vague. Do not add specificity they didn't provide.
+- If you're unsure whether a detail was mentioned, DO NOT include it
+- This is critical: making up facts destroys trust and credibility
+
+**STYLE REQUIREMENTS:**
 
 1. STRUCTURE: Use very short sentences. One thought per line. Many line breaks.
-   Example:
-   "I sat in the engineering building at Brown for 3 days.
-   I didn't belong there. I wasn't an engineer.
-   I couldn't build it alone. So I waited."
 
-2. STORYTELLING: Tell specific stories with concrete details. Day 1. Day 2. Day 3. Numbers. Names. Places.
-   - Set the scene with a specific moment
-   - Build tension through the struggle
-   - Show the turning point
-   - Land the insight
+2. STORYTELLING: Use ONLY the specific details the user actually shared.
+   - Set the scene with moments THEY described
+   - Build tension through struggles THEY mentioned
+   - Show turning points THEY experienced
 
-3. TENSION: Build tension. Show the struggle before the win.
-   "No. No. Not interested. No. One guy laughed.
-   15 engineers. 15 rejections.
-   Then someone walked in."
+3. TENSION: Build tension using their actual words and experiences.
 
 4. PUNCHLINES: End sections with short, punchy lines that hit hard.
-   "We just built it."
-   "First. In. The. World."
-   "What if I had?"
 
 5. AUTHENTICITY: Write like it was spoken, not written. Casual. Direct. Real.
    - NO corporate jargon
@@ -59,7 +55,7 @@ export async function generateLinkedInPosts(
 
 7. ENDING: End with a single powerful line or question. Not a generic call to action.
 
-The posts should feel like they were written in 2 minutes by someone who just experienced something real.
+The posts should feel like they were written by the user themselves, using their actual experiences.
 
 **Voice Note Transcriptions:**
 
@@ -123,9 +119,15 @@ ${originalPost}
 
 ${feedback ? `**User Feedback:** ${feedback}` : "**Request:** Try a different hook, different structure, different angle. Same story, fresh take."}
 ${preferencesSection}
-**CRITICAL STYLE REQUIREMENTS:**
+**MOST IMPORTANT RULE - NO HALLUCINATION:**
+- ONLY use facts, details, numbers, names, places that appear in the original post
+- DO NOT invent or add ANY new specific details (dates, dollar amounts, statistics, etc.)
+- If something is vague in the original, keep it vague
+- Making up facts destroys trust and credibility
+
+**STYLE REQUIREMENTS:**
 - Very short sentences. One thought per line. Many line breaks.
-- Tell the story with specific details: numbers, names, places, days
+- Use ONLY the details from the original post
 - Build tension before the payoff
 - End with a punchy line or question
 - NO corporate jargon, NO hashtags, NO emojis
@@ -152,4 +154,72 @@ Generate a new version:`;
     .join("");
 
   return responseText.trim();
+}
+
+interface EmployeeContext {
+  name: string;
+  linkedinProfileContext?: string;
+  writingPreferences?: string[];
+}
+
+export async function generateBulkVariations(
+  originalContent: string,
+  employees: EmployeeContext[],
+  variationContext?: string
+): Promise<string[]> {
+  const variations: string[] = [];
+
+  for (const employee of employees) {
+    const preferencesSection = employee.writingPreferences?.length
+      ? `\n**THEIR WRITING STYLE PREFERENCES:**\n${employee.writingPreferences.map((p) => `- ${p}`).join("\n")}`
+      : "";
+
+    const profileSection = employee.linkedinProfileContext
+      ? `\n**THEIR PROFESSIONAL BACKGROUND:**\n${employee.linkedinProfileContext}`
+      : "";
+
+    const prompt = `You are adapting a LinkedIn post for a different person while keeping the core message and structure.
+
+**ORIGINAL POST:**
+${originalContent}
+
+**TARGET PERSON:**
+Name: ${employee.name}${profileSection}${preferencesSection}
+
+**VARIATION INSTRUCTIONS:**
+${variationContext || "Create a personalized version that sounds authentic to this person while keeping the same core message and lesson."}
+
+**CRITICAL RULES:**
+1. Keep the EXACT same core message/lesson/insight
+2. Keep the same general structure and flow
+3. Adapt the specific examples and framing to fit their background (if provided)
+4. Match their writing style if preferences are provided
+5. DO NOT invent facts about the person - only use details explicitly provided
+6. If no background is provided, just vary the phrasing while keeping the message
+7. Maintain the same punchy, short-sentence LinkedIn format
+8. NO hashtags, NO emojis, NO corporate jargon
+9. 150-300 words
+
+Generate the adapted post (just the post content, no commentary):`;
+
+    const message = await anthropic.messages.create({
+      model: "claude-opus-4-20250514",
+      max_tokens: 1024,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+
+    const responseText = message.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+
+    variations.push(responseText.trim());
+  }
+
+  return variations;
 }
