@@ -103,7 +103,7 @@ function LoginForm() {
             <div className="space-y-3 mb-6">
               {/* LinkedIn - Recommended */}
               <div className="relative">
-                <span className="absolute -top-2 left-4 px-2 py-0.5 text-xs font-medium bg-claude-text text-white rounded-full">
+                <span className="absolute -top-1.5 left-3 px-1.5 py-px text-[10px] font-medium bg-claude-text text-white rounded-full">
                   Recommended
                 </span>
                 <button
