@@ -460,9 +460,6 @@ function SettingsForm() {
             <Link href="/posts" className="text-sm text-claude-text-secondary hover:text-claude-text">
               Posts
             </Link>
-            <Link href="/schedule" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Schedule
-            </Link>
             <Link href="/settings" className="text-sm text-accent-coral font-medium">
               Settings
             </Link>

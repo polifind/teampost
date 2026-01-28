@@ -104,6 +104,9 @@ const LinkedInIcon = () => (
   </svg>
 );
 
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const TIMES = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+
 export default function PostsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -129,11 +132,25 @@ export default function PostsPage() {
   const [updatingImage, setUpdatingImage] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  // Bulk scheduling state
+  const [showBulkSchedule, setShowBulkSchedule] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [selectedDay, setSelectedDay] = useState("Tuesday");
+  const [selectedTime, setSelectedTime] = useState("10:00");
+  const [startDate, setStartDate] = useState("");
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login?callbackUrl=/posts");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    // Set default start date to next week
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    setStartDate(nextWeek.toISOString().split("T")[0]);
+  }, []);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -428,6 +445,47 @@ export default function PostsPage() {
     }
   };
 
+  const handleBulkSchedule = async () => {
+    if (!linkedInConnected) {
+      alert("Please connect your LinkedIn account first.");
+      return;
+    }
+
+    setScheduling(true);
+
+    try {
+      const response = await fetch("/api/schedule/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dayOfWeek: selectedDay,
+          time: selectedTime,
+          startDate,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Refetch posts to get updated schedules
+        const postsResponse = await fetch("/api/posts");
+        if (postsResponse.ok) {
+          const data = await postsResponse.json();
+          setPosts(data.posts);
+        }
+        setShowBulkSchedule(false);
+        alert(`Scheduled ${result.scheduledCount} posts successfully!`);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to schedule posts");
+      }
+    } catch (error) {
+      console.error("Failed to schedule:", error);
+      alert("Failed to schedule posts. Please try again.");
+    } finally {
+      setScheduling(false);
+    }
+  };
+
   const handleDeleteSchedule = async (scheduleId: string) => {
     if (!confirm("Are you sure you want to unschedule this post? It will be moved back to drafts.")) {
       return;
@@ -523,9 +581,6 @@ export default function PostsPage() {
             <Link href="/posts" className="text-sm text-accent-coral font-medium">
               Posts
             </Link>
-            <Link href="/schedule" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Schedule
-            </Link>
             <Link href="/settings" className="text-sm text-claude-text-secondary hover:text-claude-text">
               Settings
             </Link>
@@ -538,17 +593,97 @@ export default function PostsPage() {
           <div>
             <h1 className="text-3xl font-bold text-claude-text">Your LinkedIn Posts</h1>
             <p className="text-claude-text-secondary mt-1">
-              {posts.length} posts ready for scheduling
+              {posts.length} posts • {posts.filter(p => p.status === "DRAFT").length} drafts • {posts.filter(p => p.status === "SCHEDULED").length} scheduled
             </p>
           </div>
 
-          {posts.length > 0 && (
-            <Link href="/schedule" className="btn-primary">
+          {posts.filter(p => p.status === "DRAFT").length > 0 && linkedInConnected && (
+            <button
+              onClick={() => setShowBulkSchedule(!showBulkSchedule)}
+              className={showBulkSchedule ? "btn-secondary" : "btn-primary"}
+            >
               <CalendarIcon />
-              Schedule Posts
-            </Link>
+              {showBulkSchedule ? "Cancel" : "Schedule All Drafts"}
+            </button>
           )}
         </div>
+
+        {/* Bulk Scheduling UI */}
+        {showBulkSchedule && (
+          <div className="card mb-8 border-accent-coral/20 bg-accent-coral/5">
+            <h2 className="text-lg font-semibold text-claude-text mb-4">
+              Schedule {posts.filter(p => p.status === "DRAFT").length} draft posts
+            </h2>
+
+            <div className="grid sm:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="label">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="input"
+                />
+              </div>
+
+              <div>
+                <label className="label">Day of Week</label>
+                <select
+                  value={selectedDay}
+                  onChange={(e) => setSelectedDay(e.target.value)}
+                  className="input"
+                >
+                  {DAYS_OF_WEEK.map((day) => (
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Time</label>
+                <select
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="input"
+                >
+                  {TIMES.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <p className="text-sm text-claude-text-secondary mb-4">
+              Your posts will be published every {selectedDay} at {selectedTime}, starting from {startDate}.
+            </p>
+
+            <button
+              onClick={handleBulkSchedule}
+              disabled={scheduling}
+              className="btn-primary"
+            >
+              {scheduling ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Scheduling...
+                </>
+              ) : (
+                <>
+                  <CalendarIcon />
+                  Schedule All Posts
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {posts.length === 0 ? (
           <div className="card text-center py-12">
@@ -886,7 +1021,7 @@ export default function PostsPage() {
           </div>
         )}
 
-        {!linkedInConnected && posts.length > 0 && (
+        {!linkedInConnected && posts.length > 0 && posts.some(p => p.status === "DRAFT") && (
           <div className="mt-8 p-6 rounded-claude-lg bg-[#0077B5]/5 border border-[#0077B5]/20">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-full bg-[#0077B5] text-white flex items-center justify-center flex-shrink-0">
@@ -894,7 +1029,7 @@ export default function PostsPage() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-claude-text mb-1">
-                  Connect LinkedIn to auto-post
+                  Connect LinkedIn to schedule posts
                 </h3>
                 <p className="text-sm text-claude-text-secondary mb-4">
                   Link your LinkedIn account to automatically schedule and publish your posts.

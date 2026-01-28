@@ -433,7 +433,6 @@ export default function DashboardPage() {
           <nav className="flex items-center gap-6">
             <Link href="/dashboard" className="text-sm text-accent-coral font-medium">Dashboard</Link>
             <Link href="/posts" className="text-sm text-claude-text-secondary hover:text-claude-text">Posts</Link>
-            <Link href="/schedule" className="text-sm text-claude-text-secondary hover:text-claude-text">Schedule</Link>
             <Link href="/settings" className="text-sm text-claude-text-secondary hover:text-claude-text">Settings</Link>
           </nav>
         </div>
@@ -540,7 +539,7 @@ export default function DashboardPage() {
               </div>
             </Link>
 
-            <Link href="/schedule" className="card-hover">
+            <Link href="/posts" className="card-hover">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-claude-lg bg-warning-light text-warning flex items-center justify-center flex-shrink-0">
                   <CalendarIcon />
@@ -548,7 +547,7 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="font-semibold text-claude-text mb-1">Schedule Posts</h3>
                   <p className="text-sm text-claude-text-secondary">
-                    Set up your posting schedule for the next 10 weeks.
+                    Review and schedule your posts for LinkedIn.
                   </p>
                 </div>
               </div>
