@@ -389,10 +389,14 @@ export default function PostsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        // Add to library photos
-        setLibraryPhotos((prev) => [data.photo, ...prev]);
-        // Attach to post
-        await handleSelectPhoto(postId, data.photo.imageUrl);
+        // API returns photos array, get first item (or fallback to data.photo for backward compat)
+        const uploadedPhoto = data.photos?.[0] || data.photo;
+        if (uploadedPhoto) {
+          // Add to library photos
+          setLibraryPhotos((prev) => [uploadedPhoto, ...prev]);
+          // Attach to post
+          await handleSelectPhoto(postId, uploadedPhoto.imageUrl);
+        }
       } else {
         const errorData = await response.json();
         alert(errorData.error || "Failed to upload photo");
