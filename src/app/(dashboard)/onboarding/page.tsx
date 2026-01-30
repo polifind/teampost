@@ -14,6 +14,13 @@ interface AnswerData {
   isVoice: boolean;
   duration?: number;
   generatedPost?: string;
+  imageUrl?: string;
+}
+
+interface Photo {
+  id: string;
+  imageUrl: string;
+  filename: string | null;
 }
 
 const ArrowLeftIcon = () => (
@@ -88,6 +95,24 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const PhotoIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+  </svg>
+);
+
 export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -110,6 +135,12 @@ export default function OnboardingPage() {
   const [feedbackText, setFeedbackText] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [learnedPreferences, setLearnedPreferences] = useState<string[]>([]);
+
+  // Photo library state
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [showPhotoLibrary, setShowPhotoLibrary] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -163,6 +194,62 @@ export default function OnboardingPage() {
 
     loadExistingPosts();
   }, [status]);
+
+  // Fetch photo library
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      if (status !== "authenticated") return;
+      try {
+        const response = await fetch("/api/photos");
+        if (response.ok) {
+          const data = await response.json();
+          setPhotos(data.photos || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch photos:", error);
+      }
+    };
+    fetchPhotos();
+  }, [status]);
+
+  // Handle photo upload
+  const handlePhotoUpload = async (files: FileList) => {
+    if (files.length === 0) return;
+
+    const file = files[0];
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File is too large (max 10MB).");
+      return;
+    }
+
+    setPhotoUploading(true);
+    const formData = new FormData();
+    formData.append("files", file);
+
+    try {
+      const response = await fetch("/api/photos", {
+        method: "POST",
+        body: formData,
+      });
+      const result = await response.json();
+      if (response.ok && result.photos?.length > 0) {
+        setPhotos((prev) => [...result.photos, ...prev]);
+        setSelectedImageUrl(result.photos[0].imageUrl);
+        setShowPhotoLibrary(false);
+      } else {
+        alert(result.error || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Failed to upload photo:", error);
+      alert("Failed to upload photo.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   // Auto-stop recording and reset when changing questions
   const handleQuestionChange = (newIndex: number) => {
@@ -332,19 +419,35 @@ export default function OnboardingPage() {
         const currentAnswer = answers.find(a => a.questionIndex === currentPreview.questionIndex);
         const postContent = editingPost !== null ? editingPost : currentPreview.content;
 
-        await fetch("/api/posts", {
+        const response = await fetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             content: postContent,
             weekNumber: currentPreview.questionIndex + 1,
             sourceNoteContent: currentAnswer?.content,
+            imageUrl: selectedImageUrl,
             autoSchedule: true,
           }),
         });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to save post");
+        }
+
+        // Update local answer with imageUrl
+        setAnswers((prev) =>
+          prev.map((a) =>
+            a.questionIndex === currentPreview.questionIndex
+              ? { ...a, imageUrl: selectedImageUrl || undefined }
+              : a
+          )
+        );
       } catch (error) {
         console.error("Error saving post:", error);
-        // Continue anyway - the post is in local state
+        alert("Failed to save post. Please try again.");
+        return; // Don't close modal if save failed
       }
     }
 
@@ -352,6 +455,8 @@ export default function OnboardingPage() {
     setCurrentPreview(null);
     setEditingPost(null);
     setTextInput('');
+    setSelectedImageUrl(null);
+    setShowPhotoLibrary(false);
 
     // Reset the voice recorder for the next question
     voiceRecorderRef.current?.reset();
@@ -473,6 +578,8 @@ export default function OnboardingPage() {
                     setShowPostPreview(false);
                     setCurrentPreview(null);
                     setEditingPost(null);
+                    setSelectedImageUrl(null);
+                    setShowPhotoLibrary(false);
                   }}
                   className="p-2 hover:bg-claude-bg-tertiary rounded-claude"
                 >
@@ -518,6 +625,93 @@ export default function OnboardingPage() {
                     ) : (
                       <div className="whitespace-pre-wrap text-sm text-claude-text">
                         {currentPreview.content}
+                      </div>
+                    )}
+
+                    {/* Image Preview/Selection */}
+                    {selectedImageUrl ? (
+                      <div className="mt-4 relative">
+                        <img
+                          src={selectedImageUrl}
+                          alt="Post image"
+                          className="w-full rounded-claude max-h-64 object-cover"
+                        />
+                        <button
+                          onClick={() => setSelectedImageUrl(null)}
+                          className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Photo Library Section */}
+                  <div className="mb-4">
+                    {!showPhotoLibrary ? (
+                      <button
+                        onClick={() => setShowPhotoLibrary(true)}
+                        className="flex items-center gap-2 text-sm text-claude-text-secondary hover:text-accent-coral"
+                      >
+                        <PhotoIcon />
+                        {selectedImageUrl ? "Change photo" : "Add a photo (2x more engagement)"}
+                      </button>
+                    ) : (
+                      <div className="p-4 bg-claude-bg-secondary rounded-claude">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-medium text-claude-text">Photo Library</span>
+                          <button
+                            onClick={() => setShowPhotoLibrary(false)}
+                            className="text-sm text-claude-text-tertiary hover:text-claude-text"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                          {/* Upload button */}
+                          <label className="aspect-square border-2 border-dashed border-claude-border rounded-claude flex flex-col items-center justify-center cursor-pointer hover:border-accent-coral hover:bg-accent-coral/5">
+                            {photoUploading ? (
+                              <div className="animate-spin w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full" />
+                            ) : (
+                              <>
+                                <PlusIcon />
+                                <span className="text-xs text-claude-text-tertiary mt-1">Upload</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => e.target.files && handlePhotoUpload(e.target.files)}
+                              className="hidden"
+                            />
+                          </label>
+                          {/* Existing photos */}
+                          {photos.map((photo) => (
+                            <button
+                              key={photo.id}
+                              onClick={() => {
+                                setSelectedImageUrl(photo.imageUrl);
+                                setShowPhotoLibrary(false);
+                              }}
+                              className={`aspect-square rounded-claude overflow-hidden border-2 ${
+                                selectedImageUrl === photo.imageUrl
+                                  ? "border-accent-coral"
+                                  : "border-transparent hover:border-claude-border-strong"
+                              }`}
+                            >
+                              <img
+                                src={photo.imageUrl}
+                                alt={photo.filename || "Photo"}
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          ))}
+                        </div>
+                        {photos.length === 0 && (
+                          <p className="text-xs text-claude-text-tertiary text-center mt-2">
+                            No photos yet. Upload one above.
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
