@@ -423,24 +423,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Simplified Personalization Section */}
-        <div className="card p-5">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center flex-shrink-0">
-              <SparklesIcon />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-claude-text">Personalize your ghostwriter</p>
-              <p className="text-sm text-claude-text-secondary">Add content to your library for Magic Drafts</p>
-            </div>
-            <Link href="/settings#personalization" className="btn-secondary text-sm flex items-center gap-1">
-              My Library
-              <ArrowRightIcon />
-            </Link>
-          </div>
-        </div>
-
-        {/* Separate Photos Section */}
+        {/* Photos Section */}
         <div className="card p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-accent-coral/10 text-accent-coral flex items-center justify-center">
