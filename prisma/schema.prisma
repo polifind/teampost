@@ -80,6 +80,7 @@ model User {
   ghostwriterGuidelines  GhostwriterGuideline[]
   lifeLibraryItems       LifeLibraryItem[]
   linkedinContacts       LinkedInContact[]
+  slackIntegration       SlackIntegration?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -141,6 +142,9 @@ model Post {
 
   // LinkedIn tagging - stores JSON array of contact IDs
   taggedContactIds String?  // JSON array of LinkedInContact IDs
+
+  // Slack draft that created this post
+  slackDraft SlackDraft?
 
   schedule Schedule?
 
@@ -471,4 +475,75 @@ model LinkedInContact {
 enum LinkedInContactType {
   PERSON
   COMPANY
+}
+
+// Slack integration for per-user bot installation
+model SlackIntegration {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Slack workspace info
+  workspaceId   String    // Slack workspace/team ID
+  teamName      String?   // Workspace name for display
+
+  // Bot credentials
+  botToken      String    // xoxb-... token
+  botUserId     String    // Bot's Slack user ID
+
+  // User's Slack identity
+  slackUserId   String    // User's Slack ID in this workspace
+
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Drafts created via this integration
+  drafts        SlackDraft[]
+
+  @@index([slackUserId])
+}
+
+// Drafts being worked on via Slack DM
+model SlackDraft {
+  id                String    @id @default(cuid())
+
+  // Slack context
+  slackIntegrationId String
+  slackIntegration   SlackIntegration @relation(fields: [slackIntegrationId], references: [id], onDelete: Cascade)
+  slackChannelId     String   // DM channel ID
+  slackThreadTs      String   // Thread timestamp for continuity
+
+  // Content
+  originalInput      String   @db.Text  // User's original bullets/idea
+  draftContent       String   @db.Text  // Generated draft
+  feedback           String[] // Array of feedback given for regeneration
+
+  // Parsed schedule from natural language (e.g., "Monday at 8:55am EST")
+  scheduleDayOfWeek  String?  // "monday", "tuesday", etc.
+  scheduleTime       String?  // "08:55" 24h format
+  scheduleTimezone   String?  // "EST", "America/New_York", etc.
+
+  // Photo attached to this draft (from Slack file uploads)
+  imageUrl           String?  // Vercel Blob URL for attached photo
+
+  // Link to saved post (once approved)
+  postId             String?  @unique
+  post               Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  // Status
+  status             SlackDraftStatus @default(DRAFTING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slackIntegrationId])
+  @@index([slackThreadTs])
+}
+
+enum SlackDraftStatus {
+  DRAFTING   // Still being edited in Slack
+  SAVED      // Saved to TeamPost as draft
+  SCHEDULED  // Saved and scheduled
+  POSTED     // Already posted to LinkedIn
 }

@@ -30,6 +30,13 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        slackIntegration: {
+          select: {
+            id: true,
+            teamName: true,
+            isActive: true,
+          },
+        },
       },
     });
 
@@ -51,6 +58,7 @@ export async function GET(request: NextRequest) {
       linkedInConnected: !!user.linkedinAccessToken,
       linkedInUserId: user.linkedinUserId,
       organizations,
+      slackIntegration: user.slackIntegration,
     });
   } catch (error) {
     console.error("Settings fetch error:", error);
