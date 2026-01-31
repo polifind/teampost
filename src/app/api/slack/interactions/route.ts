@@ -314,7 +314,7 @@ async function handleScheduleSubmission(
     return;
   }
 
-  const isScheduled = scheduleType === "scheduled" && scheduleDay && scheduleTime;
+  const isScheduled = !!(scheduleType === "scheduled" && scheduleDay && scheduleTime);
 
   // Create the post (include image if attached)
   const post = await prisma.post.create({
