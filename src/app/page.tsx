@@ -65,6 +65,12 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+const SlackIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+  </svg>
+);
+
 const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -376,6 +382,144 @@ export default function LandingPage() {
                 Posts automatically go live on your schedule. One per week, completely hands-off.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Slack Integration - Your Ghostwriter in Slack */}
+      <section className="py-20 px-6 bg-gradient-to-br from-[#4A154B]/5 to-[#4A154B]/10">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4A154B]/10 text-[#4A154B] text-sm font-medium mb-4">
+              <SlackIcon className="w-4 h-4" />
+              <span>Slack Integration</span>
+            </div>
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Your personal ghostwriter, right in Slack
+            </h2>
+            <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
+              No new app to learn. Just DM your TeamPost bot with ideas, and it drafts, refines, and schedules your LinkedIn posts. Like texting your ghostwriter.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Slack conversation mockup */}
+            <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+              {/* Slack header */}
+              <div className="bg-[#4A154B] text-white px-4 py-3 flex items-center gap-3">
+                <SlackIcon className="w-5 h-5" />
+                <span className="font-medium">TeamPost</span>
+                <span className="text-white/60 text-sm">App</span>
+              </div>
+
+              {/* Conversation */}
+              <div className="p-4 space-y-4 bg-gray-50">
+                {/* User message */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded bg-gray-300 flex-shrink-0" />
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-semibold text-sm text-gray-900">You</span>
+                      <span className="text-xs text-gray-500">10:32 AM</span>
+                    </div>
+                    <p className="text-sm text-gray-800 mt-1">
+                      hey - quick bullets for a post:<br/>
+                      • just hit $1M ARR<br/>
+                      • bootstrapped, no outside funding<br/>
+                      • took 18 months<br/><br/>
+                      Monday at 9am EST
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bot response */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded bg-accent-coral flex items-center justify-center flex-shrink-0">
+                    <SparklesIcon />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-semibold text-sm text-gray-900">TeamPost</span>
+                      <span className="text-xs text-blue-600 bg-blue-100 px-1.5 rounded">APP</span>
+                      <span className="text-xs text-gray-500">10:32 AM</span>
+                    </div>
+                    <div className="mt-2 bg-white rounded-lg border border-gray-200 p-3">
+                      <p className="text-xs text-gray-500 mb-2">Here's your LinkedIn post draft:</p>
+                      <p className="text-xs text-accent-coral mb-2">📅 Will be scheduled for: Monday 9:00 AM EST</p>
+                      <div className="border-l-2 border-gray-200 pl-3 text-sm text-gray-800">
+                        We just hit $1M ARR.<br/><br/>
+                        No VCs. No outside funding. Just us.<br/><br/>
+                        18 months of saying no to everything except what mattered...<br/><br/>
+                        <span className="text-gray-400">[Read more]</span>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <button className="px-3 py-1.5 bg-[#007a5a] text-white text-xs font-medium rounded">✅ Approve & Schedule</button>
+                        <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">🔄 Regenerate</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Benefits */}
+            <div className="space-y-8">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#4A154B]/10 text-[#4A154B] flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-claude-text mb-2">Just DM your ideas</h3>
+                <p className="text-claude-text-secondary">
+                  Send bullet points, rough thoughts, or even voice notes. Your AI ghostwriter turns them into polished LinkedIn posts instantly.
+                </p>
+              </div>
+
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#4A154B]/10 text-[#4A154B] flex items-center justify-center mb-4">
+                  <CalendarIcon />
+                </div>
+                <h3 className="text-xl font-semibold text-claude-text mb-2">Say when, it posts</h3>
+                <p className="text-claude-text-secondary">
+                  Include "Monday at 9am EST" in your message and it schedules automatically. One tap to approve. Zero friction.
+                </p>
+              </div>
+
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#4A154B]/10 text-[#4A154B] flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-claude-text mb-2">Refine with feedback</h3>
+                <p className="text-claude-text-secondary">
+                  Don't like the draft? Just reply with feedback. "Make it shorter" or "add more storytelling" — your ghostwriter adapts instantly.
+                </p>
+              </div>
+
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#4A154B]/10 text-[#4A154B] flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-claude-text mb-2">Drop in photos too</h3>
+                <p className="text-claude-text-secondary">
+                  Drag photos into the chat and they're automatically attached to your post. Your ghostwriter handles everything.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center">
+            <p className="text-claude-text-secondary mb-6">
+              It's like having a $20,000/year ghostwriter who lives in your Slack and works with you one-on-one.
+            </p>
+            <Link href="/signup" className="btn-primary bg-[#4A154B] hover:bg-[#3d1140] inline-flex items-center gap-2">
+              <SlackIcon className="w-5 h-5" />
+              Get Your Slack Ghostwriter
+            </Link>
           </div>
         </div>
       </section>
@@ -1135,7 +1279,7 @@ export default function LandingPage() {
 
               <div className="pt-6 border-t border-amber-200 mt-8">
                 <p className="font-semibold text-lg">Rohan Pavuluri</p>
-                <p className="text-claude-text-secondary text-sm">Founder, TeamPost</p>
+                <p className="text-claude-text-secondary text-sm">Creator, TeamPost</p>
               </div>
             </div>
           </div>
