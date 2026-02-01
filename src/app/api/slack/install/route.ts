@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 const SLACK_SCOPES = [
   "chat:write",      // Send messages
   "im:history",      // Read DM history
+  "im:read",         // Receive DM events (required for message.im subscription)
   "im:write",        // Send DMs
   "users:read",      // Get user info
   "users:read.email" // Get user email for account matching

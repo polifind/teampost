@@ -83,6 +83,15 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const timestamp = request.headers.get("x-slack-request-timestamp");
     const signature = request.headers.get("x-slack-signature");
+    const retryNum = request.headers.get("x-slack-retry-num");
+    const retryReason = request.headers.get("x-slack-retry-reason");
+
+    // Ignore Slack retries to prevent duplicate processing
+    // Slack retries if it doesn't get a 200 response within 3 seconds
+    if (retryNum) {
+      console.log(`[Slack Events] Ignoring retry #${retryNum}, reason: ${retryReason}`);
+      return NextResponse.json({ ok: true });
+    }
 
     // Parse the body first to check for URL verification
     const event: SlackEvent = JSON.parse(body);
@@ -102,11 +111,18 @@ export async function POST(request: NextRequest) {
     // Handle events
     if (event.type === "event_callback" && event.event) {
       const slackEvent = event.event;
-      console.log(`[Slack Events] Received event: ${slackEvent.type}, channel_type: ${slackEvent.channel_type}, user: ${slackEvent.user}`);
+      console.log(`[Slack Events] Received event: ${slackEvent.type}, subtype: ${slackEvent.subtype}, channel_type: ${slackEvent.channel_type}, user: ${slackEvent.user}`);
 
       // Ignore bot messages to prevent loops
       if (slackEvent.bot_id) {
         console.log("[Slack Events] Ignoring bot message");
+        return NextResponse.json({ ok: true });
+      }
+
+      // Ignore message subtypes we don't want to process (edits, deletes, etc.)
+      // Only process regular messages (no subtype) or file_share
+      if (slackEvent.subtype && slackEvent.subtype !== "file_share") {
+        console.log(`[Slack Events] Ignoring message subtype: ${slackEvent.subtype}`);
         return NextResponse.json({ ok: true });
       }
 
