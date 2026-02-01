@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
+import type { LibraryPhoto } from "@/types";
 
 interface Schedule {
   id: string;
@@ -24,12 +26,6 @@ interface Post {
     name: string | null;
     email: string;
   } | null;
-}
-
-interface LibraryPhoto {
-  id: string;
-  imageUrl: string;
-  filename: string | null;
 }
 
 const EditIcon = () => (
@@ -136,27 +132,8 @@ export default function PostsPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoDragActive, setPhotoDragActive] = useState(false);
   const [postingNow, setPostingNow] = useState<string | null>(null);
-  const [userTimezone, setUserTimezone] = useState("America/New_York");
-  const [scheduleTimezone, setScheduleTimezone] = useState("America/New_York");
-
-  // Common timezones for the dropdown
-  const timezones = [
-    { value: "America/New_York", label: "Eastern Time (ET)" },
-    { value: "America/Chicago", label: "Central Time (CT)" },
-    { value: "America/Denver", label: "Mountain Time (MT)" },
-    { value: "America/Los_Angeles", label: "Pacific Time (PT)" },
-    { value: "America/Phoenix", label: "Arizona (MST)" },
-    { value: "America/Anchorage", label: "Alaska (AKT)" },
-    { value: "Pacific/Honolulu", label: "Hawaii (HST)" },
-    { value: "Europe/London", label: "London (GMT/BST)" },
-    { value: "Europe/Paris", label: "Paris (CET)" },
-    { value: "Europe/Berlin", label: "Berlin (CET)" },
-    { value: "Asia/Tokyo", label: "Tokyo (JST)" },
-    { value: "Asia/Shanghai", label: "Shanghai (CST)" },
-    { value: "Asia/Singapore", label: "Singapore (SGT)" },
-    { value: "Asia/Dubai", label: "Dubai (GST)" },
-    { value: "Australia/Sydney", label: "Sydney (AEST)" },
-  ];
+  const [userTimezone, setUserTimezone] = useState(DEFAULT_TIMEZONE);
+  const [scheduleTimezone, setScheduleTimezone] = useState(DEFAULT_TIMEZONE);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -887,7 +864,7 @@ export default function PostsPage() {
                         onChange={(e) => setScheduleTimezone(e.target.value)}
                         className="px-4 py-2 bg-white border border-claude-border rounded-claude text-claude-text text-sm focus:border-accent-coral focus:ring-1 focus:ring-accent-coral transition-colors duration-150"
                       >
-                        {timezones.map((tz) => (
+                        {TIMEZONES.map((tz) => (
                           <option key={tz.value} value={tz.value}>
                             {tz.label}
                           </option>

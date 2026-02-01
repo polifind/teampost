@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-interface LinkedInContact {
-  id: string;
-  type: "PERSON" | "COMPANY";
-  linkedinUrl: string;
-  linkedinUrn: string | null;
-  name: string;
-  headline: string | null;
-  profileImageUrl: string | null;
-  usageCount: number;
-}
+import type { LinkedInContact } from "@/types";
 
 interface LinkedInTagPickerProps {
   selectedTags: LinkedInContact[];

@@ -8,6 +8,8 @@ import ContentInput from "@/components/ContentInput";
 import Logo from "@/components/Logo";
 import SubscriptionPaywall from "@/components/SubscriptionPaywall";
 import LinkedInTagPicker from "@/components/LinkedInTagPicker";
+import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
+import type { LinkedInContact, LibraryPhoto } from "@/types";
 
 interface Message {
   id: string;
@@ -29,13 +31,6 @@ interface SavedConversation {
   updatedAt: string;
 }
 
-interface LibraryPhoto {
-  id: string;
-  imageUrl: string;
-  filename: string | null;
-  usageCount: number;
-}
-
 interface LibraryItem {
   id: string;
   type: "LINK" | "YOUTUBE" | "PDF" | "DOCX";
@@ -44,17 +39,6 @@ interface LibraryItem {
   fileName: string | null;
   extractedSummary: string | null;
   processingStatus: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-}
-
-interface LinkedInContact {
-  id: string;
-  type: "PERSON" | "COMPANY";
-  linkedinUrl: string;
-  linkedinUrn: string | null;
-  name: string;
-  headline: string | null;
-  profileImageUrl: string | null;
-  usageCount: number;
 }
 
 const SparklesIcon = () => (
@@ -329,7 +313,21 @@ export default function CreatePostPage() {
   const [selectedTags, setSelectedTags] = useState<LinkedInContact[]>([]);
 
   // Timezone state
-  const [userTimezone, setUserTimezone] = useState<string>("America/New_York");
+  const [userTimezone, setUserTimezone] = useState<string>(DEFAULT_TIMEZONE);
+
+  // Tab state for AI Conversation vs Quick Schedule
+  const [activeTab, setActiveTab] = useState<"conversation" | "quick-schedule">("conversation");
+
+  // Quick Schedule state
+  const [quickContent, setQuickContent] = useState("");
+  const [quickImageUrl, setQuickImageUrl] = useState<string | undefined>(undefined);
+  const [quickTags, setQuickTags] = useState<LinkedInContact[]>([]);
+  const [quickScheduleDate, setQuickScheduleDate] = useState<string>("");
+  const [quickScheduleTime, setQuickScheduleTime] = useState<string>("08:55");
+  const [isQuickScheduling, setIsQuickScheduling] = useState(false);
+  const [quickScheduleSuccess, setQuickScheduleSuccess] = useState(false);
+  const [quickScheduledTime, setQuickScheduledTime] = useState<string | null>(null);
+  const quickFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -504,6 +502,14 @@ export default function CreatePostPage() {
       setSelectedScheduleTime("08:55");
     }
   }, [draftPost, selectedScheduleDate]);
+
+  // Initialize quick schedule date when switching to that tab
+  useEffect(() => {
+    if (activeTab === "quick-schedule" && !quickScheduleDate) {
+      const nextMonday = getNextMonday();
+      setQuickScheduleDate(nextMonday.toISOString().split("T")[0]);
+    }
+  }, [activeTab, quickScheduleDate]);
 
   const fetchSavedConversations = async () => {
     try {
@@ -1060,6 +1066,138 @@ You can type or record a voice note - whatever feels more natural.`,
     setSelectedTags([]);
   };
 
+  // Quick Schedule handlers
+  const handleQuickImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file (JPEG, PNG, GIF, or WebP)");
+      if (quickFileInputRef.current) quickFileInputRef.current.value = "";
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert("Image is too large. Maximum size is 10MB.");
+      if (quickFileInputRef.current) quickFileInputRef.current.value = "";
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to upload image");
+      }
+
+      setQuickImageUrl(result.imageUrl);
+    } catch (error) {
+      console.error("Upload error:", error);
+      const message = error instanceof Error ? error.message : "Failed to upload image";
+      alert(`Upload failed: ${message}`);
+    } finally {
+      setUploadingImage(false);
+      if (quickFileInputRef.current) {
+        quickFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleQuickInsertMention = (contact: LinkedInContact) => {
+    const mentionText = `@${contact.name}`;
+    if (quickContent.includes(mentionText)) {
+      return;
+    }
+
+    let newContent = quickContent;
+    const nameIndex = newContent.indexOf(contact.name);
+
+    if (nameIndex !== -1) {
+      const charBefore = nameIndex > 0 ? newContent[nameIndex - 1] : "";
+      if (charBefore !== "@") {
+        newContent = newContent.slice(0, nameIndex) + "@" + newContent.slice(nameIndex);
+      }
+    }
+
+    setQuickContent(newContent);
+  };
+
+  const handleQuickSchedulePost = async () => {
+    if (!quickContent.trim() || !quickScheduleDate || !quickScheduleTime) return;
+
+    setIsQuickScheduling(true);
+    try {
+      // Save the post
+      const saveResponse = await fetch("/api/posts/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: quickContent,
+          imageUrl: quickImageUrl,
+          conversationHistory: [],
+          taggedContacts: quickTags.map((t) => t.id),
+        }),
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save post");
+      }
+
+      const { postId } = await saveResponse.json();
+
+      // Schedule the post
+      const scheduledFor = new Date(`${quickScheduleDate}T${quickScheduleTime}:00`);
+
+      const scheduleResponse = await fetch("/api/schedule/next", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId,
+          scheduledFor: scheduledFor.toISOString(),
+          imageUrl: quickImageUrl,
+        }),
+      });
+
+      if (scheduleResponse.ok) {
+        const scheduleData = await scheduleResponse.json();
+        setQuickScheduledTime(scheduleData.scheduledFor || scheduledFor.toISOString());
+        setQuickScheduleSuccess(true);
+      } else if (scheduleResponse.status === 402) {
+        const errorData = await scheduleResponse.json();
+        setScheduledPostCount(errorData.scheduledPostCount || 10);
+        setShowPaywall(true);
+      } else {
+        throw new Error("Failed to schedule post");
+      }
+    } catch (error) {
+      console.error("Error scheduling:", error);
+      alert("Failed to schedule post. Please try again.");
+    } finally {
+      setIsQuickScheduling(false);
+    }
+  };
+
+  const handleQuickScheduleReset = () => {
+    setQuickContent("");
+    setQuickImageUrl(undefined);
+    setQuickTags([]);
+    setQuickScheduleSuccess(false);
+    setQuickScheduledTime(null);
+    const nextMonday = getNextMonday();
+    setQuickScheduleDate(nextMonday.toISOString().split("T")[0]);
+    setQuickScheduleTime("08:55");
+  };
+
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-claude-bg flex items-center justify-center">
@@ -1108,7 +1246,43 @@ You can type or record a voice note - whatever feels more natural.`,
         </div>
       </header>
 
+      {/* Tab Switcher */}
+      <div className="border-b border-claude-border bg-claude-bg">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setActiveTab("conversation")}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "conversation"
+                  ? "border-accent-coral text-accent-coral"
+                  : "border-transparent text-claude-text-secondary hover:text-claude-text hover:border-claude-border"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <ChatBubbleIcon />
+                AI Conversation
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab("quick-schedule")}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "quick-schedule"
+                  ? "border-accent-coral text-accent-coral"
+                  : "border-transparent text-claude-text-secondary hover:text-claude-text hover:border-claude-border"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <CalendarIcon />
+                Quick Schedule
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="flex-1 flex">
+        {activeTab === "conversation" ? (
+          <>
         {/* Conversations sidebar */}
         <div
           className={`${
@@ -1526,17 +1700,11 @@ You can type or record a voice note - whatever feels more natural.`,
                             onChange={(e) => handleTimezoneChange(e.target.value)}
                             className="w-full mt-2 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
                           >
-                            <option value="America/New_York">Eastern Time (ET)</option>
-                            <option value="America/Chicago">Central Time (CT)</option>
-                            <option value="America/Denver">Mountain Time (MT)</option>
-                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                            <option value="America/Anchorage">Alaska Time (AKT)</option>
-                            <option value="Pacific/Honolulu">Hawaii Time (HT)</option>
-                            <option value="Europe/London">London (GMT)</option>
-                            <option value="Europe/Paris">Paris (CET)</option>
-                            <option value="Asia/Tokyo">Tokyo (JST)</option>
-                            <option value="Asia/Shanghai">Shanghai (CST)</option>
-                            <option value="Australia/Sydney">Sydney (AEST)</option>
+                            {TIMEZONES.map((tz) => (
+                              <option key={tz.value} value={tz.value}>
+                                {tz.label}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
@@ -1628,6 +1796,268 @@ You can type or record a voice note - whatever feels more natural.`,
             </div>
           )}
         </div>
+          </>
+        ) : (
+          /* Quick Schedule Tab */
+          <div className="flex-1 flex max-w-5xl mx-auto w-full p-6 gap-6">
+            {/* Left: Input Form */}
+            <div className="flex-1 space-y-4">
+              <div className="bg-white rounded-claude-lg border border-claude-border p-6">
+                <h2 className="text-lg font-semibold text-claude-text mb-4 flex items-center gap-2">
+                  <CalendarIcon />
+                  Quick Schedule
+                </h2>
+                <p className="text-sm text-claude-text-secondary mb-4">
+                  Paste your post content and schedule it directly, no AI conversation needed.
+                </p>
+
+                {quickScheduleSuccess ? (
+                  /* Success state */
+                  <div className="p-4 bg-success/10 border border-success/20 rounded-claude">
+                    <div className="flex items-center gap-2 text-success mb-2">
+                      <CheckIcon />
+                      <span className="font-medium">Post Scheduled!</span>
+                    </div>
+                    <p className="text-sm text-claude-text-secondary mb-3">
+                      {quickScheduledTime ? (
+                        <>
+                          Your post will go live on{" "}
+                          {new Date(quickScheduledTime).toLocaleDateString("en-US", {
+                            weekday: "long",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                          .
+                        </>
+                      ) : (
+                        "Your post has been scheduled."
+                      )}
+                    </p>
+                    <div className="flex gap-2">
+                      <button onClick={handleQuickScheduleReset} className="btn-primary flex-1 text-sm">
+                        <PlusIcon />
+                        Schedule Another
+                      </button>
+                      <Link href="/posts" className="btn-ghost flex-1 text-sm text-center">
+                        View Posts
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Content textarea */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-claude-text">
+                        Post Content
+                      </label>
+                      <textarea
+                        value={quickContent}
+                        onChange={(e) => setQuickContent(e.target.value)}
+                        placeholder="Paste or write your LinkedIn post here..."
+                        className="w-full h-48 p-4 text-sm border border-claude-border rounded-claude resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                      />
+                      <div className="flex justify-between text-xs text-claude-text-tertiary">
+                        <span>{quickContent.length} characters</span>
+                        <span className={quickContent.length > 3000 ? "text-error" : ""}>
+                          {quickContent.length > 3000 ? "Over limit!" : `${3000 - quickContent.length} remaining`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Image upload */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-claude-text">
+                        Image (optional)
+                      </label>
+                      {quickImageUrl ? (
+                        <div className="relative">
+                          <img
+                            src={quickImageUrl}
+                            alt="Post image"
+                            className="w-full max-h-48 object-cover rounded-claude border border-claude-border"
+                          />
+                          <button
+                            onClick={() => setQuickImageUrl(undefined)}
+                            className="absolute top-2 right-2 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center hover:bg-error/80"
+                          >
+                            <XIcon />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={quickFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleQuickImageUpload}
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() => quickFileInputRef.current?.click()}
+                            disabled={uploadingImage}
+                            className="px-4 py-2 text-sm font-medium text-accent-coral border border-accent-coral/30 rounded-claude hover:bg-accent-coral/5 transition-colors flex items-center gap-2"
+                          >
+                            {uploadingImage ? (
+                              <>
+                                <div className="animate-spin w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon />
+                                Add Image
+                              </>
+                            )}
+                          </button>
+                          <span className="text-xs text-claude-text-tertiary">
+                            Posts with images get 2x more engagement
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* LinkedIn mentions */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-claude-text">
+                        Tag People or Companies (optional)
+                      </label>
+                      <p className="text-xs text-claude-text-tertiary mb-2">
+                        Select contacts to insert @mentions into your post
+                      </p>
+                      <LinkedInTagPicker
+                        selectedTags={quickTags}
+                        onTagsChange={setQuickTags}
+                        onInsertMention={handleQuickInsertMention}
+                      />
+                    </div>
+
+                    {/* Schedule controls */}
+                    <div className="space-y-2 pt-4 border-t border-claude-border">
+                      <label className="text-sm font-medium text-claude-text flex items-center gap-1">
+                        <CalendarIcon />
+                        Schedule for
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={quickScheduleDate}
+                          onChange={(e) => setQuickScheduleDate(e.target.value)}
+                          min={new Date().toISOString().split("T")[0]}
+                          className="flex-1 px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                        />
+                        <input
+                          type="time"
+                          value={quickScheduleTime}
+                          onChange={(e) => setQuickScheduleTime(e.target.value)}
+                          className="min-w-[120px] px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                        />
+                      </div>
+                      <select
+                        value={userTimezone}
+                        onChange={(e) => handleTimezoneChange(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-claude-border rounded-claude bg-white focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                      >
+                        {TIMEZONES.map((tz) => (
+                          <option key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Schedule button */}
+                    <button
+                      onClick={handleQuickSchedulePost}
+                      disabled={isQuickScheduling || !quickContent.trim() || !quickScheduleDate || !quickScheduleTime || quickContent.length > 3000}
+                      className="btn-primary w-full mt-4"
+                    >
+                      {isQuickScheduling ? (
+                        <>
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                          Scheduling...
+                        </>
+                      ) : (
+                        <>
+                          <CalendarIcon />
+                          Schedule Post
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Preview */}
+            <div className="w-96 flex-shrink-0">
+              <div className="sticky top-24">
+                <h3 className="text-sm font-medium text-claude-text-secondary mb-3">Preview</h3>
+                <div className="bg-white rounded-claude-lg border border-claude-border p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-claude-bg-tertiary flex items-center justify-center">
+                      <span className="text-sm font-medium text-claude-text">
+                        {session?.user?.name?.[0] || "U"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-claude-text text-sm">
+                        {session?.user?.name || "Your Name"}
+                      </p>
+                      <p className="text-xs text-claude-text-tertiary">
+                        {quickScheduleDate && quickScheduleTime
+                          ? `Scheduled for ${new Date(`${quickScheduleDate}T${quickScheduleTime}`).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}`
+                          : "Draft"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {quickContent ? (
+                    <div className="whitespace-pre-wrap text-sm text-claude-text">
+                      {quickContent}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-claude-text-tertiary italic">
+                      Your post preview will appear here...
+                    </div>
+                  )}
+
+                  {quickImageUrl && (
+                    <div className="mt-3">
+                      <img
+                        src={quickImageUrl}
+                        alt="Post image"
+                        className="w-full rounded-lg border border-claude-border"
+                      />
+                    </div>
+                  )}
+
+                  {quickTags.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-claude-border">
+                      <p className="text-xs text-claude-text-tertiary mb-1">Tagged:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {quickTags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full"
+                          >
+                            @{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hidden file input */}

@@ -57,3 +57,21 @@ export interface Question {
   shortTitle: string;
   prompt: string;
 }
+
+export interface LinkedInContact {
+  id: string;
+  type: "PERSON" | "COMPANY";
+  linkedinUrl: string;
+  linkedinUrn: string | null;
+  name: string;
+  headline: string | null;
+  profileImageUrl: string | null;
+  usageCount: number;
+}
+
+export interface LibraryPhoto {
+  id: string;
+  imageUrl: string;
+  filename: string | null;
+  usageCount: number;
+}

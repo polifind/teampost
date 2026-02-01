@@ -2,14 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-
-interface LinkedInContact {
-  id: string;
-  type: "PERSON" | "COMPANY";
-  linkedinUrl: string;
-  linkedinUrn: string | null;
-  name: string;
-}
+import type { LinkedInContact } from "@/types";
 
 interface MentionAttribute {
   length: number;

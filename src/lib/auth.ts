@@ -6,7 +6,7 @@ import LinkedInProvider from "next-auth/providers/linkedin";
 import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
-// Custom adapter that allows account linking
+// Custom adapter that allows account linking and handles existing users at signup
 const customAdapter = {
   ...PrismaAdapter(prisma),
   // Override getUserByAccount to allow linking accounts with the same email
@@ -21,6 +21,43 @@ const customAdapter = {
       include: { user: true },
     });
     return account?.user ?? null;
+  },
+  // Override getUserByEmail to find existing users for account linking
+  async getUserByEmail(email: string) {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+    return user;
+  },
+  // Override createUser to return existing user if email already exists
+  // This allows "signup" with OAuth to work for existing users (acts as sign in)
+  async createUser(data: { name?: string | null; email?: string | null; image?: string | null; emailVerified?: Date | null }) {
+    if (!data.email) {
+      // No email, create normally
+      return prisma.user.create({ data: data as any });
+    }
+
+    // Check if user with this email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      // User exists - update their info and return them (acts as sign in)
+      // This handles the case where an existing user tries to "sign up" with OAuth
+      console.log(`Existing user ${data.email} signing in via OAuth signup flow`);
+      return prisma.user.update({
+        where: { email: data.email },
+        data: {
+          // Only update name/image if they're not already set
+          name: existingUser.name || data.name,
+          image: existingUser.image || data.image,
+        },
+      });
+    }
+
+    // New user, create normally
+    return prisma.user.create({ data: data as any });
   },
 };
 
