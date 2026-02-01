@@ -410,14 +410,30 @@ export function buildErrorMessage(message: string): SlackMessage {
  */
 export function buildWelcomeMessage(): SlackMessage {
   return {
-    text: "Welcome to TeamPost!",
+    text: "Hey there! I'm TeamPost, your LinkedIn ghostwriter.",
     blocks: [
       {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "👋 *Welcome to TeamPost!*\n\nI help you create LinkedIn posts from your ideas.\n\nJust send me a message with:\n• Bullet points or rough ideas\n• A story you want to share\n• Key points from a meeting or conversation\n• Photos to include with your post\n\nInclude scheduling like \"Monday at 9am EST\" and I'll schedule it automatically!",
+          text: "👋 *Hey there! I'm TeamPost, your LinkedIn ghostwriter.*\n\nWhat can I help you with today?",
         },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "*Share an idea* — Send me bullet points, a story, or rough thoughts and I'll turn them into an engaging LinkedIn post.\n\n*Paste a draft* — Already have something written? Paste it and I'll polish it up for you.\n\n*Attach photos* — Drop an image and I'll include it with your post.\n\n*Schedule it* — Add \"Monday at 9am\" or \"tomorrow afternoon\" to schedule automatically.",
+        },
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: "💡 _Tip: Just start typing! I'll help with whatever you send._",
+          },
+        ],
       },
     ],
   };

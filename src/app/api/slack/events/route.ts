@@ -102,14 +102,17 @@ export async function POST(request: NextRequest) {
     // Handle events
     if (event.type === "event_callback" && event.event) {
       const slackEvent = event.event;
+      console.log(`[Slack Events] Received event: ${slackEvent.type}, channel_type: ${slackEvent.channel_type}, user: ${slackEvent.user}`);
 
       // Ignore bot messages to prevent loops
       if (slackEvent.bot_id) {
+        console.log("[Slack Events] Ignoring bot message");
         return NextResponse.json({ ok: true });
       }
 
       // Handle DM messages
       if (slackEvent.type === "message" && slackEvent.channel_type === "im") {
+        console.log(`[Slack Events] Processing DM from ${slackEvent.user}: "${slackEvent.text?.substring(0, 50)}..."`);
         // Check if this is a file upload (photo)
         if (slackEvent.files && slackEvent.files.length > 0) {
           // Handle file upload - attach to existing draft if in thread, or just save to library
@@ -265,12 +268,15 @@ async function handleDMMessage(event: {
 }) {
   const { user: slackUserId, channel, text, ts } = event;
 
+  console.log(`[Slack DM] Received message from ${slackUserId}: "${text?.substring(0, 50)}..."`);
+
   if (!slackUserId || !channel || !text || !ts) {
-    console.error("Missing required event fields");
+    console.error("[Slack DM] Missing required event fields:", { slackUserId, channel, text: !!text, ts });
     return;
   }
 
   // Find the Slack integration for this user
+  console.log(`[Slack DM] Looking up integration for slackUserId: ${slackUserId}`);
   const integration = await prisma.slackIntegration.findFirst({
     where: {
       slackUserId,
@@ -289,15 +295,21 @@ async function handleDMMessage(event: {
   if (!integration) {
     // User hasn't connected their TeamPost account
     // We can't send a message without a bot token, so just log
-    console.log(`No integration found for Slack user ${slackUserId}`);
+    console.error(`[Slack DM] No active integration found for Slack user ${slackUserId}`);
     return;
   }
 
+  console.log(`[Slack DM] Found integration for user: ${integration.user.email}`);
+
   const { botToken, user } = integration;
 
-  // Check for simple greetings
+  // Check for simple greetings (match greetings at start of message)
   const lowerText = text.toLowerCase().trim();
-  if (lowerText === "hi" || lowerText === "hello" || lowerText === "hey" || lowerText === "help") {
+  const greetings = ["hi", "hello", "hey", "help", "what can you do", "how does this work", "get started"];
+  const isGreeting = greetings.some(g => lowerText === g || lowerText.startsWith(g + " ") || lowerText.startsWith(g + ",") || lowerText.startsWith(g + "!"));
+
+  if (isGreeting) {
+    console.log(`Sending welcome message to ${slackUserId} for greeting: "${text}"`);
     await sendSlackMessage(botToken, channel, buildWelcomeMessage());
     return;
   }
