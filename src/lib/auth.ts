@@ -220,63 +220,13 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        // Allow linking OAuth accounts to existing email/password accounts
+        // For OAuth sign-ins, ensure we have the correct user ID from database
+        // Note: Account linking is handled by the adapter's linkAccount() method
         if (account?.provider && account.provider !== "credentials" && user.email) {
           const existingUser = await prisma.user.findUnique({
             where: { email: user.email },
-            include: { accounts: true },
           });
-
           if (existingUser) {
-            // Check if this OAuth account is already linked
-            const existingAccount = existingUser.accounts.find(
-              (acc) => acc.provider === account.provider
-            );
-
-            if (!existingAccount) {
-              // Link the OAuth account to existing user
-              try {
-                await prisma.account.create({
-                  data: {
-                    userId: existingUser.id,
-                    type: account.type,
-                    provider: account.provider,
-                    providerAccountId: account.providerAccountId,
-                    access_token: account.access_token,
-                    refresh_token: account.refresh_token,
-                    expires_at: account.expires_at,
-                    token_type: account.token_type,
-                    scope: account.scope,
-                    id_token: account.id_token,
-                  },
-                });
-              } catch (createError) {
-                // Account might already exist with this provider, that's ok
-                console.log("Account linking skipped (may already exist):", createError);
-              }
-            } else {
-              // Update existing account with new tokens
-              try {
-                await prisma.account.update({
-                  where: {
-                    provider_providerAccountId: {
-                      provider: account.provider,
-                      providerAccountId: existingAccount.providerAccountId,
-                    },
-                  },
-                  data: {
-                    access_token: account.access_token,
-                    refresh_token: account.refresh_token,
-                    expires_at: account.expires_at,
-                    id_token: account.id_token,
-                  },
-                });
-              } catch (updateError) {
-                console.log("Account update skipped:", updateError);
-              }
-            }
-
-            // Update user info with id for the JWT callback
             user.id = existingUser.id;
           }
         }
