@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -14,29 +14,7 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
-        name: true,
-        email: true,
         timezone: true,
-        linkedinAccessToken: true,
-        linkedinUserId: true,
-        organizationMemberships: {
-          where: { inviteStatus: "ACCEPTED" },
-          include: {
-            organization: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        slackIntegration: {
-          select: {
-            id: true,
-            teamName: true,
-            isActive: true,
-          },
-        },
       },
     });
 
@@ -44,24 +22,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get organization memberships with role info
-    const organizations = user.organizationMemberships.map((membership) => ({
-      id: membership.organization.id,
-      name: membership.organization.name,
-      role: membership.role,
-    }));
-
     return NextResponse.json({
-      name: user.name,
-      email: user.email,
-      timezone: user.timezone,
-      linkedInConnected: !!user.linkedinAccessToken,
-      linkedInUserId: user.linkedinUserId,
-      organizations,
-      slackIntegration: user.slackIntegration,
+      timezone: user.timezone || "America/New_York",
     });
   } catch (error) {
-    console.error("Settings fetch error:", error);
+    console.error("Error fetching user settings:", error);
     return NextResponse.json(
       { error: "Failed to fetch settings" },
       { status: 500 }
@@ -78,20 +43,30 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, timezone } = body;
+    const { timezone } = body;
 
-    const updateData: { name?: string; timezone?: string } = {};
-    if (name !== undefined) updateData.name = name;
-    if (timezone !== undefined) updateData.timezone = timezone;
+    if (timezone && typeof timezone !== "string") {
+      return NextResponse.json(
+        { error: "Invalid timezone format" },
+        { status: 400 }
+      );
+    }
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
-      data: updateData,
+      data: {
+        ...(timezone && { timezone }),
+      },
+      select: {
+        timezone: true,
+      },
     });
 
-    return NextResponse.json({ message: "Settings updated successfully" });
+    return NextResponse.json({
+      timezone: updatedUser.timezone,
+    });
   } catch (error) {
-    console.error("Settings update error:", error);
+    console.error("Error updating user settings:", error);
     return NextResponse.json(
       { error: "Failed to update settings" },
       { status: 500 }

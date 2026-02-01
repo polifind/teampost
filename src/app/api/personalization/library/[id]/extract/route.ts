@@ -6,10 +6,17 @@ import Anthropic from "@anthropic-ai/sdk";
 import { YoutubeTranscript } from "youtube-transcript";
 import * as cheerio from "cheerio";
 
-// Initialize Anthropic
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
+let _anthropic: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return _anthropic;
+}
 
 // Helper to extract YouTube video ID
 function extractYouTubeId(url: string): string | null {
@@ -185,7 +192,7 @@ async function summarizeContent(
   // Truncate content if too long
   const truncatedContent = content.substring(0, 30000);
 
-  const response = await anthropic.messages.create({
+  const response = await getAnthropicClient().messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 2000,
     messages: [

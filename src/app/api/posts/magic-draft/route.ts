@@ -4,9 +4,17 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
+let _anthropic: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return _anthropic;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -145,7 +153,7 @@ IMPORTANT:
 
 Return ONLY the post content, nothing else.`;
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: "claude-opus-4-20250514",
       max_tokens: 1500,
       system: systemPrompt,

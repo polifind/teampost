@@ -1,8 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
+let _anthropic: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return _anthropic;
+}
 
 interface VoiceNoteInput {
   questionIndex: number;
@@ -64,7 +72,7 @@ ${transcriptionsText}
 **Output Format:**
 Return exactly ${voiceNotes.length} posts, separated by "---POST---". No commentary. Just the posts.`;
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropicClient().messages.create({
     model: "claude-opus-4-20250514",
     max_tokens: 4096,
     messages: [
@@ -137,7 +145,7 @@ ${preferencesSection}
 
 Generate a new version:`;
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropicClient().messages.create({
     model: "claude-opus-4-20250514",
     max_tokens: 1024,
     messages: [
@@ -202,7 +210,7 @@ ${variationContext || "Create a personalized version that sounds authentic to th
 
 Generate the adapted post (just the post content, no commentary):`;
 
-    const message = await anthropic.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: "claude-opus-4-20250514",
       max_tokens: 1024,
       messages: [

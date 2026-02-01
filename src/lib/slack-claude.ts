@@ -1,8 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
+let _anthropic: Anthropic | null = null;
+
+function getAnthropicClient(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  return _anthropic;
+}
 
 interface GhostwriterGuideline {
   content: string;
@@ -37,7 +45,7 @@ Only extract scheduling info that is EXPLICITLY mentioned. Do not guess or infer
 Return ONLY the JSON object, no other text.`;
 
   try {
-    const message = await anthropic.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 256,
       messages: [{ role: "user", content: prompt }],
@@ -128,7 +136,7 @@ The post should feel like it was written by${userName ? ` ${userName}` : " the u
 **Output:**
 Generate one LinkedIn post. No commentary. No explanation. Just the post content.`;
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropicClient().messages.create({
     model: "claude-opus-4-20250514",
     max_tokens: 1024,
     messages: [
@@ -187,7 +195,7 @@ ${preferencesSection}
 **Output:**
 Generate the improved post. No commentary. No explanation. Just the post content.`;
 
-  const message = await anthropic.messages.create({
+  const message = await getAnthropicClient().messages.create({
     model: "claude-opus-4-20250514",
     max_tokens: 1024,
     messages: [

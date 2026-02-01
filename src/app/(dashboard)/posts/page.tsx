@@ -136,6 +136,27 @@ export default function PostsPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoDragActive, setPhotoDragActive] = useState(false);
   const [postingNow, setPostingNow] = useState<string | null>(null);
+  const [userTimezone, setUserTimezone] = useState("America/New_York");
+  const [scheduleTimezone, setScheduleTimezone] = useState("America/New_York");
+
+  // Common timezones for the dropdown
+  const timezones = [
+    { value: "America/New_York", label: "Eastern Time (ET)" },
+    { value: "America/Chicago", label: "Central Time (CT)" },
+    { value: "America/Denver", label: "Mountain Time (MT)" },
+    { value: "America/Los_Angeles", label: "Pacific Time (PT)" },
+    { value: "America/Phoenix", label: "Arizona (MST)" },
+    { value: "America/Anchorage", label: "Alaska (AKT)" },
+    { value: "Pacific/Honolulu", label: "Hawaii (HST)" },
+    { value: "Europe/London", label: "London (GMT/BST)" },
+    { value: "Europe/Paris", label: "Paris (CET)" },
+    { value: "Europe/Berlin", label: "Berlin (CET)" },
+    { value: "Asia/Tokyo", label: "Tokyo (JST)" },
+    { value: "Asia/Shanghai", label: "Shanghai (CST)" },
+    { value: "Asia/Singapore", label: "Singapore (SGT)" },
+    { value: "Asia/Dubai", label: "Dubai (GST)" },
+    { value: "Australia/Sydney", label: "Sydney (AEST)" },
+  ];
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -171,9 +192,25 @@ export default function PostsPage() {
       }
     };
 
+    const fetchUserSettings = async () => {
+      try {
+        const response = await fetch("/api/user/settings");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.timezone) {
+            setUserTimezone(data.timezone);
+            setScheduleTimezone(data.timezone);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch user settings:", error);
+      }
+    };
+
     if (session?.user) {
       fetchPosts();
       fetchLibraryPhotos();
+      fetchUserSettings();
     }
   }, [session]);
 
@@ -456,14 +493,22 @@ export default function PostsPage() {
   const handleEditSchedule = (post: Post) => {
     if (post.schedule) {
       const scheduledDate = new Date(post.schedule.scheduledFor);
-      setNewScheduledDate(scheduledDate.toISOString().split("T")[0]);
-      setNewScheduledTime(
-        scheduledDate.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-      );
+      // Format date/time in the user's timezone
+      const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: userTimezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const timeFormatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: userTimezone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      setNewScheduledDate(dateFormatter.format(scheduledDate));
+      setNewScheduledTime(timeFormatter.format(scheduledDate));
+      setScheduleTimezone(userTimezone);
       setEditingSchedule(post.schedule.id);
     }
   };
@@ -473,13 +518,34 @@ export default function PostsPage() {
 
     setUpdatingSchedule(scheduleId);
     try {
-      const scheduledFor = new Date(`${newScheduledDate}T${newScheduledTime}:00`);
+      // Convert local time in selected timezone to UTC
+      // Create the date string and use Intl to get the correct UTC time
+      const localDateTimeStr = `${newScheduledDate}T${newScheduledTime}:00`;
+
+      // Get the offset for the selected timezone at the specified date/time
+      const tempDate = new Date(localDateTimeStr);
+      const utcDate = new Date(tempDate.toLocaleString("en-US", { timeZone: "UTC" }));
+      const tzDate = new Date(tempDate.toLocaleString("en-US", { timeZone: scheduleTimezone }));
+      const offset = utcDate.getTime() - tzDate.getTime();
+
+      // Apply offset to get correct UTC time
+      const scheduledFor = new Date(tempDate.getTime() + offset);
 
       const response = await fetch(`/api/schedule/${scheduleId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scheduledFor: scheduledFor.toISOString() }),
       });
+
+      // Save the timezone preference if it changed
+      if (scheduleTimezone !== userTimezone) {
+        await fetch("/api/user/settings", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timezone: scheduleTimezone }),
+        });
+        setUserTimezone(scheduleTimezone);
+      }
 
       if (response.ok) {
         const { schedule } = await response.json();
@@ -816,6 +882,17 @@ export default function PostsPage() {
                         onChange={(e) => setNewScheduledTime(e.target.value)}
                         className="min-w-[140px] px-4 py-2 bg-white border border-claude-border rounded-claude text-claude-text text-sm focus:border-accent-coral focus:ring-1 focus:ring-accent-coral transition-colors duration-150"
                       />
+                      <select
+                        value={scheduleTimezone}
+                        onChange={(e) => setScheduleTimezone(e.target.value)}
+                        className="px-4 py-2 bg-white border border-claude-border rounded-claude text-claude-text text-sm focus:border-accent-coral focus:ring-1 focus:ring-accent-coral transition-colors duration-150"
+                      >
+                        {timezones.map((tz) => (
+                          <option key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </option>
+                        ))}
+                      </select>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleSaveSchedule(post.schedule!.id)}

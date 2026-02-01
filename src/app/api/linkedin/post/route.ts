@@ -25,6 +25,7 @@ interface MentionAttribute {
 }
 
 // Build content with mentions for LinkedIn API
+// Finds inline mentions in the format @CompanyName or @PersonName and creates proper LinkedIn attributes
 function buildContentWithMentions(
   content: string,
   taggedContacts: LinkedInContact[]
@@ -35,39 +36,46 @@ function buildContentWithMentions(
     return { text: content, attributes: [] };
   }
 
-  // Add mention text at the end of the content
-  // Format: "Content\n\ncc: @Name1 @Name2"
-  const mentionNames = contactsWithUrns.map((c) => `@${c.name}`);
-  const mentionText = `\n\ncc: ${mentionNames.join(" ")}`;
-  const fullText = content + mentionText;
-
-  // Build attributes for each mention
+  // Find all inline mentions in the content and build attributes
   const attributes: MentionAttribute[] = [];
-  let currentPosition = content.length + 5; // "\n\ncc: " is 5 chars
 
   for (const contact of contactsWithUrns) {
+    // Look for the mention in the content (with @ prefix)
     const mentionStr = `@${contact.name}`;
-    const attr: MentionAttribute = {
-      start: currentPosition,
-      length: mentionStr.length,
-      value: {},
-    };
+    let searchPos = 0;
 
-    if (contact.type === "PERSON") {
-      attr.value["com.linkedin.common.MemberAttributedEntity"] = {
-        member: contact.linkedinUrn!,
+    while (true) {
+      const mentionPos = content.indexOf(mentionStr, searchPos);
+      if (mentionPos === -1) break;
+
+      const attr: MentionAttribute = {
+        start: mentionPos,
+        length: mentionStr.length,
+        value: {},
       };
-    } else {
-      attr.value["com.linkedin.common.CompanyAttributedEntity"] = {
-        company: contact.linkedinUrn!,
-      };
+
+      if (contact.type === "PERSON") {
+        attr.value["com.linkedin.common.MemberAttributedEntity"] = {
+          member: contact.linkedinUrn!,
+        };
+      } else {
+        attr.value["com.linkedin.common.CompanyAttributedEntity"] = {
+          company: contact.linkedinUrn!,
+        };
+      }
+
+      attributes.push(attr);
+      searchPos = mentionPos + mentionStr.length;
     }
 
-    attributes.push(attr);
-    currentPosition += mentionStr.length + 1; // +1 for space
+    // Also check for the name without @ (for cases like "I joined Speechify")
+    // and if found with no @, we won't create a mention attribute as user didn't explicitly tag
   }
 
-  return { text: fullText, attributes };
+  // Sort attributes by start position (LinkedIn requires this)
+  attributes.sort((a, b) => a.start - b.start);
+
+  return { text: content, attributes };
 }
 
 // Post to LinkedIn using Share API

@@ -17,6 +17,7 @@ interface LinkedInTagPickerProps {
   selectedTags: LinkedInContact[];
   onTagsChange: (tags: LinkedInContact[]) => void;
   disabled?: boolean;
+  onInsertMention?: (contact: LinkedInContact) => void; // For inline mention insertion
 }
 
 const PersonIcon = () => (
@@ -53,6 +54,7 @@ export default function LinkedInTagPicker({
   selectedTags,
   onTagsChange,
   disabled = false,
+  onInsertMention,
 }: LinkedInTagPickerProps) {
   const [contacts, setContacts] = useState<LinkedInContact[]>([]);
   const [showPicker, setShowPicker] = useState(false);
@@ -157,12 +159,20 @@ export default function LinkedInTagPicker({
   };
 
   const handleSelectContact = (contact: LinkedInContact) => {
-    if (selectedTags.find((t) => t.id === contact.id)) {
-      // Already selected, remove it
-      onTagsChange(selectedTags.filter((t) => t.id !== contact.id));
+    if (onInsertMention) {
+      // Insert mention mode - insert @Name into text and track the contact
+      if (!selectedTags.find((t) => t.id === contact.id)) {
+        onTagsChange([...selectedTags, contact]);
+      }
+      onInsertMention(contact);
+      setShowPicker(false);
     } else {
-      // Add to selected
-      onTagsChange([...selectedTags, contact]);
+      // Legacy mode - just toggle selection
+      if (selectedTags.find((t) => t.id === contact.id)) {
+        onTagsChange(selectedTags.filter((t) => t.id !== contact.id));
+      } else {
+        onTagsChange([...selectedTags, contact]);
+      }
     }
   };
 
@@ -220,7 +230,7 @@ export default function LinkedInTagPicker({
           className="flex items-center gap-2 px-3 py-2 text-sm text-claude-text-secondary border border-claude-border rounded-claude hover:bg-claude-bg-secondary transition-colors"
         >
           <AtSymbolIcon />
-          Tag People or Companies
+          {onInsertMention ? "Insert @Mention" : "Tag People or Companies"}
         </button>
       )}
 

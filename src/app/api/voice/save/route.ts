@@ -4,9 +4,15 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build errors when OPENAI_API_KEY is not set
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +35,8 @@ export async function POST(request: NextRequest) {
     let transcription = "";
 
     // Transcribe audio if provided and OpenAI API key is available
-    if (audioData && process.env.OPENAI_API_KEY) {
+    const openai = getOpenAIClient();
+    if (audioData && openai) {
       try {
         // Convert base64 to buffer
         const audioBuffer = Buffer.from(audioData, "base64");

@@ -791,6 +791,41 @@ You can type or record a voice note - whatever feels more natural.`,
     setIsEditingDraft(false);
   };
 
+  const handleInsertMention = (contact: LinkedInContact) => {
+    if (!draftPost) return;
+
+    // Insert @Name at the end of the content (or you could track cursor position for more advanced insertion)
+    const mentionText = `@${contact.name}`;
+
+    // Check if mention already exists in content
+    if (draftPost.content.includes(mentionText)) {
+      return; // Already mentioned
+    }
+
+    // Find a good place to insert - typically at the end of the content
+    // Or if there's a sentence that mentions the company name without @, add @ there
+    let newContent = draftPost.content;
+
+    // Try to find the company/person name without @ and add @ before it
+    const nameWithoutAt = contact.name;
+    const nameIndex = newContent.indexOf(nameWithoutAt);
+
+    if (nameIndex !== -1) {
+      // Check if there's no @ before this occurrence
+      const charBefore = nameIndex > 0 ? newContent[nameIndex - 1] : "";
+      if (charBefore !== "@") {
+        // Insert @ before the name
+        newContent =
+          newContent.slice(0, nameIndex) + "@" + newContent.slice(nameIndex);
+      }
+    }
+
+    setDraftPost({
+      ...draftPost,
+      content: newContent,
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1308,10 +1343,14 @@ You can type or record a voice note - whatever feels more natural.`,
                   {/* LinkedIn tagging section */}
                   {!isEditingDraft && !draftPost.isApproved && (
                     <div className="mt-4 pt-4 border-t border-claude-border">
+                      <p className="text-xs text-claude-text-secondary mb-2">
+                        Click a contact to insert @mention into your post
+                      </p>
                       <LinkedInTagPicker
                         selectedTags={selectedTags}
                         onTagsChange={setSelectedTags}
                         disabled={draftPost.isApproved}
+                        onInsertMention={handleInsertMention}
                       />
                     </div>
                   )}
