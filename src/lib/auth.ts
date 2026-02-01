@@ -22,12 +22,13 @@ const customAdapter = {
     });
     return account?.user ?? null;
   },
-  // Override getUserByEmail to find existing users for account linking
+  // Override getUserByEmail to return null - this prevents the OAuthAccountNotLinked error
+  // by making NextAuth think no user exists, so it will call createUser instead
+  // Our createUser override handles returning the existing user
   async getUserByEmail(email: string) {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-    return user;
+    // Return null to bypass the OAuthAccountNotLinked check
+    // The createUser method will handle existing users
+    return null;
   },
   // Override createUser to return existing user if email already exists
   // This allows "signup" with OAuth to work for existing users (acts as sign in)
@@ -58,6 +59,39 @@ const customAdapter = {
 
     // New user, create normally
     return prisma.user.create({ data: data as any });
+  },
+  // Override linkAccount to handle linking to existing users
+  async linkAccount(account: any) {
+    // Check if this account already exists
+    const existingAccount = await prisma.account.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        },
+      },
+    });
+
+    if (existingAccount) {
+      // Update existing account with new tokens
+      return prisma.account.update({
+        where: {
+          provider_providerAccountId: {
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          },
+        },
+        data: {
+          access_token: account.access_token,
+          refresh_token: account.refresh_token,
+          expires_at: account.expires_at,
+          id_token: account.id_token,
+        },
+      });
+    }
+
+    // Create new account link
+    return prisma.account.create({ data: account });
   },
 };
 
