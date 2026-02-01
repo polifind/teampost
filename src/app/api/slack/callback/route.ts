@@ -128,8 +128,11 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Slack callback error:", error);
+    // Provide more specific error message for debugging
+    const errorMessage = error instanceof Error ? error.message : "internal_error";
+    const safeMessage = encodeURIComponent(errorMessage.substring(0, 100));
     return NextResponse.redirect(
-      new URL("/settings?slack=error&message=internal_error", process.env.NEXTAUTH_URL || "http://localhost:3000")
+      new URL(`/settings?slack=error&message=${safeMessage}`, process.env.NEXTAUTH_URL || "http://localhost:3000")
     );
   }
 }
