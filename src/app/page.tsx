@@ -1338,7 +1338,7 @@ export default function LandingPage() {
                 </p>
                 <p>
                   Employee content on LinkedIn isn't a marketing tactic. It's the new distribution moat.
-                  Companies like Lovable, Clay, and Cursor aren't buying ads. They're building media empires through their teams.
+                  Companies like Lovable, Clay, and Cursor aren't buying ads or waiting for reporters. They're building media empires through their teams.
                 </p>
                 <p className="text-accent-coral font-medium">
                   TeamPost is how you go direct.
