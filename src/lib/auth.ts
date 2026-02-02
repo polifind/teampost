@@ -155,6 +155,7 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: true,
             issuer: "https://www.linkedin.com/oauth",
+            jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
             authorization: {
               url: "https://www.linkedin.com/oauth/v2/authorization",
               params: {
