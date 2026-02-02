@@ -215,63 +215,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Marc Andreessen "Go Direct" Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-10 md:p-14 overflow-hidden">
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="absolute top-0 left-0 w-full h-full" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              }} />
-            </div>
-
-            <div className="relative z-10">
-              {/* Quote icon */}
-              <div className="text-6xl text-white/20 font-serif leading-none mb-6">"</div>
-
-              <blockquote className="text-2xl md:text-3xl text-white font-medium leading-relaxed mb-8">
-                We sometimes call ourselves a media company that monetizes via investing.
-                <span className="block mt-4 text-xl md:text-2xl text-white/80">
-                  The line between a "company" and a "media company" is blurring in every industry.
-                </span>
-              </blockquote>
-
-              <div className="flex items-center gap-4">
-                {/* Marc Andreessen photo */}
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Marc_Andreessen_-_2022_%28cropped%29.jpg/440px-Marc_Andreessen_-_2022_%28cropped%29.jpg"
-                  alt="Marc Andreessen"
-                  className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
-                />
-                <div>
-                  <div className="text-white font-semibold text-lg">Marc Andreessen</div>
-                  <div className="text-white/60 text-sm">Co-founder, Andreessen Horowitz</div>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="border-t border-white/10 my-8" />
-
-              {/* The insight */}
-              <div className="space-y-4 text-white/80">
-                <p className="text-lg">
-                  <span className="text-accent-coral font-semibold">The smartest companies are "going direct."</span>{" "}
-                  They're bypassing traditional media gatekeepers and building their own audiences through authentic, human voices.
-                </p>
-                <p>
-                  Employee content on LinkedIn isn't a marketing tactic—it's the new distribution moat.
-                  Companies like Lovable, Clay, and Cursor aren't buying ads. They're building media empires through their teams.
-                </p>
-                <p className="text-accent-coral font-medium">
-                  TeamPost is how you go direct.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Revenue Impact Section */}
       <section className="py-20 px-6 bg-gradient-to-br from-accent-coral/5 to-accent-coral/10">
         <div className="max-w-6xl mx-auto">
@@ -1337,6 +1280,61 @@ export default function LandingPage() {
               <div className="pt-6 border-t border-amber-200 mt-8">
                 <p className="font-semibold text-lg">Rohan Pavuluri</p>
                 <p className="text-claude-text-secondary text-sm">Creator, TeamPost</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Marc Andreessen "Go Direct" Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-10 md:p-14 overflow-hidden">
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 left-0 w-full h-full" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }} />
+            </div>
+
+            <div className="relative z-10">
+              {/* Quote icon */}
+              <div className="text-6xl text-white/20 font-serif leading-none mb-6">"</div>
+
+              <blockquote className="text-2xl md:text-3xl text-white font-medium leading-relaxed mb-8">
+                The number one reason we pass on entrepreneurs we'd otherwise back is they're focusing on product to the exclusion of everything else.
+                <span className="block mt-4 text-xl md:text-2xl text-white/80">
+                  Many entrepreneurs who build great products simply don't have a good distribution strategy.
+                </span>
+              </blockquote>
+
+              <div className="flex items-center gap-4">
+                {/* Marc Andreessen initials */}
+                <div className="w-16 h-16 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">MA</span>
+                </div>
+                <div>
+                  <div className="text-white font-semibold text-lg">Marc Andreessen</div>
+                  <div className="text-white/60 text-sm">Co-founder, Andreessen Horowitz</div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-white/10 my-8" />
+
+              {/* The insight */}
+              <div className="space-y-4 text-white/80">
+                <p>
+                  <span className="text-accent-coral font-semibold">The smartest companies are "going direct."</span>{" "}
+                  They're bypassing traditional media gatekeepers and building their own audiences through authentic, human voices.
+                </p>
+                <p>
+                  Employee content on LinkedIn isn't a marketing tactic. It's the new distribution moat.
+                  Companies like Lovable, Clay, and Cursor aren't buying ads. They're building media empires through their teams.
+                </p>
+                <p className="text-accent-coral font-medium">
+                  TeamPost is how you go direct.
+                </p>
               </div>
             </div>
           </div>
