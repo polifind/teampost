@@ -76,6 +76,11 @@ https://teampost.vercel.app/api/auth/callback/linkedin
 ### "error=OAuthAccountNotLinked" on login
 This error occurs when NextAuth's OAuth flow fails during account linking. Understanding the flow is critical:
 
+**CRITICAL: Prisma Adapter Version Compatibility**
+- NextAuth v4.x requires `@next-auth/prisma-adapter` (NOT `@auth/prisma-adapter`)
+- `@auth/prisma-adapter` v2.x is for Auth.js v5, which is NOT compatible with NextAuth v4
+- If you see `OAuthAccountNotLinked` errors, verify the correct adapter is installed
+
 **NextAuth OAuth Flow:**
 1. `getUserByAccount(provider, providerAccountId)` → Finds user by OAuth account
 2. If found → Signs them in (SUCCESS)
