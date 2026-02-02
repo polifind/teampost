@@ -1301,11 +1301,19 @@ export default function LandingPage() {
               {/* Quote icon */}
               <div className="text-6xl text-white/20 font-serif leading-none mb-6">"</div>
 
-              <blockquote className="text-2xl md:text-3xl text-white font-medium leading-relaxed mb-8">
-                The number one reason we pass on entrepreneurs we'd otherwise back is they're focusing on product to the exclusion of everything else.
-                <span className="block mt-4 text-xl md:text-2xl text-white/80">
-                  Many entrepreneurs who build great products simply don't have a good distribution strategy.
-                </span>
+              <blockquote className="text-xl md:text-2xl text-white font-medium leading-relaxed mb-8 space-y-4">
+                <p>
+                  We've lived in this world for a while where content only comes from content companies. I think content is going to increasingly come from everybody.
+                </p>
+                <p className="text-white/80">
+                  We're actually an example of that. We actually hired a reporter at my venture capital firm. We're in the content business. And why do we need a reporter? We need a reporter because the stuff that we do is complicated and new.
+                </p>
+                <p className="text-white/80">
+                  We think we develop a deep understanding—or at least we try very hard. And then we want to explain these things. And these things are complicated in a world moving fast. And so we're trying to take more responsibility for being able to articulate complex subjects to large audiences.
+                </p>
+                <p className="text-white/80">
+                  The communications functions in many companies has been trying to get reporters to write the right things. I think increasingly it's direct communication.
+                </p>
               </blockquote>
 
               <div className="flex items-center gap-4">

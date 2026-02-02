@@ -7,10 +7,16 @@ import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
 // Custom adapter that allows account linking and handles existing users at signup
+// Key insight: We rely on `allowDangerousEmailAccountLinking: true` on the providers
+// and only override linkAccount to handle token updates for existing accounts.
 const customAdapter = {
   ...PrismaAdapter(prisma),
-  // Override getUserByAccount to allow linking accounts with the same email
+
+  // getUserByAccount - Standard lookup, no override needed
+  // This finds a user by their OAuth account (provider + providerAccountId)
   async getUserByAccount(providerAccountId: { provider: string; providerAccountId: string }) {
+    console.log(`[getUserByAccount] Looking for provider=${providerAccountId.provider}, providerAccountId=${providerAccountId.providerAccountId}`);
+
     const account = await prisma.account.findUnique({
       where: {
         provider_providerAccountId: {
@@ -20,49 +26,32 @@ const customAdapter = {
       },
       include: { user: true },
     });
-    return account?.user ?? null;
-  },
-  // Override getUserByEmail to return null - this prevents the OAuthAccountNotLinked error
-  // by making NextAuth think no user exists, so it will call createUser instead
-  // Our createUser override handles returning the existing user
-  async getUserByEmail(email: string) {
-    // Return null to bypass the OAuthAccountNotLinked check
-    // The createUser method will handle existing users
+
+    if (account?.user) {
+      console.log(`[getUserByAccount] Found user ${account.user.id} via exact match`);
+      return account.user;
+    }
+
+    console.log(`[getUserByAccount] No exact match found`);
     return null;
   },
-  // Override createUser to return existing user if email already exists
-  // This allows "signup" with OAuth to work for existing users (acts as sign in)
-  async createUser(data: { name?: string | null; email?: string | null; image?: string | null; emailVerified?: Date | null }) {
-    if (!data.email) {
-      // No email, create normally
-      return prisma.user.create({ data: data as any });
-    }
 
-    // Check if user with this email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (existingUser) {
-      // User exists - update their info and return them (acts as sign in)
-      // This handles the case where an existing user tries to "sign up" with OAuth
-      console.log(`Existing user ${data.email} signing in via OAuth signup flow`);
-      return prisma.user.update({
-        where: { email: data.email },
-        data: {
-          // Only update name/image if they're not already set
-          name: existingUser.name || data.name,
-          image: existingUser.image || data.image,
-        },
-      });
-    }
-
-    // New user, create normally
-    return prisma.user.create({ data: data as any });
+  // getUserByEmail - Return the real user!
+  // We trust allowDangerousEmailAccountLinking to handle the linking properly.
+  // Previously this returned null which broke the OAuth flow for existing users.
+  async getUserByEmail(email: string) {
+    console.log(`[getUserByEmail] Called for ${email}`);
+    const user = await prisma.user.findUnique({ where: { email } });
+    console.log(`[getUserByEmail] ${user ? `Found user ${user.id}` : 'No user found'}`);
+    return user;
   },
-  // Override linkAccount to handle linking to existing users
+
+  // linkAccount - Handle token updates for existing accounts
+  // This is called after getUserByEmail finds a user (with allowDangerousEmailAccountLinking)
   async linkAccount(account: any) {
-    // Check if this account already exists
+    console.log(`[linkAccount] userId=${account.userId}, provider=${account.provider}, providerAccountId=${account.providerAccountId}`);
+
+    // Check if this exact account already exists (same provider + providerAccountId)
     const existingAccount = await prisma.account.findUnique({
       where: {
         provider_providerAccountId: {
@@ -73,14 +62,9 @@ const customAdapter = {
     });
 
     if (existingAccount) {
-      // Update existing account with new tokens
+      console.log(`[linkAccount] Found existing account ${existingAccount.id}, updating tokens`);
       return prisma.account.update({
-        where: {
-          provider_providerAccountId: {
-            provider: account.provider,
-            providerAccountId: account.providerAccountId,
-          },
-        },
+        where: { id: existingAccount.id },
         data: {
           access_token: account.access_token,
           refresh_token: account.refresh_token,
@@ -90,7 +74,30 @@ const customAdapter = {
       });
     }
 
-    // Create new account link
+    // Check if user already has an account from this provider (different providerAccountId)
+    // This handles the edge case where LinkedIn's sub claim might change
+    const existingUserProviderAccount = await prisma.account.findFirst({
+      where: {
+        userId: account.userId,
+        provider: account.provider,
+      },
+    });
+
+    if (existingUserProviderAccount) {
+      console.log(`[linkAccount] User already has ${account.provider} account with different providerAccountId, updating it`);
+      return prisma.account.update({
+        where: { id: existingUserProviderAccount.id },
+        data: {
+          providerAccountId: account.providerAccountId,
+          access_token: account.access_token,
+          refresh_token: account.refresh_token,
+          expires_at: account.expires_at,
+          id_token: account.id_token,
+        },
+      });
+    }
+
+    console.log(`[linkAccount] Creating new account link`);
     return prisma.account.create({ data: account });
   },
 };

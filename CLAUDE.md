@@ -74,20 +74,39 @@ https://teampost.vercel.app/api/auth/callback/linkedin
 4. Ensure `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` or `LINKEDIN_CLIENT_ID`/`LINKEDIN_CLIENT_SECRET` are set in Vercel
 
 ### "error=OAuthAccountNotLinked" on login
-This error occurs when NextAuth detects an existing user with the same email and tries to link accounts but fails. **Root cause**: Duplicate account linking logic.
+This error occurs when NextAuth's OAuth flow fails during account linking. Understanding the flow is critical:
 
-**IMPORTANT**: The custom adapter in `auth.ts` handles account linking via `linkAccount()`. Do NOT also try to create/update Account records manually in the `signIn` callback - this causes race conditions and unique constraint violations.
+**NextAuth OAuth Flow:**
+1. `getUserByAccount(provider, providerAccountId)` → Finds user by OAuth account
+2. If found → Signs them in (SUCCESS)
+3. If NOT found → `getUserByEmail(email)` → Finds user by email
+4. If user found by email AND `allowDangerousEmailAccountLinking: true` → Links account
+5. If user NOT found → `createUser()` → Creates new user
+6. Finally → `linkAccount()` → Creates/updates the Account record
 
-The `signIn` callback should only:
-1. Store LinkedIn tokens on the User record (for posting)
-2. Look up the existing user to set `user.id` for the JWT
-3. Handle auto-join organization logic
+**CRITICAL: Custom Adapter Rules**
+The custom adapter in `auth.ts` relies on `allowDangerousEmailAccountLinking: true` on providers:
 
-It should NOT:
+1. **`getUserByEmail` MUST return the real user** - Returning `null` breaks the flow by forcing NextAuth to create a new user when one already exists, causing duplicate account issues.
+
+2. **`linkAccount` handles token updates** - It safely updates existing accounts if they exist, or creates new ones. It also handles the edge case where a user already has an account from the same provider with a different `providerAccountId`.
+
+3. **Don't override `createUser`** - Let the default PrismaAdapter handle user creation.
+
+**The `signIn` callback should only:**
+- Store LinkedIn tokens on the User record (for posting API calls)
+- Look up the existing user to set `user.id` for the JWT
+- Handle auto-join organization logic
+
+**It should NOT:**
 - Create Account records (`prisma.account.create`)
 - Update Account records (`prisma.account.update`)
+- Return `null` from `getUserByEmail` (this breaks the flow!)
 
-The adapter's `linkAccount()` method handles all account creation/updates automatically.
+**Debug OAuth issues by checking Vercel logs for:**
+- `[getUserByAccount]` - Should find existing account on second login
+- `[getUserByEmail]` - Should find existing user by email
+- `[linkAccount]` - Should update tokens for existing account
 
 ### Slack URL verification fails
 The `/api/slack/events` endpoint handles URL verification BEFORE signature verification to allow Slack to verify the endpoint during setup.
