@@ -6,14 +6,16 @@ import LinkedInProvider from "next-auth/providers/linkedin";
 import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
-// Custom adapter that allows account linking and handles existing users at signup
-// Key insight: We rely on `allowDangerousEmailAccountLinking: true` on the providers
-// and only override linkAccount to handle token updates for existing accounts.
-const customAdapter = {
-  ...PrismaAdapter(prisma),
+// Get the base adapter
+const baseAdapter = PrismaAdapter(prisma);
 
-  // getUserByAccount - Standard lookup, no override needed
-  // This finds a user by their OAuth account (provider + providerAccountId)
+// Custom adapter that handles account linking properly
+// We extend the base PrismaAdapter but override specific methods
+const customAdapter = {
+  // Spread ALL methods from base adapter first
+  ...baseAdapter,
+
+  // getUserByAccount - Find user by their OAuth account
   async getUserByAccount(providerAccountId: { provider: string; providerAccountId: string }) {
     console.log(`[getUserByAccount] Looking for provider=${providerAccountId.provider}, providerAccountId=${providerAccountId.providerAccountId}`);
 
@@ -36,9 +38,7 @@ const customAdapter = {
     return null;
   },
 
-  // getUserByEmail - Return the real user!
-  // We trust allowDangerousEmailAccountLinking to handle the linking properly.
-  // Previously this returned null which broke the OAuth flow for existing users.
+  // getUserByEmail - MUST return the real user for allowDangerousEmailAccountLinking to work
   async getUserByEmail(email: string) {
     console.log(`[getUserByEmail] Called for ${email}`);
     const user = await prisma.user.findUnique({ where: { email } });
@@ -46,12 +46,11 @@ const customAdapter = {
     return user;
   },
 
-  // linkAccount - Handle token updates for existing accounts
-  // This is called after getUserByEmail finds a user (with allowDangerousEmailAccountLinking)
+  // linkAccount - Handle creating or updating account links
   async linkAccount(account: any) {
     console.log(`[linkAccount] userId=${account.userId}, provider=${account.provider}, providerAccountId=${account.providerAccountId}`);
 
-    // Check if this exact account already exists (same provider + providerAccountId)
+    // Check if this exact account already exists
     const existingAccount = await prisma.account.findUnique({
       where: {
         provider_providerAccountId: {
@@ -62,7 +61,7 @@ const customAdapter = {
     });
 
     if (existingAccount) {
-      console.log(`[linkAccount] Found existing account ${existingAccount.id}, updating tokens`);
+      console.log(`[linkAccount] Updating existing account ${existingAccount.id}`);
       return prisma.account.update({
         where: { id: existingAccount.id },
         data: {
@@ -74,8 +73,7 @@ const customAdapter = {
       });
     }
 
-    // Check if user already has an account from this provider (different providerAccountId)
-    // This handles the edge case where LinkedIn's sub claim might change
+    // Check if user already has an account from this provider with different providerAccountId
     const existingUserProviderAccount = await prisma.account.findFirst({
       where: {
         userId: account.userId,
@@ -84,7 +82,7 @@ const customAdapter = {
     });
 
     if (existingUserProviderAccount) {
-      console.log(`[linkAccount] User already has ${account.provider} account with different providerAccountId, updating it`);
+      console.log(`[linkAccount] Updating user's existing ${account.provider} account`);
       return prisma.account.update({
         where: { id: existingUserProviderAccount.id },
         data: {
@@ -97,7 +95,7 @@ const customAdapter = {
       });
     }
 
-    console.log(`[linkAccount] Creating new account link`);
+    console.log(`[linkAccount] Creating new account`);
     return prisma.account.create({ data: account });
   },
 };
@@ -156,7 +154,6 @@ export const authOptions: NextAuthOptions = {
             clientId: process.env.LINKEDIN_CLIENT_ID,
             clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: true,
-            issuer: "https://www.linkedin.com/oauth",
             authorization: {
               url: "https://www.linkedin.com/oauth/v2/authorization",
               params: {
@@ -171,7 +168,6 @@ export const authOptions: NextAuthOptions = {
             userinfo: {
               url: "https://api.linkedin.com/v2/userinfo",
             },
-            jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
             profile(profile) {
               return {
                 id: profile.sub,
@@ -191,8 +187,10 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/login",
   },
+  debug: process.env.NODE_ENV === "development",
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log(`[signIn callback] provider=${account?.provider}, email=${user.email}, userId=${user.id}`);
       try {
         // If signing in with LinkedIn, store the access token on the User record for posting
         if (account?.provider === "linkedin" && account.access_token && user.email) {
