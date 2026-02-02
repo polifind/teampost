@@ -43,11 +43,28 @@ export interface ParsedSchedule {
  * Build draft preview message with action buttons
  * If a schedule was parsed from the message, show it and offer one-click approval
  */
+// Slack block text limit is 3000 characters
+const SLACK_BLOCK_TEXT_LIMIT = 3000;
+
+/**
+ * Truncate content to fit within Slack's block text limit
+ */
+function truncateForSlack(content: string, limit: number = SLACK_BLOCK_TEXT_LIMIT): string {
+  if (content.length <= limit) {
+    return content;
+  }
+  // Leave room for truncation indicator
+  return content.substring(0, limit - 50) + "\n\n_[Content truncated - view full post in TeamPost]_";
+}
+
 export function buildDraftMessage(
   draftId: string,
   content: string,
   parsedSchedule?: ParsedSchedule | null
 ): SlackMessage {
+  // Truncate content to fit Slack limits
+  const displayContent = truncateForSlack(content);
+
   // Format schedule info if available
   let scheduleText = "";
   const hasSchedule = parsedSchedule?.dayOfWeek || parsedSchedule?.time;
@@ -89,7 +106,7 @@ export function buildDraftMessage(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: content,
+          text: displayContent,
         },
       },
       {

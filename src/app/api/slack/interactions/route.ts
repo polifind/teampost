@@ -430,7 +430,8 @@ async function handleRegeneration(
 }
 
 /**
- * Calculate the scheduled date based on day of week and time
+ * Calculate the scheduled date based on day of week and time in user's timezone
+ * Returns a Date object representing the correct UTC moment
  */
 function calculateScheduledDate(
   day: string,
@@ -450,24 +451,48 @@ function calculateScheduledDate(
   const targetDay = dayMap[day.toLowerCase()];
   const [hours, minutes] = time.split(":").map(Number);
 
-  // Create date in user's timezone
+  // Get current time in user's timezone to determine "today" from their perspective
   const now = new Date();
-  const currentDay = now.getDay();
+  const nowInTzStr = now.toLocaleString("en-US", { timeZone: timezone });
+  const nowInTz = new Date(nowInTzStr);
+  const currentDayInTz = nowInTz.getDay();
 
-  // Calculate days until target day
-  let daysUntil = targetDay - currentDay;
+  // Calculate days until target day (from user's perspective)
+  let daysUntil = targetDay - currentDayInTz;
   if (daysUntil <= 0) {
     daysUntil += 7; // Next week
   }
 
-  // Set the date
-  const scheduledDate = new Date(now);
-  scheduledDate.setDate(now.getDate() + daysUntil);
-  scheduledDate.setHours(hours, minutes, 0, 0);
+  // Calculate the target date in user's timezone
+  const targetDateInTz = new Date(nowInTz);
+  targetDateInTz.setDate(nowInTz.getDate() + daysUntil);
+  targetDateInTz.setHours(hours, minutes, 0, 0);
 
-  // Convert to UTC (simplified - for production use a proper timezone library)
-  // This is a basic implementation; in production use date-fns-tz or similar
-  return scheduledDate;
+  // Now we need to convert this "local time in timezone" to UTC
+  // Strategy: Find what UTC time corresponds to this local time in the given timezone
+  // We do this by creating a reference point and calculating the offset
+
+  // Get the timezone offset at the target date by comparing local and UTC representations
+  const targetYear = targetDateInTz.getFullYear();
+  const targetMonth = targetDateInTz.getMonth();
+  const targetDayOfMonth = targetDateInTz.getDate();
+
+  // Create a date object for the target time, treating it as UTC first
+  const asIfUtc = new Date(Date.UTC(targetYear, targetMonth, targetDayOfMonth, hours, minutes, 0, 0));
+
+  // Get what this UTC time looks like in the user's timezone
+  const utcInTzStr = asIfUtc.toLocaleString("en-US", { timeZone: timezone });
+  const utcInTz = new Date(utcInTzStr);
+
+  // Calculate the offset: how many ms ahead/behind is the timezone from UTC?
+  // If timezone shows 9 AM when UTC is 2 PM, the timezone is UTC-5, offset = -5 hours
+  const offset = utcInTz.getTime() - asIfUtc.getTime();
+
+  // Apply the offset to get the actual UTC time
+  // If user wants 9 AM EST (UTC-5), UTC time should be 2 PM
+  const scheduledUtc = new Date(asIfUtc.getTime() - offset);
+
+  return scheduledUtc;
 }
 
 /**

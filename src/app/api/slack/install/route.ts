@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 // Slack OAuth scopes for bot functionality
 const SLACK_SCOPES = [
   "chat:write",      // Send messages
+  "files:read",      // Download files (photos) from Slack
   "im:history",      // Read DM history
   "im:read",         // Receive DM events (required for message.im subscription)
   "im:write",        // Send DMs
