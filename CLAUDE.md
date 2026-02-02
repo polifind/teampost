@@ -116,6 +116,17 @@ The `/api/slack/events` endpoint handles URL verification BEFORE signature verif
 2. Users must reconnect Slack if new scopes are added
 3. Check for `x-slack-retry-num` header handling - Slack retries events if response takes >3s
 
+### Slack photo uploads not working
+1. Check that `files:read` scope is included - required to download photos from Slack
+2. Users must reconnect Slack if this scope was added after their initial connection
+
+### Slack scheduling shows wrong time
+The `calculateScheduledDate` function in `interactions/route.ts` converts user's local time to UTC:
+1. Gets current time in user's timezone to determine "today"
+2. Calculates target date based on day of week
+3. Converts the target time in user's timezone to UTC for storage
+4. If times are still wrong, check that the user's timezone is set correctly in their profile
+
 ## Key Files
 
 ### Auth
@@ -149,6 +160,18 @@ The `/api/slack/events` endpoint handles URL verification BEFORE signature verif
 - Include scheduling like "Monday at 9am EST" for automatic scheduling
 - Approve/regenerate buttons in Slack
 - Photo upload support (saves to library, attaches to drafts)
+
+## Slack OAuth Scopes
+The bot requires these scopes (defined in `/src/app/api/slack/install/route.ts`):
+- `chat:write` - Send messages
+- `files:read` - Download photos from Slack
+- `im:history` - Read DM history
+- `im:read` - Receive DM events (required for message.im subscription)
+- `im:write` - Send DMs
+- `users:read` - Get user info
+- `users:read.email` - Get user email for account matching
+
+**Important**: If new scopes are added, existing users must disconnect and reconnect Slack to get the new permissions.
 
 ## Development Guidelines
 
@@ -200,3 +223,5 @@ npm run qa
 3. **Session issues**: Check `NEXTAUTH_SECRET` is set in production
 4. **Prisma errors**: Run `npx prisma generate` after pulling schema changes
 5. **Build failures**: Run `npm run build` to catch TypeScript errors before deploying
+6. **Slack content too long**: Slack block text has 3000 char limit - use `truncateForSlack()` in `slack-blocks.ts`
+7. **Slack scopes missing**: If adding new Slack features, check if new OAuth scopes are needed
