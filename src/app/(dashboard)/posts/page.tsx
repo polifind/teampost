@@ -147,7 +147,24 @@ export default function PostsPage() {
         const response = await fetch("/api/posts");
         if (response.ok) {
           const data = await response.json();
-          setPosts(data.posts);
+          // Sort posts: DRAFT first, then SCHEDULED (by upcoming date), then POSTED last
+          const sortedPosts = [...data.posts].sort((a: Post, b: Post) => {
+            const statusOrder: Record<Post["status"], number> = { DRAFT: 0, SCHEDULED: 1, POSTED: 2, FAILED: 3 };
+            const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+            if (statusDiff !== 0) return statusDiff;
+
+            // Within SCHEDULED, sort by upcoming date (earliest first)
+            if (a.status === "SCHEDULED" && a.schedule && b.schedule) {
+              return new Date(a.schedule.scheduledFor).getTime() - new Date(b.schedule.scheduledFor).getTime();
+            }
+            // Within POSTED, sort by most recent first
+            if (a.status === "POSTED") {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            // Default: sort by week number
+            return a.weekNumber - b.weekNumber;
+          });
+          setPosts(sortedPosts);
           setLinkedInConnected(data.linkedInConnected);
         }
       } catch (error) {

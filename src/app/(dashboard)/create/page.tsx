@@ -8,6 +8,7 @@ import ContentInput from "@/components/ContentInput";
 import Logo from "@/components/Logo";
 import SubscriptionPaywall from "@/components/SubscriptionPaywall";
 import LinkedInTagPicker from "@/components/LinkedInTagPicker";
+import { MentionEditor, MentionHighlightOverlay } from "@/components/MentionEditor";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { LinkedInContact, LibraryPhoto } from "@/types";
 
@@ -311,6 +312,7 @@ export default function CreatePostPage() {
 
   // LinkedIn tagging state
   const [selectedTags, setSelectedTags] = useState<LinkedInContact[]>([]);
+  const [contacts, setContacts] = useState<LinkedInContact[]>([]);
 
   // Timezone state
   const [userTimezone, setUserTimezone] = useState<string>(DEFAULT_TIMEZONE);
@@ -346,6 +348,7 @@ export default function CreatePostPage() {
       fetchLibraryPhotos();
       checkMagicDraftAvailability();
       fetchUserTimezone();
+      fetchContacts();
     }
   }, [session]);
 
@@ -481,6 +484,43 @@ export default function CreatePostPage() {
       }
     } catch (error) {
       console.error("Failed to fetch photos:", error);
+    }
+  };
+
+  const fetchContacts = async () => {
+    try {
+      const response = await fetch("/api/linkedin/contacts");
+      if (response.ok) {
+        const data = await response.json();
+        setContacts(data.contacts || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch contacts:", error);
+    }
+  };
+
+  const handleAddContact = async (name: string): Promise<LinkedInContact | null> => {
+    try {
+      const response = await fetch("/api/linkedin/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          type: "COMPANY", // Default to company, could be made smarter
+          linkedinUrl: `https://linkedin.com/company/${name.toLowerCase().replace(/\s+/g, "-")}`,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newContact = data.contact;
+        setContacts((prev) => [newContact, ...prev]);
+        return newContact;
+      }
+      return null;
+    } catch (error) {
+      console.error("Failed to add contact:", error);
+      return null;
     }
   };
 
@@ -1503,22 +1543,33 @@ You can type or record a voice note - whatever feels more natural.`,
                   </div>
 
                   {isEditingDraft ? (
-                    <textarea
+                    <MentionEditor
                       value={editedContent}
-                      onChange={(e) => setEditedContent(e.target.value)}
-                      className="w-full h-64 p-2 border border-claude-border rounded text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral"
+                      onChange={setEditedContent}
+                      contacts={contacts}
+                      selectedTags={selectedTags}
+                      onTagsChange={setSelectedTags}
+                      onAddContact={handleAddContact}
+                      placeholder="Edit your post..."
+                      minHeight="256px"
                     />
                   ) : (
                     <div className="whitespace-pre-wrap text-sm text-claude-text">
-                      {draftPost.content}
+                      <MentionHighlightOverlay
+                        content={draftPost.content}
+                        selectedTags={selectedTags}
+                      />
                     </div>
                   )}
 
-                  {/* LinkedIn tagging section */}
+                  {/* LinkedIn tagging section - now showing selected tags */}
                   {!isEditingDraft && !draftPost.isApproved && (
                     <div className="mt-4 pt-4 border-t border-claude-border">
                       <p className="text-xs text-claude-text-secondary mb-2">
-                        Click a contact to insert @mention into your post
+                        {selectedTags.length > 0
+                          ? `Tagged: ${selectedTags.map(t => t.name).join(", ")}`
+                          : "Type @ in the editor to tag people or companies"
+                        }
                       </p>
                       <LinkedInTagPicker
                         selectedTags={selectedTags}
