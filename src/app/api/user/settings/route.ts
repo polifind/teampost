@@ -14,7 +14,30 @@ export async function GET() {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
+        id: true,
+        name: true,
+        email: true,
         timezone: true,
+        linkedinAccessToken: true,
+        linkedinUserId: true,
+        slackIntegration: {
+          select: {
+            id: true,
+            teamName: true,
+            isActive: true,
+          },
+        },
+        organizationMemberships: {
+          select: {
+            role: true,
+            organization: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -22,8 +45,24 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Check if LinkedIn is connected (has access token)
+    const linkedInConnected = Boolean(user.linkedinAccessToken);
+
+    // Format organizations for the response
+    const organizations = user.organizationMemberships.map((member) => ({
+      id: member.organization.id,
+      name: member.organization.name,
+      role: member.role,
+    }));
+
     return NextResponse.json({
+      name: user.name || "",
+      email: user.email || "",
       timezone: user.timezone || "America/New_York",
+      linkedInConnected,
+      linkedInUserId: user.linkedinUserId,
+      organizations,
+      slackIntegration: user.slackIntegration,
     });
   } catch (error) {
     console.error("Error fetching user settings:", error);
