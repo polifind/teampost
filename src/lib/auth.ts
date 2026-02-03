@@ -6,102 +6,12 @@ import LinkedInProvider from "next-auth/providers/linkedin";
 import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
-// Get the base adapter
-const baseAdapter = PrismaAdapter(prisma);
-
-// Custom adapter that handles account linking properly
-// We extend the base PrismaAdapter but override specific methods
-const customAdapter = {
-  // Spread ALL methods from base adapter first
-  ...baseAdapter,
-
-  // getUserByAccount - Find user by their OAuth account
-  async getUserByAccount(providerAccountId: { provider: string; providerAccountId: string }) {
-    console.log(`[getUserByAccount] Looking for provider=${providerAccountId.provider}, providerAccountId=${providerAccountId.providerAccountId}`);
-
-    const account = await prisma.account.findUnique({
-      where: {
-        provider_providerAccountId: {
-          provider: providerAccountId.provider,
-          providerAccountId: providerAccountId.providerAccountId,
-        },
-      },
-      include: { user: true },
-    });
-
-    if (account?.user) {
-      console.log(`[getUserByAccount] Found user ${account.user.id} via exact match`);
-      return account.user;
-    }
-
-    console.log(`[getUserByAccount] No exact match found`);
-    return null;
-  },
-
-  // getUserByEmail - MUST return the real user for allowDangerousEmailAccountLinking to work
-  async getUserByEmail(email: string) {
-    console.log(`[getUserByEmail] Called for ${email}`);
-    const user = await prisma.user.findUnique({ where: { email } });
-    console.log(`[getUserByEmail] ${user ? `Found user ${user.id}` : 'No user found'}`);
-    return user;
-  },
-
-  // linkAccount - Handle creating or updating account links
-  async linkAccount(account: any) {
-    console.log(`[linkAccount] userId=${account.userId}, provider=${account.provider}, providerAccountId=${account.providerAccountId}`);
-
-    // Check if this exact account already exists
-    const existingAccount = await prisma.account.findUnique({
-      where: {
-        provider_providerAccountId: {
-          provider: account.provider,
-          providerAccountId: account.providerAccountId,
-        },
-      },
-    });
-
-    if (existingAccount) {
-      console.log(`[linkAccount] Updating existing account ${existingAccount.id}`);
-      return prisma.account.update({
-        where: { id: existingAccount.id },
-        data: {
-          access_token: account.access_token,
-          refresh_token: account.refresh_token,
-          expires_at: account.expires_at,
-          id_token: account.id_token,
-        },
-      });
-    }
-
-    // Check if user already has an account from this provider with different providerAccountId
-    const existingUserProviderAccount = await prisma.account.findFirst({
-      where: {
-        userId: account.userId,
-        provider: account.provider,
-      },
-    });
-
-    if (existingUserProviderAccount) {
-      console.log(`[linkAccount] Updating user's existing ${account.provider} account`);
-      return prisma.account.update({
-        where: { id: existingUserProviderAccount.id },
-        data: {
-          providerAccountId: account.providerAccountId,
-          access_token: account.access_token,
-          refresh_token: account.refresh_token,
-          expires_at: account.expires_at,
-          id_token: account.id_token,
-        },
-      });
-    }
-
-    console.log(`[linkAccount] Creating new account`);
-    return prisma.account.create({ data: account });
-  },
-};
+// Use default PrismaAdapter - the allowDangerousEmailAccountLinking on providers
+// should handle account linking for existing users
+const adapter = PrismaAdapter(prisma);
 
 export const authOptions: NextAuthOptions = {
-  adapter: customAdapter as any,
+  adapter,
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -209,7 +119,7 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/login",
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // Enable debug logging to diagnose OAuth issues
   callbacks: {
     async signIn({ user, account, profile }) {
       console.log(`[signIn callback] provider=${account?.provider}, email=${user.email}, userId=${user.id}`);
