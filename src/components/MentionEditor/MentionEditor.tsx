@@ -3,7 +3,6 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import type { LinkedInContact } from "@/types";
 import { useMentionDetection } from "./useMentionDetection";
-import { MentionHighlightOverlay } from "./MentionHighlightOverlay";
 import { MentionAutocomplete } from "./MentionAutocomplete";
 import { insertMention } from "./mentionUtils";
 
@@ -35,7 +34,6 @@ export function MentionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
-  const [scrollTop, setScrollTop] = useState(0);
   const cursorPositionRef = useRef<number | null>(null);
 
   const {
@@ -45,10 +43,6 @@ export function MentionEditor({
     startIndex,
     closeAutocomplete,
   } = useMentionDetection(textareaRef, value);
-
-  const handleScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
-    setScrollTop(e.currentTarget.scrollTop);
-  }, []);
 
   // Handle change while preserving cursor position
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -164,43 +158,18 @@ export function MentionEditor({
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Container for textarea and overlay */}
       <div className="relative" style={{ minHeight }}>
-        {/* Textarea - visible with transparent text */}
+        {/* Textarea - now with visible text */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={handleChange}
-          onScroll={handleScroll}
           placeholder={placeholder}
           disabled={disabled || addingContact}
-          className="absolute inset-0 w-full h-full p-3 text-sm leading-relaxed bg-white border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent"
+          className="w-full h-full p-3 text-sm leading-relaxed bg-white border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent text-gray-900"
           style={{
             minHeight,
-            color: "transparent",
-            caretColor: "#1a1a1a", // Keep cursor visible
           }}
         />
-
-        {/* Highlight overlay - shows colored mentions */}
-        <div
-          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none overflow-hidden border border-transparent rounded-lg"
-          style={{
-            minHeight,
-          }}
-        >
-          <div style={{ transform: `translateY(-${scrollTop}px)` }}>
-            <MentionHighlightOverlay
-              content={value}
-              selectedTags={selectedTags}
-            />
-          </div>
-        </div>
-
-        {/* Placeholder when empty */}
-        {!value && (
-          <div className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none text-claude-text-tertiary">
-            {placeholder}
-          </div>
-        )}
 
         {/* Autocomplete dropdown */}
         {showAutocomplete && !addingContact && (
