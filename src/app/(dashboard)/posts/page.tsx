@@ -133,6 +133,7 @@ export default function PostsPage() {
   const [postingNow, setPostingNow] = useState<string | null>(null);
   const [userTimezone, setUserTimezone] = useState(DEFAULT_TIMEZONE);
   const [scheduleTimezone, setScheduleTimezone] = useState(DEFAULT_TIMEZONE);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
 
   // Bulk scheduling state
   const [showBulkScheduleModal, setShowBulkScheduleModal] = useState(false);
@@ -994,9 +995,25 @@ export default function PostsPage() {
                   </div>
                 ) : (
                   <div className="prose prose-sm max-w-none">
-                    <p className="text-claude-text whitespace-pre-wrap leading-relaxed">
+                    <p className={`text-claude-text whitespace-pre-wrap leading-relaxed ${!expandedPosts.has(post.id) ? "line-clamp-3" : ""}`}>
                       {post.content}
                     </p>
+                    {post.content.length > 200 && (
+                      <button
+                        onClick={() => {
+                          const newExpanded = new Set(expandedPosts);
+                          if (expandedPosts.has(post.id)) {
+                            newExpanded.delete(post.id);
+                          } else {
+                            newExpanded.add(post.id);
+                          }
+                          setExpandedPosts(newExpanded);
+                        }}
+                        className="text-sm text-accent-coral hover:underline mt-2"
+                      >
+                        {expandedPosts.has(post.id) ? "Show less" : "Show more"}
+                      </button>
+                    )}
                   </div>
                 )}
 
