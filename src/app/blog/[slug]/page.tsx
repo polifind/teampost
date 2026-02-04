@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPostBySlug, getAllPosts } from "../posts";
@@ -222,9 +223,13 @@ export default async function BlogPostPage({ params }: PageProps) {
           </div>
           <h1 className="text-4xl font-bold text-claude-text mb-6 leading-tight">{post.title}</h1>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-coral to-accent-coral/70 flex items-center justify-center text-white font-semibold text-lg">
-              RP
-            </div>
+            <Image
+              src="/rohan-pavuluri.jpg"
+              alt={post.author}
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-full object-cover"
+            />
             <div>
               <p className="font-medium text-claude-text">{post.author}</p>
               <p className="text-sm text-claude-text-tertiary">

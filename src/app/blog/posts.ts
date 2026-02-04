@@ -211,7 +211,7 @@ Storytelling is alpha. It's time to start compounding.
     content: `
 It isn't just you. A lot of people are spending more time on LinkedIn.
 
-According to a recent [Wall Street Journal analysis](https://www.wsj.com/tech/linkedin-social-media-scrolling-ff06b1a4), Americans checking LinkedIn more than once a day climbed to 4.7% last year from 3.9% in 2020. That might sound small, but on a platform with 1.3 billion members, it represents tens of millions of additional daily sessions.
+According to a recent [Wall Street Journal analysis](https://www.wsj.com/tech/personal-tech/three-reasons-we-cant-get-enough-of-linkedin-31333eff), Americans checking LinkedIn more than once a day climbed to 4.7% last year from 3.9% in 2020. That might sound small, but on a platform with 1.3 billion members, it represents tens of millions of additional daily sessions.
 
 Meanwhile, revenue jumped to $17 billion in 2025 from $7 billion in 2020. Membership doubled. And perhaps most importantly, users actually stick around.
 

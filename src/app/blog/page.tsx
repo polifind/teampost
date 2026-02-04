@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getAllPosts } from "./posts";
 
@@ -50,14 +51,13 @@ export default function BlogPage() {
       </nav>
 
       {/* Header */}
-      <header className="py-16 px-6 bg-gradient-to-br from-violet-500/5 to-purple-500/10">
+      <header className="py-16 px-6 bg-gradient-to-br from-accent-coral to-accent-coral/80">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl font-bold text-claude-text mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
             The TeamPost Blog
           </h1>
-          <p className="text-lg text-claude-text-secondary max-w-2xl mx-auto">
-            Insights on going direct, building your professional brand, and why LinkedIn is the
-            most underrated platform for B2B professionals.
+          <p className="text-lg text-white/90 max-w-2xl mx-auto">
+            Why every professional should own their narrative.
           </p>
         </div>
       </header>
@@ -84,9 +84,13 @@ export default function BlogPage() {
               <p className="text-claude-text-secondary mb-4 line-clamp-3">{post.excerpt}</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-coral to-accent-coral/70 flex items-center justify-center text-white font-semibold">
-                    RP
-                  </div>
+                  <Image
+                    src="/rohan-pavuluri.jpg"
+                    alt={post.author}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
                   <div>
                     <p className="text-sm font-medium text-claude-text">{post.author}</p>
                     <p className="text-xs text-claude-text-tertiary">
