@@ -160,6 +160,9 @@ export default function LandingPage() {
             <Logo size="md" />
           </Link>
           <div className="flex items-center gap-4">
+            <Link href="/blog" className="text-sm text-claude-text-secondary hover:text-claude-text transition-colors">
+              Blog
+            </Link>
             <a href="#pricing" className="text-sm text-claude-text-secondary hover:text-claude-text transition-colors">
               Pricing
             </a>
@@ -549,7 +552,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-claude-text mb-2">Refine with feedback</h3>
                 <p className="text-claude-text-secondary">
-                  Don't like the draft? Just reply with feedback. "Make it shorter" or "add more storytelling" — your ghostwriter adapts instantly.
+                  Don't like the draft? Just reply with feedback. "Make it shorter" or "add more storytelling." Your ghostwriter adapts instantly.
                 </p>
               </div>
 
@@ -592,7 +595,7 @@ export default function LandingPage() {
               Your life, auto-magically turned into LinkedIn content
             </h2>
             <p className="text-lg text-claude-text-secondary max-w-3xl mx-auto">
-              Upload anything about yourself—resumes, LinkedIn screenshots, Slack chats, Linear tickets—and TeamPost transforms it into polished posts. We even pull from your public presence to create content that sounds authentically you.
+              Upload anything about yourself: resumes, LinkedIn screenshots, Slack chats, Linear tickets. TeamPost transforms it all into polished posts. We even pull from your public presence to create content that sounds authentically you.
             </p>
           </div>
 
@@ -664,13 +667,13 @@ export default function LandingPage() {
                 {
                   icon: CloudArrowUpIcon,
                   title: "Upload Anything About You",
-                  description: "Resumes, cover letters, LinkedIn screenshots, Slack messages, Linear tickets—anything that tells your story becomes content.",
+                  description: "Resumes, cover letters, LinkedIn screenshots, Slack messages, Linear tickets. Anything that tells your story becomes content.",
                   color: "bg-blue-500/10 text-blue-600",
                 },
                 {
                   icon: VideoCameraIcon,
                   title: "Your Public Presence",
-                  description: "YouTube videos, podcast appearances, news coverage, books you've written, public essays—we automatically find and use your existing content.",
+                  description: "YouTube videos, podcast appearances, news coverage, books you've written, public essays. We automatically find and use your existing content.",
                   color: "bg-red-500/10 text-red-600",
                 },
                 {
@@ -682,7 +685,7 @@ export default function LandingPage() {
                 {
                   icon: SparklesIcon,
                   title: "Generate On-Demand or On Autopilot",
-                  description: "Generate drafts instantly with one click, or set a cadence and receive fresh content delivered straight to your Slack—daily, weekly, whatever works for you.",
+                  description: "Generate drafts instantly with one click, or set a cadence and receive fresh content delivered straight to your Slack. Daily, weekly, whatever works for you.",
                   color: "bg-violet-500/10 text-violet-600",
                 },
               ].map((benefit, i) => (
@@ -1497,7 +1500,7 @@ export default function LandingPage() {
                   We're actually an example of that. We actually hired a reporter at my venture capital firm. We're in the content business. And why do we need a reporter? We need a reporter because the stuff that we do is complicated and new.
                 </p>
                 <p className="text-white/80">
-                  We think we develop a deep understanding—or at least we try very hard. And then we want to explain these things. And these things are complicated in a world moving fast. And so we're trying to take more responsibility for being able to articulate complex subjects to large audiences.
+                  We think we develop a deep understanding, or at least we try very hard. And then we want to explain these things. And these things are complicated in a world moving fast. And so we're trying to take more responsibility for being able to articulate complex subjects to large audiences.
                 </p>
                 <p className="text-white/80">
                   The communications functions in many companies has been trying to get reporters to write the right things. I think increasingly it's direct communication.
