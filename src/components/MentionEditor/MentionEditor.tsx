@@ -149,6 +149,7 @@ export function MentionEditor({
     if (newTags.length > 0) {
       onTagsChange([...selectedTags, ...newTags]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, contacts]); // Intentionally not including selectedTags/onTagsChange to avoid loops
 
   return (
