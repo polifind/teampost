@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import type { LinkedInContact } from "@/types";
 import { useMentionDetection } from "./useMentionDetection";
 import { MentionHighlightOverlay } from "./MentionHighlightOverlay";
@@ -59,19 +59,20 @@ export function MentionEditor({
     cursorPositionRef.current = cursorPos;
 
     onChange(newValue);
-
-    // Use multiple frames to ensure cursor is restored after all React updates
-    // This handles the race condition with useMentionDetection state updates
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (textareaRef.current && cursorPositionRef.current !== null) {
-          const pos = cursorPositionRef.current;
-          textareaRef.current.setSelectionRange(pos, pos);
-          cursorPositionRef.current = null;
-        }
-      });
-    });
   }, [onChange]);
+
+  // Restore cursor position synchronously after DOM updates using useLayoutEffect
+  // This runs after React updates the DOM but before browser paint
+  useLayoutEffect(() => {
+    if (cursorPositionRef.current !== null && textareaRef.current) {
+      const pos = cursorPositionRef.current;
+      // Only restore if the textarea is focused (user is actively typing)
+      if (document.activeElement === textareaRef.current) {
+        textareaRef.current.setSelectionRange(pos, pos);
+      }
+      cursorPositionRef.current = null;
+    }
+  }, [value]);
 
   // Handle selecting a contact from autocomplete
   const handleSelectContact = useCallback(
