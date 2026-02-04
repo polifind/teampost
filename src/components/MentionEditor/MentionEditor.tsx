@@ -52,19 +52,26 @@ export function MentionEditor({
 
   // Handle change while preserving cursor position
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Save cursor position before the value changes
-    cursorPositionRef.current = e.target.selectionStart;
-    onChange(e.target.value);
-  }, [onChange]);
+    const cursorPos = e.target.selectionStart;
+    const newValue = e.target.value;
 
-  // Restore cursor position after render
-  useEffect(() => {
-    if (cursorPositionRef.current !== null && textareaRef.current) {
-      const pos = cursorPositionRef.current;
-      textareaRef.current.setSelectionRange(pos, pos);
-      cursorPositionRef.current = null;
-    }
-  }, [value]);
+    // Store cursor position for restoration
+    cursorPositionRef.current = cursorPos;
+
+    onChange(newValue);
+
+    // Use multiple frames to ensure cursor is restored after all React updates
+    // This handles the race condition with useMentionDetection state updates
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (textareaRef.current && cursorPositionRef.current !== null) {
+          const pos = cursorPositionRef.current;
+          textareaRef.current.setSelectionRange(pos, pos);
+          cursorPositionRef.current = null;
+        }
+      });
+    });
+  }, [onChange]);
 
   // Handle selecting a contact from autocomplete
   const handleSelectContact = useCallback(
