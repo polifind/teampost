@@ -13,7 +13,7 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "marc-andreessen-going-direct-a16z-media-empire",
-    title: "How a16z Built a $100M Media Empire by Refusing to Talk to Journalists",
+    title: "How a16z Built a Media Empire by Refusing to Talk to Journalists",
     excerpt: "Marc Andreessen's firm went from courting reporters to completely ignoring them. Here's why that strategy is working, and what it means for every company trying to tell their story.",
     author: "Rohan Pavuluri",
     authorRole: "Creator, TeamPost",
