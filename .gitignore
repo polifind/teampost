@@ -49,3 +49,10 @@ prisma/dev.db-journal
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+e2e/.auth/

@@ -37,7 +37,16 @@
       "Bash(npm ls:*)",
       "Bash(node:*)",
       "Bash(npx next lint:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(/usr/local/bin/npm run build)",
+      "Bash(export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\")",
+      "Bash(source ~/.nvm/nvm.sh)",
+      "Bash(source ~/.zshrc)",
+      "Bash(/Users/rohanpavuluri/.nvm/versions/node/v20.18.0/bin/npm run build)",
+      "Bash(git reset:*)",
+      "Bash(npm init:*)"
     ]
   }
 }
