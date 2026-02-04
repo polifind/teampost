@@ -81,6 +81,7 @@ model User {
   lifeLibraryItems       LifeLibraryItem[]
   linkedinContacts       LinkedInContact[]
   slackIntegration       SlackIntegration?
+  draftCadence           DraftCadence?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -546,4 +547,46 @@ enum SlackDraftStatus {
   SAVED      // Saved to TeamPost as draft
   SCHEDULED  // Saved and scheduled
   POSTED     // Already posted to LinkedIn
+}
+
+// Draft cadence for automatic Magic Draft generation
+model DraftCadence {
+  id            String    @id @default(cuid())
+  userId        String    @unique  // One cadence per user
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Frequency settings
+  frequency     CadenceFrequency @default(WEEKLY)
+  dayOfWeek     String?          // "monday", "tuesday", etc. (for WEEKLY)
+  dayOfMonth    Int?             // 1-28 (for MONTHLY)
+  timeOfDay     String           // "09:00" 24h format in user's timezone
+
+  // Source selection - which library items to use
+  // Empty array means "use all items"
+  selectedLibraryItemIds String[] // Array of LifeLibraryItem IDs
+
+  // Delivery settings
+  deliveryMethod CadenceDeliveryMethod @default(SLACK)
+
+  // Tracking
+  lastGeneratedAt DateTime?
+  nextGenerationAt DateTime?  // Pre-calculated next run time (UTC)
+
+  // Active/paused
+  isActive      Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CadenceFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum CadenceDeliveryMethod {
+  SLACK       // Deliver to Slack DM
+  WEB_ONLY    // Just create as draft in web app
 }

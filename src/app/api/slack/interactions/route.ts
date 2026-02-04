@@ -154,6 +154,24 @@ export async function POST(request: NextRequest) {
           interaction.trigger_id,
           buildFeedbackModal(draftId!)
         );
+      } else if (action.action_id === "approve_cadence_draft") {
+        // Approve a cadence-generated draft (just save it as draft, no scheduling)
+        const postId = action.value;
+        handleApproveCadenceDraft(
+          integration,
+          postId!,
+          interaction.channel?.id,
+          interaction.message?.ts
+        ).catch(console.error);
+      } else if (action.action_id === "discard_cadence_draft") {
+        // Discard a cadence-generated draft
+        const postId = action.value;
+        handleDiscardCadenceDraft(
+          integration,
+          postId!,
+          interaction.channel?.id,
+          interaction.message?.ts
+        ).catch(console.error);
       }
 
       return new Response("", { status: 200 });
@@ -507,4 +525,101 @@ function formatScheduleDisplay(date: Date, timezone: string): string {
   };
 
   return date.toLocaleString("en-US", options);
+}
+
+/**
+ * Handle approval of a cadence-generated draft
+ */
+async function handleApproveCadenceDraft(
+  integration: { botToken: string; user: { id: string } },
+  postId: string,
+  channelId?: string,
+  messageTs?: string
+) {
+  try {
+    // Update the post status to indicate it's been approved
+    await prisma.post.update({
+      where: { id: postId },
+      data: { status: "DRAFT" }, // Already a draft, but confirm it stays
+    });
+
+    // Update the Slack message to show it was approved
+    if (channelId && messageTs) {
+      await updateSlackMessage(
+        integration.botToken,
+        channelId,
+        messageTs,
+        {
+          text: "Draft approved!",
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "✅ *Draft approved and saved!*\n\nYou can view and schedule this draft in <https://teampost.vercel.app/posts|TeamPost>.",
+              },
+            },
+          ],
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Error approving cadence draft:", error);
+    if (channelId && messageTs) {
+      await sendSlackMessage(
+        integration.botToken,
+        channelId,
+        buildErrorMessage("Failed to approve draft. Please try again."),
+        messageTs
+      );
+    }
+  }
+}
+
+/**
+ * Handle discarding a cadence-generated draft
+ */
+async function handleDiscardCadenceDraft(
+  integration: { botToken: string },
+  postId: string,
+  channelId?: string,
+  messageTs?: string
+) {
+  try {
+    // Delete the post
+    await prisma.post.delete({
+      where: { id: postId },
+    });
+
+    // Update the Slack message to show it was discarded
+    if (channelId && messageTs) {
+      await updateSlackMessage(
+        integration.botToken,
+        channelId,
+        messageTs,
+        {
+          text: "Draft discarded",
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: "🗑️ *Draft discarded.*\n\nNo worries, another draft will be generated on your next scheduled time.",
+              },
+            },
+          ],
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Error discarding cadence draft:", error);
+    if (channelId && messageTs) {
+      await sendSlackMessage(
+        integration.botToken,
+        channelId,
+        buildErrorMessage("Failed to discard draft. Please try again."),
+        messageTs
+      );
+    }
+  }
 }
