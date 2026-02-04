@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -21,15 +20,17 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry configuration options
-const sentryWebpackPluginOptions = {
-  // Suppresses source map uploading logs during build
-  silent: true,
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  // Only upload source maps in production
-  dryRun: process.env.NODE_ENV !== "production",
-};
+// Only wrap with Sentry if DSN is configured
+let exportedConfig = nextConfig;
 
-// Wrap config with Sentry
-export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  // Dynamic import to avoid errors when Sentry env vars aren't set
+  const { withSentryConfig } = require("@sentry/nextjs");
+  exportedConfig = withSentryConfig(nextConfig, {
+    silent: true,
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+  });
+}
+
+export default exportedConfig;
