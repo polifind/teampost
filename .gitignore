@@ -41,3 +41,11 @@ prisma/dev.db-journal
 # IDE
 .idea/
 .vscode/
+
+# Backup/duplicate files
+*.save
+*\ 2.*
+*\ 2
+
+# Claude Code local settings
+.claude/settings.local.json

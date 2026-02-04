@@ -256,22 +256,7 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="min-h-screen bg-claude-bg">
-      {/* Header */}
-      <header className="sticky top-0 bg-claude-bg/80 backdrop-blur-md border-b border-claude-border z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo size="md" />
-          </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm text-accent-coral font-medium">Dashboard</Link>
-            <Link href="/posts" className="text-sm text-claude-text-secondary hover:text-claude-text">Posts</Link>
-            <Link href="/schedule" className="text-sm text-claude-text-secondary hover:text-claude-text">Schedule</Link>
-            <Link href="/settings" className="text-sm text-claude-text-secondary hover:text-claude-text">Settings</Link>
-          </nav>
-        </div>
-      </header>
-
+    <>
       <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Welcome Section */}
         <div className="mb-12">
@@ -373,15 +358,15 @@ export default function DashboardPage() {
               </div>
             </Link>
 
-            <Link href="/schedule" className="card-hover">
+            <Link href="/magic-drafts" className="card-hover">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-claude-lg bg-warning-light text-warning flex items-center justify-center flex-shrink-0">
-                  <CalendarIcon />
+                <div className="w-12 h-12 rounded-claude-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0">
+                  <SparklesIcon />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-claude-text mb-1">Schedule Posts</h3>
+                  <h3 className="font-semibold text-claude-text mb-1">Magic Drafts</h3>
                   <p className="text-sm text-claude-text-secondary">
-                    Set up your posting schedule for the next 10 weeks.
+                    Generate AI-powered posts from your content library.
                   </p>
                 </div>
               </div>

@@ -247,7 +247,7 @@ export default function ReviewPostsPage() {
       });
 
       if (response.ok) {
-        router.push("/schedule?success=true");
+        router.push("/posts?success=true");
       } else {
         throw new Error("Failed to schedule posts");
       }

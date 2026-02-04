@@ -1279,8 +1279,8 @@ You can type or record a voice note - whatever feels more natural.`,
             <Link href="/posts" className="btn-ghost text-sm">
               My Posts
             </Link>
-            <Link href="/schedule" className="btn-ghost text-sm">
-              Schedule
+            <Link href="/settings" className="btn-ghost text-sm">
+              Settings
             </Link>
           </div>
         </div>

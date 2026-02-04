@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Logo from "@/components/Logo";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
 import type { LibraryPhoto } from "@/types";
 
@@ -135,6 +134,13 @@ export default function PostsPage() {
   const [userTimezone, setUserTimezone] = useState(DEFAULT_TIMEZONE);
   const [scheduleTimezone, setScheduleTimezone] = useState(DEFAULT_TIMEZONE);
 
+  // Bulk scheduling state
+  const [showBulkScheduleModal, setShowBulkScheduleModal] = useState(false);
+  const [bulkScheduling, setBulkScheduling] = useState(false);
+  const [bulkScheduleDay, setBulkScheduleDay] = useState("Tuesday");
+  const [bulkScheduleTime, setBulkScheduleTime] = useState("10:00");
+  const [bulkScheduleStartDate, setBulkScheduleStartDate] = useState("");
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login?callbackUrl=/posts");
@@ -207,6 +213,72 @@ export default function PostsPage() {
       fetchUserSettings();
     }
   }, [session]);
+
+  // Initialize bulk schedule start date
+  useEffect(() => {
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    setBulkScheduleStartDate(nextWeek.toISOString().split("T")[0]);
+  }, []);
+
+  const draftPosts = posts.filter((p) => p.status === "DRAFT");
+
+  const handleBulkSchedule = async () => {
+    if (!linkedInConnected) {
+      alert("Please connect your LinkedIn account first.");
+      return;
+    }
+
+    if (draftPosts.length === 0) {
+      alert("No draft posts to schedule.");
+      return;
+    }
+
+    setBulkScheduling(true);
+    try {
+      const response = await fetch("/api/schedule/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dayOfWeek: bulkScheduleDay,
+          time: bulkScheduleTime,
+          startDate: bulkScheduleStartDate,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Refetch posts to get updated status
+        const postsResponse = await fetch("/api/posts");
+        if (postsResponse.ok) {
+          const data = await postsResponse.json();
+          const sortedPosts = [...data.posts].sort((a: Post, b: Post) => {
+            const statusOrder: Record<Post["status"], number> = { DRAFT: 0, SCHEDULED: 1, POSTED: 2, FAILED: 3 };
+            const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+            if (statusDiff !== 0) return statusDiff;
+            if (a.status === "SCHEDULED" && a.schedule && b.schedule) {
+              return new Date(a.schedule.scheduledFor).getTime() - new Date(b.schedule.scheduledFor).getTime();
+            }
+            if (a.status === "POSTED") {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+            return a.weekNumber - b.weekNumber;
+          });
+          setPosts(sortedPosts);
+        }
+        setShowBulkScheduleModal(false);
+        alert(`Scheduled ${result.scheduledCount} posts successfully!`);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to schedule posts");
+      }
+    } catch (error) {
+      console.error("Failed to schedule:", error);
+      alert("Failed to schedule posts. Please try again.");
+    } finally {
+      setBulkScheduling(false);
+    }
+  };
 
   const handleEdit = (post: Post) => {
     setEditingPost(post.id);
@@ -643,31 +715,7 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-claude-bg">
-      {/* Header */}
-      <header className="sticky top-0 bg-claude-bg/80 backdrop-blur-md border-b border-claude-border z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo size="md" />
-          </Link>
-
-          <nav className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Dashboard
-            </Link>
-            <Link href="/posts" className="text-sm text-accent-coral font-medium">
-              Posts
-            </Link>
-            <Link href="/schedule" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Schedule
-            </Link>
-            <Link href="/settings" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Settings
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <>
       <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -678,10 +726,21 @@ export default function PostsPage() {
           </div>
 
           {posts.length > 0 && (
-            <Link href="/schedule" className="btn-primary">
-              <CalendarIcon />
-              Schedule Posts
-            </Link>
+            <div className="flex items-center gap-3">
+              {draftPosts.length > 0 && linkedInConnected && (
+                <button
+                  onClick={() => setShowBulkScheduleModal(true)}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  <CalendarIcon />
+                  Schedule All ({draftPosts.length})
+                </button>
+              )}
+              <Link href="/create" className="btn-primary flex items-center gap-2">
+                <PlusIcon />
+                New Post
+              </Link>
+            </div>
           )}
         </div>
 
@@ -1084,6 +1143,103 @@ export default function PostsPage() {
           </div>
         )}
       </main>
-    </div>
+
+      {/* Bulk Schedule Modal */}
+      {showBulkScheduleModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-claude-bg rounded-claude-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-claude-text">
+                Schedule {draftPosts.length} Draft{draftPosts.length !== 1 ? "s" : ""}
+              </h2>
+              <button
+                onClick={() => setShowBulkScheduleModal(false)}
+                className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary transition-colors"
+              >
+                <XIcon />
+              </button>
+            </div>
+
+            <p className="text-sm text-claude-text-secondary mb-6">
+              Schedule all your draft posts to publish weekly on LinkedIn.
+            </p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="label">Start Date</label>
+                <input
+                  type="date"
+                  value={bulkScheduleStartDate}
+                  onChange={(e) => setBulkScheduleStartDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="input w-full"
+                />
+              </div>
+
+              <div>
+                <label className="label">Day of Week</label>
+                <select
+                  value={bulkScheduleDay}
+                  onChange={(e) => setBulkScheduleDay(e.target.value)}
+                  className="input w-full"
+                >
+                  {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Time</label>
+                <select
+                  value={bulkScheduleTime}
+                  onChange={(e) => setBulkScheduleTime(e.target.value)}
+                  className="input w-full"
+                >
+                  {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map((time) => {
+                    const hour = parseInt(time.split(":")[0]);
+                    const displayTime = hour > 12 ? `${hour - 12}:00 PM` : hour === 12 ? "12:00 PM" : `${hour}:00 AM`;
+                    return (
+                      <option key={time} value={time}>
+                        {displayTime}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkScheduleModal(false)}
+                className="btn-secondary flex-1"
+                disabled={bulkScheduling}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkSchedule}
+                disabled={bulkScheduling}
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                {bulkScheduling ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Scheduling...
+                  </>
+                ) : (
+                  <>
+                    <CalendarIcon />
+                    Schedule All
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

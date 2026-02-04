@@ -4,7 +4,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import Logo from "@/components/Logo";
 
 interface OrganizationMembership {
   id: string;
@@ -34,24 +33,6 @@ interface Guideline {
   createdAt: string;
 }
 
-interface LibraryItem {
-  id: string;
-  type: "LINK" | "YOUTUBE" | "PDF" | "DOCX";
-  sourceUrl: string | null;
-  fileName: string | null;
-  title: string | null;
-  extractedSummary: string | null;
-  processingStatus: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
-  processingError: string | null;
-  usageCount: number;
-  createdAt: string;
-}
-
-interface LinkedInScreenshot {
-  id: string;
-  sectionType: string;
-  createdAt: string;
-}
 
 const LinkedInIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -113,42 +94,6 @@ const PlusIcon = () => (
   </svg>
 );
 
-const BookOpenIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-  </svg>
-);
-
-const VideoIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-  </svg>
-);
-
-const FileIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-  </svg>
-);
-
-const UserCircleIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const PhotoIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-  </svg>
-);
 
 const SlackIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -175,18 +120,6 @@ function SettingsForm() {
   const [editingGuidelineId, setEditingGuidelineId] = useState<string | null>(null);
   const [editingGuidelineContent, setEditingGuidelineContent] = useState("");
 
-  // Library state
-  const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
-  const [libraryLoading, setLibraryLoading] = useState(true);
-  const [urlInput, setUrlInput] = useState("");
-  const [addingUrl, setAddingUrl] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [libraryDragActive, setLibraryDragActive] = useState(false);
-
-  // LinkedIn screenshot state
-  const [linkedInScreenshots, setLinkedInScreenshots] = useState<LinkedInScreenshot[]>([]);
-  const [linkedInUploading, setLinkedInUploading] = useState(false);
-  const [linkedInDragActive, setLinkedInDragActive] = useState(false);
 
   // Check for LinkedIn/Slack connection status from URL params
   useEffect(() => {
@@ -258,45 +191,6 @@ function SettingsForm() {
     }
   }, [session]);
 
-  // Fetch library items
-  useEffect(() => {
-    const fetchLibrary = async () => {
-      try {
-        const response = await fetch("/api/personalization/library");
-        if (response.ok) {
-          const result = await response.json();
-          setLibraryItems(result.items || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch library:", error);
-      } finally {
-        setLibraryLoading(false);
-      }
-    };
-
-    if (session?.user) {
-      fetchLibrary();
-    }
-  }, [session]);
-
-  // Fetch LinkedIn screenshots
-  useEffect(() => {
-    const fetchLinkedInProfile = async () => {
-      try {
-        const response = await fetch("/api/profile/upload-linkedin");
-        if (response.ok) {
-          const result = await response.json();
-          setLinkedInScreenshots(result.screenshots || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch LinkedIn profile:", error);
-      }
-    };
-
-    if (session?.user) {
-      fetchLinkedInProfile();
-    }
-  }, [session]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -402,180 +296,6 @@ function SettingsForm() {
     }
   };
 
-  // Library handlers
-  const handleAddUrl = async () => {
-    if (!urlInput.trim()) return;
-    setAddingUrl(true);
-    try {
-      const response = await fetch("/api/personalization/library", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: urlInput.trim() }),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setLibraryItems((prev) => [result.item, ...prev]);
-        setUrlInput("");
-      }
-    } catch (error) {
-      console.error("Failed to add URL:", error);
-    } finally {
-      setAddingUrl(false);
-    }
-  };
-
-  const handleLibraryFileUpload = async (files: FileList) => {
-    setUploadingFile(true);
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const response = await fetch("/api/personalization/library", {
-          method: "POST",
-          body: formData,
-        });
-        if (response.ok) {
-          const result = await response.json();
-          setLibraryItems((prev) => [result.item, ...prev]);
-        }
-      } catch (error) {
-        console.error("Failed to upload file:", error);
-      }
-    }
-    setUploadingFile(false);
-  };
-
-  const handleDeleteLibraryItem = async (id: string) => {
-    try {
-      const response = await fetch("/api/personalization/library", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (response.ok) {
-        setLibraryItems((prev) => prev.filter((item) => item.id !== id));
-      }
-    } catch (error) {
-      console.error("Failed to delete library item:", error);
-    }
-  };
-
-  const handleLibraryDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setLibraryDragActive(true);
-    } else if (e.type === "dragleave") {
-      setLibraryDragActive(false);
-    }
-  };
-
-  const handleLibraryDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLibraryDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleLibraryFileUpload(e.dataTransfer.files);
-    }
-  };
-
-  const getLibraryTypeIcon = (type: string) => {
-    switch (type) {
-      case "YOUTUBE": return <VideoIcon />;
-      case "PDF": case "DOCX": return <FileIcon />;
-      default: return <LinkIcon />;
-    }
-  };
-
-  // LinkedIn screenshot handlers
-  const handleLinkedInScreenshotUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setMessage("Please upload an image file (PNG, JPG, etc.)");
-      return;
-    }
-
-    setLinkedInUploading(true);
-    try {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const imageData = await base64Promise;
-
-      const response = await fetch("/api/profile/upload-linkedin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageData, sectionType: "full_profile" }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        // Refresh the screenshots list
-        const profileRes = await fetch("/api/profile/upload-linkedin");
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setLinkedInScreenshots(profileData.screenshots || []);
-        }
-        setMessage("LinkedIn profile information extracted!");
-        setTimeout(() => setMessage(""), 3000);
-      } else {
-        setMessage("Failed to process screenshot. Please try again.");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      setMessage("Failed to process screenshot. Please try again.");
-    } finally {
-      setLinkedInUploading(false);
-    }
-  };
-
-  const handleLinkedInDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setLinkedInDragActive(true);
-    } else if (e.type === "dragleave") {
-      setLinkedInDragActive(false);
-    }
-  };
-
-  const handleLinkedInDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLinkedInDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleLinkedInScreenshotUpload(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleDeleteLinkedInScreenshot = async (id: string) => {
-    try {
-      const response = await fetch(`/api/profile/upload-linkedin?id=${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        setLinkedInScreenshots((prev) => prev.filter((s) => s.id !== id));
-      }
-    } catch (error) {
-      console.error("Failed to delete screenshot:", error);
-    }
-  };
-
-  const getProcessingBadge = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return <span className="px-2 py-0.5 bg-success/10 text-success text-xs rounded-full">Ready</span>;
-      case "PROCESSING":
-        return <span className="px-2 py-0.5 bg-warning/10 text-warning text-xs rounded-full animate-pulse">Processing...</span>;
-      case "FAILED":
-        return <span className="px-2 py-0.5 bg-error/10 text-error text-xs rounded-full">Failed</span>;
-      default:
-        return <span className="px-2 py-0.5 bg-claude-bg-tertiary text-claude-text-tertiary text-xs rounded-full">Pending</span>;
-    }
-  };
 
   if (status === "loading" || loading) {
     return (
@@ -586,31 +306,7 @@ function SettingsForm() {
   }
 
   return (
-    <div className="min-h-screen bg-claude-bg">
-      {/* Header */}
-      <header className="sticky top-0 bg-claude-bg/80 backdrop-blur-md border-b border-claude-border z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo size="md" />
-          </Link>
-
-          <nav className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Dashboard
-            </Link>
-            <Link href="/posts" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Posts
-            </Link>
-            <Link href="/schedule" className="text-sm text-claude-text-secondary hover:text-claude-text">
-              Schedule
-            </Link>
-            <Link href="/settings" className="text-sm text-accent-coral font-medium">
-              Settings
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <>
       <main className="max-w-2xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold text-claude-text mb-8">Settings</h1>
 
@@ -914,183 +610,6 @@ function SettingsForm() {
             )}
           </div>
 
-          {/* Library Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <BookOpenIcon />
-              <h3 className="font-medium text-claude-text">My Library</h3>
-            </div>
-            <p className="text-sm text-claude-text-secondary mb-4">
-              Upload your content - articles, YouTube videos, PDFs, resume, documents. Your ghostwriter will use these to create <strong>Magic Drafts</strong>.
-            </p>
-
-            {/* Add URL */}
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="Paste a URL (article, YouTube video, etc.)"
-                className="input flex-1"
-                onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-              />
-              <button
-                onClick={handleAddUrl}
-                disabled={addingUrl || !urlInput.trim()}
-                className="btn-primary"
-              >
-                {addingUrl ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <PlusIcon />
-                )}
-                Add
-              </button>
-            </div>
-
-            {/* File upload zone */}
-            <div
-              onDragEnter={handleLibraryDrag}
-              onDragLeave={handleLibraryDrag}
-              onDragOver={handleLibraryDrag}
-              onDrop={handleLibraryDrop}
-              className={`border-2 border-dashed rounded-claude p-4 text-center mb-4 transition-colors ${
-                libraryDragActive
-                  ? "border-accent-coral bg-accent-coral/5"
-                  : "border-claude-border hover:border-claude-border-strong"
-              }`}
-            >
-              {uploadingFile ? (
-                <div className="flex items-center justify-center gap-2 py-2">
-                  <div className="w-4 h-4 border-2 border-accent-coral border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-claude-text-secondary">Uploading...</span>
-                </div>
-              ) : (
-                <label className="cursor-pointer">
-                  <span className="text-sm text-claude-text-secondary">
-                    Drag & drop PDF, resume, or DOCX files here, or <span className="text-accent-coral">browse</span>
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    multiple
-                    onChange={(e) => e.target.files && handleLibraryFileUpload(e.target.files)}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
-
-            {/* LinkedIn screenshot upload */}
-            <div
-              onDragEnter={handleLinkedInDrag}
-              onDragLeave={handleLinkedInDrag}
-              onDragOver={handleLinkedInDrag}
-              onDrop={handleLinkedInDrop}
-              className={`border-2 border-dashed rounded-claude p-4 text-center mb-4 transition-colors ${
-                linkedInDragActive
-                  ? "border-[#0077B5] bg-[#0077B5]/5"
-                  : "border-claude-border hover:border-claude-border-strong"
-              }`}
-            >
-              {linkedInUploading ? (
-                <div className="flex items-center justify-center gap-2 py-2">
-                  <div className="w-4 h-4 border-2 border-[#0077B5] border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-claude-text-secondary">Analyzing your LinkedIn profile...</span>
-                </div>
-              ) : (
-                <label className="cursor-pointer flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <UserCircleIcon />
-                    <span className="text-sm text-claude-text-secondary">
-                      Upload LinkedIn profile screenshot, or <span className="text-[#0077B5]">browse</span>
-                    </span>
-                  </div>
-                  <span className="text-xs text-claude-text-tertiary">
-                    Screenshot your LinkedIn profile to help your ghostwriter understand your background
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleLinkedInScreenshotUpload(e.target.files[0])}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
-
-            {/* LinkedIn screenshots list */}
-            {linkedInScreenshots.length > 0 && (
-              <div className="space-y-2 mb-4">
-                {linkedInScreenshots.map((screenshot) => (
-                  <div key={screenshot.id} className="flex items-center gap-3 p-3 bg-claude-bg-secondary rounded-claude group">
-                    <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 bg-[#0077B5]/10 text-[#0077B5]">
-                      <UserCircleIcon />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-claude-text font-medium">LinkedIn Profile Screenshot</p>
-                      <p className="text-xs text-claude-text-tertiary">
-                        Uploaded {new Date(screenshot.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className="px-2 py-0.5 bg-success/10 text-success text-xs rounded-full">Ready</span>
-                    <button
-                      onClick={() => handleDeleteLinkedInScreenshot(screenshot.id)}
-                      className="p-1 text-claude-text-tertiary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Library items list */}
-            {libraryLoading ? (
-              <div className="py-4 text-center text-claude-text-tertiary">Loading...</div>
-            ) : libraryItems.length === 0 ? (
-              <div className="py-4 text-center">
-                <p className="text-claude-text-tertiary text-sm">Your library is empty</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {libraryItems.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3 p-3 bg-claude-bg-secondary rounded-claude group">
-                    <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${
-                      item.type === "YOUTUBE" ? "bg-red-100 text-red-600" :
-                      item.type === "PDF" ? "bg-orange-100 text-orange-600" :
-                      item.type === "DOCX" ? "bg-blue-100 text-blue-600" :
-                      "bg-claude-bg-tertiary text-claude-text-secondary"
-                    }`}>
-                      {getLibraryTypeIcon(item.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-claude-text font-medium truncate">
-                        {item.title || item.fileName || item.sourceUrl || "Untitled"}
-                      </p>
-                      {item.extractedSummary && (
-                        <p className="text-xs text-claude-text-tertiary mt-1 line-clamp-2">
-                          {item.extractedSummary}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1">
-                        {getProcessingBadge(item.processingStatus)}
-                        {item.usageCount > 0 && (
-                          <span className="text-xs text-claude-text-tertiary">Used {item.usageCount}x</span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteLibraryItem(item.id)}
-                      className="p-1 text-claude-text-tertiary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <TrashIcon />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Account Section */}
@@ -1105,7 +624,7 @@ function SettingsForm() {
           </button>
         </div>
       </main>
-    </div>
+    </>
   );
 }
 

@@ -147,18 +147,33 @@ The `calculateScheduledDate` function in `interactions/route.ts` converts user's
 - `/src/lib/slack-blocks.ts` - Slack Block Kit message builders
 - `/src/lib/slack-verify.ts` - Request signature verification
 
-### Dashboard
-- `/src/app/(dashboard)/` - Protected dashboard routes
-- `/src/app/(dashboard)/settings/page.tsx` - User settings including Slack/LinkedIn connections
-- `/src/app/(dashboard)/posts/page.tsx` - Post management
+### Dashboard Layout & Navigation
+- `/src/app/(dashboard)/layout.tsx` - Shared dashboard layout with navigation (Dashboard, Posts, Magic Drafts, Settings)
+- `/src/app/(dashboard)/dashboard/page.tsx` - Dashboard home with stats overview
+- `/src/app/(dashboard)/posts/page.tsx` - Post management (drafts, scheduled, posted) with bulk scheduling
+- `/src/app/(dashboard)/magic-drafts/page.tsx` - Library management and AI-powered draft generation
+- `/src/app/(dashboard)/settings/page.tsx` - User settings, LinkedIn/Slack connections, timezone
+- `/src/app/(dashboard)/create/page.tsx` - Onboarding flow for new posts
+- `/src/app/(dashboard)/onboarding/page.tsx` - Initial user onboarding
 
 ### Landing Page
 - `/src/app/page.tsx` - Public landing page with Slack integration section
+
+### Components
+- `/src/components/Logo.tsx` - TeamPost logo component
+- `/src/components/MentionEditor.tsx` - Rich text editor with @mention support for LinkedIn
 
 ## Database Schema Notes
 - `SlackIntegration` - One per user, stores bot token
 - `SlackDraft` - Drafts created via Slack DM, linked to integration
 - `User.slackIntegration` - One-to-one relation
+
+## App Navigation Structure
+The dashboard has four main sections:
+1. **Dashboard** (`/dashboard`) - Overview with post stats and quick actions
+2. **Posts** (`/posts`) - Unified view of all posts (drafts, scheduled, posted) with bulk scheduling
+3. **Magic Drafts** (`/magic-drafts`) - AI-powered draft generation from your content library
+4. **Settings** (`/settings`) - Profile, connections (LinkedIn, Slack), timezone, writing guidelines
 
 ## Slack Bot Features
 - DM the bot with bullet points/ideas to generate LinkedIn posts
@@ -230,3 +245,41 @@ npm run qa
 5. **Build failures**: Run `npm run build` to catch TypeScript errors before deploying
 6. **Slack content too long**: Slack block text has 3000 char limit - use `truncateForSlack()` in `slack-blocks.ts`
 7. **Slack scopes missing**: If adding new Slack features, check if new OAuth scopes are needed
+
+## Testing
+
+### Test Infrastructure
+- **Framework**: Vitest with jsdom
+- **Location**: `/src/__tests__/` - Unit tests organized by feature
+- **Patterns**: Mock Prisma and NextAuth for isolated testing
+
+### Test Commands
+```bash
+npm run test:run      # Run all tests once
+npm run test          # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
+```
+
+### Manual QA Checklist
+Before deploying, manually test these critical flows. See `/docs/QA-CHECKLIST.md` for the full checklist.
+
+**Critical Paths:**
+1. Auth: Login, logout, OAuth flows (Google, LinkedIn)
+2. Posts: Create, edit, delete, schedule, publish
+3. Magic Drafts: Add library items, generate drafts
+4. Slack Bot: DM messages, photo uploads, scheduling via Slack
+5. Navigation: All nav links work, correct page highlights
+
+### Pre-Deploy Script
+The `npm run predeploy` command runs:
+1. `npm run test:run` - All unit tests must pass
+2. `npm run build` - TypeScript compilation and Next.js build
+
+### QA Script
+The `npm run qa` command runs comprehensive checks:
+- TypeScript compilation
+- ESLint validation
+- Next.js build
+- Unit tests
+- Critical file existence checks
+- Security scans for hardcoded secrets

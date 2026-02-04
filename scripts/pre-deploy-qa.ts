@@ -193,7 +193,9 @@ async function runQAChecks() {
     "src/app/(dashboard)/dashboard/page.tsx",
     "src/app/(dashboard)/create/page.tsx",
     "src/app/(dashboard)/posts/page.tsx",
+    "src/app/(dashboard)/magic-drafts/page.tsx",
     "src/app/(dashboard)/settings/page.tsx",
+    "src/app/(dashboard)/layout.tsx",
     "src/app/page.tsx",
   ];
 
