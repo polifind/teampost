@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { TIMEZONES, DEFAULT_TIMEZONE } from "@/lib/timezones";
-import type { LibraryPhoto } from "@/types";
+import type { LibraryPhoto, LinkedInContact } from "@/types";
+import { MentionEditor } from "@/components/MentionEditor/MentionEditor";
 
 interface Schedule {
   id: string;
@@ -134,6 +135,8 @@ export default function PostsPage() {
   const [userTimezone, setUserTimezone] = useState(DEFAULT_TIMEZONE);
   const [scheduleTimezone, setScheduleTimezone] = useState(DEFAULT_TIMEZONE);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  const [contacts, setContacts] = useState<LinkedInContact[]>([]);
+  const [selectedTags, setSelectedTags] = useState<LinkedInContact[]>([]);
 
   // Bulk scheduling state
   const [showBulkScheduleModal, setShowBulkScheduleModal] = useState(false);
@@ -193,6 +196,18 @@ export default function PostsPage() {
       }
     };
 
+    const fetchContacts = async () => {
+      try {
+        const response = await fetch("/api/linkedin/contacts");
+        if (response.ok) {
+          const data = await response.json();
+          setContacts(data.contacts || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch contacts:", error);
+      }
+    };
+
     const fetchUserSettings = async () => {
       try {
         const response = await fetch("/api/user/settings");
@@ -212,6 +227,7 @@ export default function PostsPage() {
       fetchPosts();
       fetchLibraryPhotos();
       fetchUserSettings();
+      fetchContacts();
     }
   }, [session]);
 
@@ -336,6 +352,31 @@ export default function PostsPage() {
       }
     } catch (error) {
       console.error("Failed to save post:", error);
+    }
+  };
+
+  const handleAddContact = async (name: string): Promise<LinkedInContact | null> => {
+    try {
+      const response = await fetch("/api/linkedin/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          type: "COMPANY",
+          linkedinUrl: `https://linkedin.com/company/${name.toLowerCase().replace(/\s+/g, "-")}`,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newContact = data.contact;
+        setContacts((prev) => [newContact, ...prev]);
+        return newContact;
+      }
+      return null;
+    } catch (error) {
+      console.error("Failed to add contact:", error);
+      return null;
     }
   };
 
@@ -972,12 +1013,19 @@ export default function PostsPage() {
 
                 {editingPost === post.id ? (
                   <div className="space-y-4">
-                    <textarea
+                    <MentionEditor
                       value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className="input min-h-[200px] resize-y"
-                      placeholder="Edit your post..."
+                      onChange={setEditContent}
+                      contacts={contacts}
+                      selectedTags={selectedTags}
+                      onTagsChange={setSelectedTags}
+                      onAddContact={handleAddContact}
+                      placeholder="Edit your post... Type @ to mention someone"
+                      minHeight="200px"
                     />
+                    <p className="text-xs text-claude-text-tertiary">
+                      Type @ to tag a person or company on LinkedIn
+                    </p>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleSaveEdit(post.id)}
