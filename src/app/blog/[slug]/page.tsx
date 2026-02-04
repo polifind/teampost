@@ -77,7 +77,7 @@ function renderContent(content: string) {
       const boldMatch = line.match(/^\*\*(.+?)\*\*:(.*)$/);
       if (boldMatch) {
         elements.push(
-          <p key={i} className="text-claude-text-secondary mb-4 leading-relaxed">
+          <p key={i} className="text-gray-700 mb-4 leading-relaxed">
             <strong className="text-claude-text">{boldMatch[1]}:</strong>
             {renderInlineFormatting(boldMatch[2])}
           </p>
@@ -89,7 +89,7 @@ function renderContent(content: string) {
 
     // Regular paragraph
     elements.push(
-      <p key={i} className="text-claude-text-secondary mb-4 leading-relaxed">
+      <p key={i} className="text-gray-700 mb-4 leading-relaxed">
         {renderInlineFormatting(line)}
       </p>
     );
