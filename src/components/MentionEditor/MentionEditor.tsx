@@ -36,6 +36,7 @@ export function MentionEditor({
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
+  const cursorPositionRef = useRef<number | null>(null);
 
   const {
     showAutocomplete,
@@ -48,6 +49,22 @@ export function MentionEditor({
   const handleScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
   }, []);
+
+  // Handle change while preserving cursor position
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Save cursor position before the value changes
+    cursorPositionRef.current = e.target.selectionStart;
+    onChange(e.target.value);
+  }, [onChange]);
+
+  // Restore cursor position after render
+  useEffect(() => {
+    if (cursorPositionRef.current !== null && textareaRef.current) {
+      const pos = cursorPositionRef.current;
+      textareaRef.current.setSelectionRange(pos, pos);
+      cursorPositionRef.current = null;
+    }
+  }, [value]);
 
   // Handle selecting a contact from autocomplete
   const handleSelectContact = useCallback(
@@ -142,7 +159,7 @@ export function MentionEditor({
         <textarea
           ref={textareaRef}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleChange}
           onScroll={handleScroll}
           placeholder={placeholder}
           disabled={disabled || addingContact}
