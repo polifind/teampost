@@ -71,6 +71,61 @@ const SlackIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   </svg>
 );
 
+// Magic Drafts section icons
+const DocumentTextIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+  </svg>
+);
+
+const PhotoIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+  </svg>
+);
+
+const ChatBubbleIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+  </svg>
+);
+
+const VideoCameraIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+  </svg>
+);
+
+const MicrophoneIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+  </svg>
+);
+
+const NewspaperIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
+  </svg>
+);
+
+const MagnifyingGlassIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+  </svg>
+);
+
+const CloudArrowUpIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+  </svg>
+);
+
+const ArrowDownIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+  </svg>
+);
+
 const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -519,6 +574,139 @@ export default function LandingPage() {
             <Link href="/signup" className="btn-primary bg-[#4A154B] hover:bg-[#3d1140] inline-flex items-center gap-2">
               <SlackIcon className="w-5 h-5" />
               Get Your Slack Ghostwriter
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Magic Drafts Section */}
+      <section className="py-20 px-6 bg-gradient-to-br from-violet-500/5 to-purple-500/10">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 text-sm font-medium mb-4">
+              <SparklesIcon />
+              <span>Magic Drafts</span>
+            </div>
+            <h2 className="text-3xl font-bold text-claude-text mb-4">
+              Your life, auto-magically turned into LinkedIn content
+            </h2>
+            <p className="text-lg text-claude-text-secondary max-w-3xl mx-auto">
+              Upload anything about yourself—resumes, LinkedIn screenshots, Slack chats, Linear tickets—and TeamPost transforms it into polished posts. We even pull from your public presence to create content that sounds authentically you.
+            </p>
+          </div>
+
+          {/* Two-column layout */}
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Visual mockup showing content sources */}
+            <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <SparklesIcon />
+                  <span className="font-semibold">Magic Drafts</span>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Sources label */}
+                <p className="text-xs font-medium text-claude-text-tertiary uppercase tracking-wider mb-4">Your Content Sources</p>
+
+                {/* Sources grid */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[
+                    { icon: DocumentTextIcon, label: "Resume", color: "text-blue-500 bg-blue-50" },
+                    { icon: PhotoIcon, label: "Screenshots", color: "text-green-500 bg-green-50" },
+                    { icon: ChatBubbleIcon, label: "Slack", color: "text-purple-500 bg-purple-50" },
+                    { icon: VideoCameraIcon, label: "YouTube", color: "text-red-500 bg-red-50" },
+                    { icon: MicrophoneIcon, label: "Podcasts", color: "text-orange-500 bg-orange-50" },
+                    { icon: NewspaperIcon, label: "Articles", color: "text-indigo-500 bg-indigo-50" },
+                  ].map((source, i) => (
+                    <div key={i} className={`flex flex-col items-center gap-2 p-3 rounded-lg ${source.color.split(' ')[1]}`}>
+                      <source.icon className={`w-6 h-6 ${source.color.split(' ')[0]}`} />
+                      <span className="text-xs font-medium text-claude-text-secondary">{source.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Arrow */}
+                <div className="flex justify-center mb-6">
+                  <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
+                    <ArrowDownIcon className="w-5 h-5 text-violet-600" />
+                  </div>
+                </div>
+
+                {/* Output preview */}
+                <div className="border border-claude-border rounded-lg p-4 bg-claude-bg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-[#0077B5] flex items-center justify-center">
+                      <LinkedInIcon />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-claude-text">Your LinkedIn Post</p>
+                      <p className="text-xs text-claude-text-tertiary">Ready for your approval</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-claude-text-secondary italic">
+                    "Just shipped a new feature that reduced our API latency by 40%. Here's what I learned about performance optimization..."
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">✓ Authentic voice</span>
+                    <span className="px-2 py-1 text-xs rounded-full bg-violet-100 text-violet-700">✨ AI-generated</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Benefits list */}
+            <div className="space-y-8">
+              {[
+                {
+                  icon: CloudArrowUpIcon,
+                  title: "Upload Anything About You",
+                  description: "Resumes, cover letters, LinkedIn screenshots, Slack messages, Linear tickets—anything that tells your story becomes content.",
+                  color: "bg-blue-500/10 text-blue-600",
+                },
+                {
+                  icon: VideoCameraIcon,
+                  title: "Your Public Presence",
+                  description: "YouTube videos, podcast appearances, news coverage, books you've written, public essays—we automatically find and use your existing content.",
+                  color: "bg-red-500/10 text-red-600",
+                },
+                {
+                  icon: MagnifyingGlassIcon,
+                  title: "We Do The Research",
+                  description: "We search publicly available sources about you and your company to create authentic content from your unique perspective.",
+                  color: "bg-green-500/10 text-green-600",
+                },
+                {
+                  icon: SparklesIcon,
+                  title: "Generate On-Demand or On Autopilot",
+                  description: "Generate drafts instantly with one click, or set a cadence and receive fresh content delivered straight to your Slack—daily, weekly, whatever works for you.",
+                  color: "bg-violet-500/10 text-violet-600",
+                },
+              ].map((benefit, i) => (
+                <div key={i} className="flex gap-4">
+                  <div className={`w-12 h-12 rounded-xl ${benefit.color} flex items-center justify-center flex-shrink-0`}>
+                    <benefit.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-claude-text mb-1">{benefit.title}</h3>
+                    <p className="text-claude-text-secondary">{benefit.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-16 text-center">
+            <p className="text-claude-text-secondary mb-6">
+              TeamPost knows your life and understands how to turn anything you share into LinkedIn content.
+            </p>
+            <Link href="/signup" className="btn-primary bg-violet-600 hover:bg-violet-700 inline-flex items-center gap-2">
+              <SparklesIcon />
+              Start Creating Magic Drafts
             </Link>
           </div>
         </div>
