@@ -57,7 +57,7 @@ export default function BlogPage() {
             The TeamPost Blog
           </h1>
           <p className="text-lg text-white/90 max-w-2xl mx-auto">
-            Why every professional and company should own their narrative.
+            How going direct transforms sales, marketing, recruiting, and investor brand.
           </p>
         </div>
       </header>
