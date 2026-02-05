@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import type { LinkedInContact } from "@/types";
 import { useMentionDetection } from "./useMentionDetection";
 import { MentionAutocomplete } from "./MentionAutocomplete";
@@ -151,20 +151,88 @@ export function MentionEditor({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [internalValue, contacts]); // Intentionally not including selectedTags/onTagsChange to avoid loops
 
+  // Generate the highlighted overlay content
+  const highlightedContent = useMemo(() => {
+    if (!internalValue) return null;
+
+    // Create a set of contact names for quick lookup (case-insensitive)
+    const mentionNames = new Set(
+      selectedTags.map((t) => t.name.toLowerCase())
+    );
+
+    // Split content by @mentions
+    const parts: Array<{ text: string; isMention: boolean; displayText: string }> = [];
+    let lastIndex = 0;
+    const regex = /@([\w][\w\s]*[\w]|[\w]+)/g;
+    let match;
+
+    while ((match = regex.exec(internalValue)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        const text = internalValue.slice(lastIndex, match.index);
+        parts.push({ text, isMention: false, displayText: text });
+      }
+
+      // Check if this mention is in selectedTags
+      const mentionName = match[1];
+      const isTagged = mentionNames.has(mentionName.toLowerCase());
+
+      parts.push({
+        text: match[0], // Full text including @
+        isMention: isTagged,
+        displayText: isTagged ? mentionName : match[0], // Show without @ if tagged
+      });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text after last match
+    if (lastIndex < internalValue.length) {
+      const text = internalValue.slice(lastIndex);
+      parts.push({ text, isMention: false, displayText: text });
+    }
+
+    return parts;
+  }, [internalValue, selectedTags]);
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Container for textarea and overlay */}
       <div className="relative" style={{ minHeight }}>
-        {/* Textarea - using defaultValue for uncontrolled behavior */}
+        {/* Highlight overlay - shows formatted text */}
+        <div
+          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-hidden border border-transparent rounded-lg"
+          style={{ minHeight }}
+          aria-hidden="true"
+        >
+          {highlightedContent?.map((part, i) => {
+            if (part.isMention) {
+              return (
+                <span key={i} className="font-semibold text-blue-600">
+                  {part.displayText}
+                </span>
+              );
+            }
+            return <span key={i}>{part.displayText}</span>;
+          })}
+          {/* Placeholder when empty */}
+          {!internalValue && (
+            <span className="text-gray-400">{placeholder}</span>
+          )}
+        </div>
+
+        {/* Textarea - transparent text, user types here */}
         <textarea
           ref={textareaRef}
           defaultValue={value}
           onInput={handleInput}
-          placeholder={placeholder}
+          placeholder=""
           disabled={disabled || addingContact}
-          className="w-full h-full p-3 text-sm leading-relaxed bg-white border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent text-gray-900"
+          className="w-full h-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900"
           style={{
             minHeight,
+            color: "transparent",
+            caretColor: "#111827",
           }}
         />
 
