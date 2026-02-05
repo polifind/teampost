@@ -34,6 +34,18 @@ export function MentionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
+  // Track the internal value for uncontrolled behavior
+  const [internalValue, setInternalValue] = useState(value);
+
+  // Sync internal value when prop changes from outside
+  useEffect(() => {
+    if (value !== internalValue) {
+      setInternalValue(value);
+      if (textareaRef.current && textareaRef.current.value !== value) {
+        textareaRef.current.value = value;
+      }
+    }
+  }, [value]);
 
   const {
     showAutocomplete,
@@ -41,11 +53,14 @@ export function MentionEditor({
     position,
     startIndex,
     closeAutocomplete,
-  } = useMentionDetection(textareaRef, value);
+  } = useMentionDetection(textareaRef, internalValue);
 
-  // Simple change handler - just pass through to parent
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(e.target.value);
+  // Handle input changes
+  const handleInput = useCallback((e: React.FormEvent<HTMLTextAreaElement>) => {
+    const target = e.target as HTMLTextAreaElement;
+    const newValue = target.value;
+    setInternalValue(newValue);
+    onChange(newValue);
   }, [onChange]);
 
   // Handle selecting a contact from autocomplete
@@ -55,12 +70,13 @@ export function MentionEditor({
 
       const cursorPos = textareaRef.current.selectionStart;
       const { newContent, newCursorPosition } = insertMention(
-        value,
+        internalValue,
         contact.name,
         startIndex,
         cursorPos
       );
 
+      setInternalValue(newContent);
       onChange(newContent);
 
       // Add to selectedTags if not already present
@@ -73,12 +89,13 @@ export function MentionEditor({
       // Restore focus and cursor position
       setTimeout(() => {
         if (textareaRef.current) {
+          textareaRef.current.value = newContent;
           textareaRef.current.focus();
           textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
         }
       }, 0);
     },
-    [value, startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
+    [internalValue, startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
   // Handle adding a new contact
@@ -115,7 +132,7 @@ export function MentionEditor({
     const mentionRegex = /@([\w][\w\s]*[\w]|[\w]+)/g;
     const mentionsInContent = new Set<string>();
     let match;
-    while ((match = mentionRegex.exec(value)) !== null) {
+    while ((match = mentionRegex.exec(internalValue)) !== null) {
       mentionsInContent.add(match[1].toLowerCase());
     }
 
@@ -132,17 +149,17 @@ export function MentionEditor({
       onTagsChange([...selectedTags, ...newTags]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, contacts]); // Intentionally not including selectedTags/onTagsChange to avoid loops
+  }, [internalValue, contacts]); // Intentionally not including selectedTags/onTagsChange to avoid loops
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Container for textarea and overlay */}
       <div className="relative" style={{ minHeight }}>
-        {/* Textarea - now with visible text */}
+        {/* Textarea - using defaultValue for uncontrolled behavior */}
         <textarea
           ref={textareaRef}
-          value={value}
-          onChange={handleChange}
+          defaultValue={value}
+          onInput={handleInput}
           placeholder={placeholder}
           disabled={disabled || addingContact}
           className="w-full h-full p-3 text-sm leading-relaxed bg-white border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent text-gray-900"
