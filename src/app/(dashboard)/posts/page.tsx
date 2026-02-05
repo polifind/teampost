@@ -138,6 +138,16 @@ export default function PostsPage() {
   const [contacts, setContacts] = useState<LinkedInContact[]>([]);
   const [selectedTags, setSelectedTags] = useState<LinkedInContact[]>([]);
 
+  // Add contact modal state
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
+  const [newContactName, setNewContactName] = useState("");
+  const [newContactUrl, setNewContactUrl] = useState("");
+  const [addingContact, setAddingContact] = useState(false);
+  const [addContactError, setAddContactError] = useState("");
+  const [pendingContactResolver, setPendingContactResolver] = useState<{
+    resolve: (contact: LinkedInContact | null) => void;
+  } | null>(null);
+
   // Bulk scheduling state
   const [showBulkScheduleModal, setShowBulkScheduleModal] = useState(false);
   const [bulkScheduling, setBulkScheduling] = useState(false);
@@ -356,14 +366,32 @@ export default function PostsPage() {
   };
 
   const handleAddContact = async (name: string): Promise<LinkedInContact | null> => {
+    // Show modal and wait for user to enter LinkedIn URL
+    return new Promise((resolve) => {
+      setNewContactName(name);
+      setNewContactUrl("");
+      setAddContactError("");
+      setPendingContactResolver({ resolve });
+      setShowAddContactModal(true);
+    });
+  };
+
+  const handleSubmitNewContact = async () => {
+    if (!newContactUrl.trim()) {
+      setAddContactError("Please enter a LinkedIn URL");
+      return;
+    }
+
+    setAddingContact(true);
+    setAddContactError("");
+
     try {
       const response = await fetch("/api/linkedin/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
-          type: "COMPANY",
-          linkedinUrl: `https://linkedin.com/company/${name.toLowerCase().replace(/\s+/g, "-")}`,
+          name: newContactName.trim(),
+          linkedinUrl: newContactUrl.trim(),
         }),
       });
 
@@ -372,26 +400,42 @@ export default function PostsPage() {
       if (response.ok) {
         const newContact = data.contact;
         setContacts((prev) => [newContact, ...prev]);
-        return newContact;
+        pendingContactResolver?.resolve(newContact);
+        setShowAddContactModal(false);
+        setPendingContactResolver(null);
+        return;
       }
 
       // Handle 409 Conflict - contact already exists, use the existing one
       if (response.status === 409 && data.contact) {
-        // Make sure it's in our contacts list
         setContacts((prev) => {
-          if (!prev.find(c => c.id === data.contact.id)) {
+          if (!prev.find((c) => c.id === data.contact.id)) {
             return [data.contact, ...prev];
           }
           return prev;
         });
-        return data.contact;
+        pendingContactResolver?.resolve(data.contact);
+        setShowAddContactModal(false);
+        setPendingContactResolver(null);
+        return;
       }
 
-      return null;
+      setAddContactError(data.error || "Failed to add contact");
     } catch (error) {
       console.error("Failed to add contact:", error);
-      return null;
+      setAddContactError("Failed to add contact. Please try again.");
+    } finally {
+      setAddingContact(false);
     }
+  };
+
+  const handleCancelAddContact = () => {
+    pendingContactResolver?.resolve(null);
+    setShowAddContactModal(false);
+    setPendingContactResolver(null);
+    setNewContactName("");
+    setNewContactUrl("");
+    setAddContactError("");
   };
 
   const handleStartRegenerate = (postId: string) => {
@@ -1313,6 +1357,85 @@ export default function PostsPage() {
                     <CalendarIcon />
                     Schedule All
                   </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Contact Modal */}
+      {showAddContactModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-claude-bg rounded-claude-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-claude-text">
+                Add LinkedIn Contact
+              </h2>
+              <button
+                onClick={handleCancelAddContact}
+                className="p-2 rounded-claude text-claude-text-secondary hover:bg-claude-bg-tertiary transition-colors"
+              >
+                <XIcon />
+              </button>
+            </div>
+
+            <p className="text-sm text-claude-text-secondary mb-4">
+              Paste the LinkedIn profile or company page URL for <strong>@{newContactName}</strong>
+            </p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="label">Name</label>
+                <input
+                  type="text"
+                  value={newContactName}
+                  onChange={(e) => setNewContactName(e.target.value)}
+                  placeholder="Person or company name"
+                  className="input w-full"
+                />
+              </div>
+
+              <div>
+                <label className="label">LinkedIn URL</label>
+                <input
+                  type="url"
+                  value={newContactUrl}
+                  onChange={(e) => setNewContactUrl(e.target.value)}
+                  placeholder="https://linkedin.com/in/username or /company/name"
+                  className="input w-full"
+                  autoFocus
+                />
+                <p className="text-xs text-claude-text-tertiary mt-1">
+                  Example: linkedin.com/in/johndoe or linkedin.com/company/acme
+                </p>
+              </div>
+
+              {addContactError && (
+                <p className="text-sm text-error">{addContactError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelAddContact}
+                className="btn-secondary flex-1"
+                disabled={addingContact}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitNewContact}
+                disabled={addingContact || !newContactUrl.trim()}
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                {addingContact ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Contact"
                 )}
               </button>
             </div>
