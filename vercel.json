@@ -5,11 +5,11 @@
   "crons": [
     {
       "path": "/api/cron/post-scheduler",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/cadence-drafts",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
