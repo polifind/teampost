@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import type { LinkedInContact } from "@/types";
 import { useMentionDetection } from "./useMentionDetection";
 import { MentionAutocomplete } from "./MentionAutocomplete";
@@ -34,7 +34,6 @@ export function MentionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
-  const cursorPositionRef = useRef<number | null>(null);
 
   const {
     showAutocomplete,
@@ -44,29 +43,10 @@ export function MentionEditor({
     closeAutocomplete,
   } = useMentionDetection(textareaRef, value);
 
-  // Handle change while preserving cursor position
+  // Simple change handler - just pass through to parent
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const cursorPos = e.target.selectionStart;
-    const newValue = e.target.value;
-
-    // Store cursor position for restoration
-    cursorPositionRef.current = cursorPos;
-
-    onChange(newValue);
+    onChange(e.target.value);
   }, [onChange]);
-
-  // Restore cursor position synchronously after DOM updates using useLayoutEffect
-  // This runs after React updates the DOM but before browser paint
-  useLayoutEffect(() => {
-    if (cursorPositionRef.current !== null && textareaRef.current) {
-      const pos = cursorPositionRef.current;
-      // Only restore if the textarea is focused (user is actively typing)
-      if (document.activeElement === textareaRef.current) {
-        textareaRef.current.setSelectionRange(pos, pos);
-      }
-      cursorPositionRef.current = null;
-    }
-  }, [value]);
 
   // Handle selecting a contact from autocomplete
   const handleSelectContact = useCallback(
