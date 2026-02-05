@@ -77,7 +77,9 @@
       "Bash(export PATH=\"/usr/local/bin:/usr/local/lib/node_modules/corepack/shims:$PATH\")",
       "Bash(/opt/homebrew/bin/gh run list --limit 3)",
       "Bash(/opt/homebrew/bin/gh run list --limit 2)",
-      "Bash(/opt/homebrew/bin/gh run list --limit 10)"
+      "Bash(/opt/homebrew/bin/gh run list --limit 10)",
+      "Bash(/usr/local/bin/npx vercel:*)",
+      "Bash(PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\" npx vercel:*)"
     ]
   }
 }

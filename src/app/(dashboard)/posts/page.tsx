@@ -367,12 +367,26 @@ export default function PostsPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         const newContact = data.contact;
         setContacts((prev) => [newContact, ...prev]);
         return newContact;
       }
+
+      // Handle 409 Conflict - contact already exists, use the existing one
+      if (response.status === 409 && data.contact) {
+        // Make sure it's in our contacts list
+        setContacts((prev) => {
+          if (!prev.find(c => c.id === data.contact.id)) {
+            return [data.contact, ...prev];
+          }
+          return prev;
+        });
+        return data.contact;
+      }
+
       return null;
     } catch (error) {
       console.error("Failed to add contact:", error);
