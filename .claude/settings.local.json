@@ -79,7 +79,13 @@
       "Bash(/opt/homebrew/bin/gh run list --limit 2)",
       "Bash(/opt/homebrew/bin/gh run list --limit 10)",
       "Bash(/usr/local/bin/npx vercel:*)",
-      "Bash(PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\" npx vercel:*)"
+      "Bash(PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\" npx vercel:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" /usr/local/bin/npm run build:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git status:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git diff:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git add:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git push:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm run build:*)"
     ]
   }
 }

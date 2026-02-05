@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface LibraryItem {
   id: string;
@@ -162,6 +162,7 @@ export default function MagicDraftsPage() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generatedDrafts, setGeneratedDrafts] = useState<GeneratedDraft[]>([]);
+  const draftIdCounter = useRef(0);
 
   // Message state
   const [message, setMessage] = useState("");
@@ -428,9 +429,10 @@ export default function MagicDraftsPage() {
       });
       if (response.ok) {
         const data = await response.json();
+        draftIdCounter.current += 1;
         setGeneratedDrafts((prev) => [
           {
-            id: Date.now().toString(),
+            id: `draft-${Date.now()}-${draftIdCounter.current}`,
             content: data.draft,
             sourcedFrom: data.sourcedFrom,
             createdAt: new Date(),
@@ -566,10 +568,15 @@ export default function MagicDraftsPage() {
         setGeneratedDrafts((prev) => prev.filter((d) => d.id !== draft.id));
         setMessage("Draft saved! View it in your Posts.");
         setTimeout(() => setMessage(""), 3000);
+      } else {
+        const error = await response.json();
+        setMessage(error.error || "Failed to save draft. Please try again.");
+        setTimeout(() => setMessage(""), 5000);
       }
     } catch (error) {
       console.error("Failed to save draft:", error);
       setMessage("Failed to save draft. Please try again.");
+      setTimeout(() => setMessage(""), 5000);
     }
   };
 

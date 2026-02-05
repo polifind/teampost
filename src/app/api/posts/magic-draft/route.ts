@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { itemIds } = await request.json();
+    const { selectedLibraryItemIds: itemIds } = await request.json();
 
     // Fetch user data
     const user = await prisma.user.findUnique({
