@@ -323,11 +323,17 @@ export default function OnboardingPage() {
 
       const data = await response.json();
 
+      // Check if transcription was successful
+      if (!data.transcription) {
+        throw new Error("Could not transcribe your recording. Please try again or use text input.");
+      }
+
       // Process the transcription to generate a post
       await generatePost(data.transcription, true, duration);
     } catch (error) {
       console.error("Error processing recording:", error);
-      alert("Failed to process recording. Please try again.");
+      const message = error instanceof Error ? error.message : "Failed to process recording. Please try again.";
+      alert(message);
       setIsProcessing(false);
     }
   };
@@ -386,11 +392,13 @@ export default function OnboardingPage() {
           )
         );
       } else {
-        throw new Error("Failed to generate post");
+        const errorData = await previewResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to generate post");
       }
     } catch (error) {
       console.error("Error generating post:", error);
-      alert("Failed to generate post. Please try again.");
+      const message = error instanceof Error ? error.message : "Failed to generate post. Please try again.";
+      alert(message);
       setShowPostPreview(false);
     } finally {
       setIsProcessing(false);
