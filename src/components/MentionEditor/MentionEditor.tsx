@@ -161,7 +161,7 @@ export function MentionEditor({
     );
 
     // Split content by @mentions
-    const parts: Array<{ text: string; isMention: boolean; displayText: string }> = [];
+    const parts: Array<{ text: string; isMention: boolean }> = [];
     let lastIndex = 0;
     const regex = /@([\w][\w\s]*[\w]|[\w]+)/g;
     let match;
@@ -170,17 +170,17 @@ export function MentionEditor({
       // Add text before the match
       if (match.index > lastIndex) {
         const text = internalValue.slice(lastIndex, match.index);
-        parts.push({ text, isMention: false, displayText: text });
+        parts.push({ text, isMention: false });
       }
 
       // Check if this mention is in selectedTags
       const mentionName = match[1];
       const isTagged = mentionNames.has(mentionName.toLowerCase());
 
+      // Keep the full text including @ to maintain character alignment with textarea
       parts.push({
-        text: match[0], // Full text including @
+        text: match[0],
         isMention: isTagged,
-        displayText: isTagged ? mentionName : match[0], // Show without @ if tagged
       });
 
       lastIndex = match.index + match[0].length;
@@ -189,7 +189,7 @@ export function MentionEditor({
     // Add remaining text after last match
     if (lastIndex < internalValue.length) {
       const text = internalValue.slice(lastIndex);
-      parts.push({ text, isMention: false, displayText: text });
+      parts.push({ text, isMention: false });
     }
 
     return parts;
@@ -207,13 +207,17 @@ export function MentionEditor({
         >
           {highlightedContent?.map((part, i) => {
             if (part.isMention) {
+              // Style the mention: hide @ visually but keep it for alignment
+              const atSymbol = part.text.charAt(0); // The @
+              const name = part.text.slice(1); // The name after @
               return (
-                <span key={i} className="font-semibold text-blue-600">
-                  {part.displayText}
+                <span key={i}>
+                  <span className="text-transparent">{atSymbol}</span>
+                  <span className="font-semibold text-blue-600">{name}</span>
                 </span>
               );
             }
-            return <span key={i}>{part.displayText}</span>;
+            return <span key={i}>{part.text}</span>;
           })}
           {/* Placeholder when empty */}
           {!internalValue && (
