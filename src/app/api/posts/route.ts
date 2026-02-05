@@ -29,13 +29,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { content, weekNumber, sourceNoteContent, imageUrl, autoSchedule } = await request.json();
+    const { content, weekNumber, sourceNoteContent, imageUrl, autoSchedule, status } = await request.json();
 
     if (!content) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
 
-    const weekNum = weekNumber || 1;
+    // If no weekNumber provided, always create a new post (e.g., from Magic Drafts)
+    if (!weekNumber) {
+      // Find the highest weekNumber for this user and add 1
+      const highestPost = await prisma.post.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { weekNumber: "desc" },
+        select: { weekNumber: true },
+      });
+      const nextWeekNum = (highestPost?.weekNumber || 0) + 1;
+
+      const post = await prisma.post.create({
+        data: {
+          userId: session.user.id,
+          content,
+          weekNumber: nextWeekNum,
+          imageUrl: imageUrl || null,
+          status: status || "DRAFT",
+        },
+      });
+
+      return NextResponse.json({ post });
+    }
+
+    const weekNum = weekNumber;
 
     // Check if a post with this weekNumber already exists for this user
     const existingPost = await prisma.post.findFirst({
@@ -85,7 +108,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ post: updatedPost });
     }
 
-    // Create new post
+    // Create new post with specific weekNumber
     const post = await prisma.post.create({
       data: {
         userId: session.user.id,
