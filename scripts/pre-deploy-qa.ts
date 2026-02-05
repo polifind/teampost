@@ -208,6 +208,33 @@ async function runQAChecks() {
     });
   });
 
+  // === COMPONENT CHECKS ===
+  log("\n🧩 Component Checks", "info");
+  log("-".repeat(30), "info");
+
+  runCheck("MentionEditor has working handleChange", () => {
+    const mentionEditorPath = path.join(process.cwd(), "src/components/MentionEditor/MentionEditor.tsx");
+    if (!fs.existsSync(mentionEditorPath)) {
+      throw new Error("MentionEditor.tsx not found");
+    }
+    const content = fs.readFileSync(mentionEditorPath, "utf-8");
+
+    // Check that handleChange function is defined
+    if (!content.includes("const handleChange")) {
+      throw new Error("MentionEditor is missing handleChange function");
+    }
+
+    // Check that textarea uses onChange={handleChange}
+    if (!content.includes("onChange={handleChange}")) {
+      throw new Error("MentionEditor textarea is not using handleChange");
+    }
+
+    // Check that textarea has visible text (not transparent)
+    if (content.includes('color: "transparent"') || content.includes("color: 'transparent'")) {
+      throw new Error("MentionEditor has transparent text - text will be invisible");
+    }
+  });
+
   // === SECURITY CHECKS ===
   log("\n🔒 Security Checks", "info");
   log("-".repeat(30), "info");
