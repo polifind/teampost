@@ -12,6 +12,855 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "what-makes-linkedin-ghostwriter-strong",
+    title: "I've Worked With Dozens of LinkedIn Ghostwriters. Only 3 Qualities Actually Matter.",
+    excerpt: "After building TeamPost, I've learned that the best ghostwriters share three qualities most people never think about. Spoiler: it's not just 'good writing.'",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-01-11",
+    readingTime: "5 min read",
+    category: "LinkedIn",
+    content: `
+Most people think hiring a ghostwriter is about finding someone who can write.
+
+That's table stakes. The writers who actually transform your LinkedIn presence have something else entirely.
+
+After building TeamPost and working with dozens of executives on their content, I've identified three qualities that separate great ghostwriters from expensive disappointers.
+
+## 1. Accountability Over Everything
+
+Here's a dirty secret about the ghostwriting industry: most engagements fail because of missed deadlines, not bad writing.
+
+The executive is busy. The writer is waiting for feedback. Weeks pass. The momentum dies. The engagement quietly ends.
+
+The best ghostwriters don't just write. They create systems. They send calendar reminders. They follow up relentlessly. They make posting feel inevitable rather than optional.
+
+This is why we built scheduling and autopilot directly into TeamPost. The system holds you accountable even when your ghostwriter can't.
+
+## 2. They Listen More Than They Write
+
+I used to think ghostwriters needed to be great at putting words on paper.
+
+Wrong.
+
+They need to be great at pulling words OUT of you.
+
+The executives I've watched succeed with ghostwriting all said variations of the same thing: "The writer just lets me talk, and somehow my ideas come out cleaner than I could ever write them."
+
+This is the superpower. Not writing. Listening.
+
+A great ghostwriter asks questions like:
+- "What made you angry this week?"
+- "What's something your industry gets completely wrong?"
+- "Tell me about a time you almost quit."
+
+Then they shut up and record.
+
+TeamPost's voice notes feature exists precisely because of this insight. We wanted people to be able to ramble, think out loud, and let AI do the listening.
+
+## 3. Strong Writing Means Strong Editing
+
+"Strong writing" sounds obvious, but most people misunderstand what it means in a LinkedIn context.
+
+It doesn't mean flowery prose. It doesn't mean impressive vocabulary.
+
+It means ruthless editing.
+
+The best LinkedIn posts feel effortless because every unnecessary word has been cut. Every paragraph break is intentional. Every hook has been rewritten five times.
+
+The skill isn't writing beautiful sentences. It's knowing which sentences to delete.
+
+This is where AI actually shines. It can generate ten versions of the same idea in seconds. The human's job is to pick the best one and trim the fat.
+
+## How TeamPost Builds This In
+
+When I designed TeamPost, I asked: what if we could encode these qualities into software?
+
+**Accountability**: Autopilot scheduling means your posts go out whether you're thinking about LinkedIn or not. The system creates the consistency that most ghostwriting relationships lack.
+
+**Listening**: Voice notes and Slack integration mean you can capture ideas the moment they happen. You talk, TeamPost listens.
+
+**Strong editing**: AI generates options. You pick and refine. The editing happens in seconds, not days.
+
+The best ghostwriter isn't a person. It's a system that makes great content inevitable.
+
+## The Bottom Line
+
+If you're evaluating a ghostwriter—human or AI—ask yourself three questions:
+
+1. Will they hold me accountable to actually posting?
+2. Are they better at listening than writing?
+3. Can they edit ruthlessly, not just write prettily?
+
+Get all three, and your LinkedIn presence will transform.
+
+Miss even one, and you'll be back to posting sporadically within months.
+
+That's what TeamPost is designed to solve. Accountability, listening, and editing—all built into one system.
+`,
+  },
+  {
+    slug: "linkedin-writing-styles-that-work",
+    title: "Stop Copying LinkedIn Tactics. Find Your Writing Style Instead. (Here Are the 7 That Work)",
+    excerpt: "Not everyone should write the same way on LinkedIn. After analyzing hundreds of successful creators, I've identified seven distinct styles—and why matching your personality matters more than copying tactics.",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-01-12",
+    readingTime: "7 min read",
+    category: "LinkedIn",
+    content: `
+Here's something most LinkedIn advice gets wrong: they tell you what to post, not how to sound.
+
+The tactics are everywhere. Hook in the first line. Use white space. End with a question.
+
+But tactics without voice feel hollow. You can spot them instantly—those posts that follow every rule but still feel like they were written by a committee.
+
+The solution isn't better tactics. It's finding YOUR style.
+
+After analyzing hundreds of successful LinkedIn creators and building the writing style system inside TeamPost, I've identified seven distinct archetypes. Most people naturally fit one or two.
+
+## The Storyteller
+
+You share experiences through compelling narratives. Your posts read like mini-stories with a beginning, middle, and end.
+
+**You know you're a Storyteller if:**
+- Your best posts start with "I was 23 when..." or "Three years ago..."
+- People say they feel like they're reading a movie scene
+- You struggle to give advice without a story to illustrate it
+
+**Best for:** Personal experiences, career pivots, origin stories, failures and comebacks.
+
+**The trap to avoid:** Getting so lost in narrative that you forget the insight.
+
+## The Thought Leader
+
+You share frameworks, contrarian takes, and industry insights. Your posts make people think differently about their field.
+
+**You know you're a Thought Leader if:**
+- You start posts with "Unpopular opinion:" or "Here's what nobody tells you:"
+- You love numbered lists and frameworks
+- You get energy from challenging conventional wisdom
+
+**Best for:** Industry insights, professional advice, reframing narratives.
+
+**The trap to avoid:** Being contrarian for its own sake.
+
+## The Educator
+
+You break down complex topics into digestible insights. Your posts teach something valuable in a clear, structured way.
+
+**You know you're an Educator if:**
+- You naturally use step-by-step structures
+- People constantly ask you "how do you do that?"
+- You'd rather explain than debate
+
+**Best for:** How-to content, frameworks, career advice.
+
+**The trap to avoid:** Assuming your audience knows what you know.
+
+## The Conversationalist
+
+You write like you talk—casual, relatable, and authentic. Your posts feel like a chat with a smart friend.
+
+**You know you're a Conversationalist if:**
+- Your best posts feel like they took five minutes to write
+- You use questions constantly
+- Formality makes you cringe
+
+**Best for:** Hot takes, observations, starting discussions.
+
+**The trap to avoid:** Being so casual you forget to make a point.
+
+## The Analyst
+
+You back up insights with data, research, and evidence. Your posts are credible because they're grounded in facts.
+
+**You know you're an Analyst if:**
+- You can't make a claim without wanting to cite something
+- Numbers excite you
+- Your best posts include percentages and studies
+
+**Best for:** Industry trends, research insights, myth-busting.
+
+**The trap to avoid:** Drowning readers in data without synthesis.
+
+## The Builder
+
+You share what you're building and the hard problems you're solving. Your posts showcase technical depth and mission-driven work.
+
+**You know you're a Builder if:**
+- You get excited explaining "why this is hard"
+- Your posts naturally attract job applicants
+- You think in terms of problems and solutions
+
+**Best for:** Hiring posts, product updates, technical challenges.
+
+**The trap to avoid:** Humble bragging about challenges that aren't actually hard.
+
+## The Curator
+
+You aggregate insights, share valuable resources, and synthesize trends. Your posts are go-to sources for curated wisdom.
+
+**You know you're a Curator if:**
+- You're constantly bookmarking articles to share later
+- People thank you for saving them time
+- You'd rather synthesize ten sources than write one original thought
+
+**Best for:** Resource roundups, trend analysis, tool recommendations.
+
+**The trap to avoid:** Sharing without adding your perspective.
+
+## How to Find Your Style
+
+Most people are a blend of two styles with one dominant.
+
+Ask yourself:
+1. What kind of posts do I actually enjoy writing?
+2. What feedback do I consistently get?
+3. What comes out when I talk into a voice memo?
+
+The answer tells you where to start.
+
+## Why This Matters for TeamPost
+
+When we built TeamPost, we created a style quiz and personalization system because we realized something important: AI ghostwriting only works if it sounds like YOU.
+
+Generic AI content feels generic. But AI trained on your style? That's a multiplier.
+
+You pick your archetype. TeamPost's AI adapts. The output sounds like you on your best day—every time.
+
+## The Bottom Line
+
+Stop copying tactics. Start finding your voice.
+
+The creators who win on LinkedIn aren't the ones who follow every rule. They're the ones who sound unmistakably like themselves.
+
+Your style is your competitive advantage. Find it, own it, and let everything else follow.
+`,
+  },
+  {
+    slug: "journalist-strategy-linkedin-content",
+    title: "The LinkedIn Strategy Nobody Talks About: Become a 'Journalist' for Your Industry",
+    excerpt: "Some of the most successful LinkedIn creators aren't sharing their own expertise—they're covering their industry like beat reporters. Here's how to steal their playbook.",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-01-18",
+    readingTime: "5 min read",
+    category: "LinkedIn",
+    content: `
+There's a LinkedIn strategy hiding in plain sight.
+
+The creators using it don't look like typical "thought leaders." They don't share morning routines or hard-won lessons from their journey.
+
+Instead, they do something simpler: they cover their industry like journalists.
+
+## The Strategy
+
+Pick a niche. Follow the news. Add your commentary.
+
+That's it.
+
+When something happens in AI, the "AI journalists" on LinkedIn explain what it means.
+
+When a company in fintech raises money, the fintech commentators break down why it matters.
+
+When regulation changes, the policy nerds translate it for everyone else.
+
+They're not reporting news—actual journalists do that. They're adding perspective. They're saying "here's what this means for you."
+
+## Why It Works
+
+Most people think LinkedIn content needs to be personal. And personal content works. But it's also exhausting.
+
+You can only share so many origin stories. You can only talk about your failures and comebacks so many times before you run out of material—or it starts feeling forced.
+
+The journalist strategy solves this problem completely.
+
+News is infinite. There's always something to react to. Every week brings new fundraises, new launches, new controversies, new regulations.
+
+Your perspective is what makes it valuable. The news is the raw material. Your analysis is the product.
+
+## How to Do It
+
+**1. Pick your beat**
+
+What industry are you actually qualified to comment on? Where do you have genuine expertise that makes your perspective worth hearing?
+
+Don't pick too broadly. "Tech" isn't a beat. "How AI is changing legal services" is a beat.
+
+**2. Build your sources**
+
+Follow the publications that cover your space. Set up Google Alerts. Join the Slack communities where practitioners share news.
+
+The goal is to see what's happening faster than your audience.
+
+**3. Add the "so what"**
+
+This is the whole game. Anyone can summarize news. The value is in saying "here's what this means."
+
+Does this fundraise signal a shift in how investors see the market?
+Does this product launch threaten an incumbent?
+Does this regulation create opportunity or kill it?
+
+**4. Be consistent**
+
+The journalist strategy compounds. If you comment on every major development in your niche, people start coming to you first when they want to understand what's happening.
+
+You become the person who "covers" that topic.
+
+## The Beautiful Part
+
+The journalist strategy is permission to have opinions without having to be the story.
+
+Some people love being the main character. They share their journey, their struggles, their wins. That works for them.
+
+Other people would rather stay behind the scenes. They have valuable perspectives but don't want to constantly self-promote.
+
+The journalist strategy is made for the second group.
+
+You're not saying "look at me." You're saying "look at this—here's what I think it means."
+
+## A Real Example
+
+Let's say you work in healthcare tech.
+
+News: "Epic just announced a new AI partnership."
+
+Generic post: "Wow, Epic announced an AI partnership. Healthcare is changing!"
+
+Journalist post: "Epic's new AI partnership tells us three things about where healthcare is headed:
+
+1. [Your insight about what it means for interoperability]
+2. [Your take on how competitors will respond]
+3. [Your prediction for what this enables that wasn't possible before]
+
+Here's what I'd watch for over the next 6 months..."
+
+The second version positions you as the expert. The first makes you look like everyone else.
+
+## How TeamPost Helps
+
+When I built TeamPost, I realized that the journalist strategy is perfect for AI assistance.
+
+You can't use AI to generate your personal stories. Those need to be yours.
+
+But you CAN use AI to help you react to news faster. Paste in an article. Add your rough take. Let AI help you structure and sharpen it.
+
+Magic Drafts is especially powerful here. Add industry articles to your library. When news breaks, you have context ready to reference.
+
+## The Bottom Line
+
+You don't need to be the story to build authority on LinkedIn.
+
+Sometimes the best strategy is to cover the story—and let your perspective do the talking.
+
+Pick a beat. Follow the news. Add your commentary.
+
+That's the journalist strategy. And it's working better than ever.
+`,
+  },
+  {
+    slug: "raw-photos-vertical-video-linkedin",
+    title: "Your Blurry Selfie Will Outperform Your Professional Headshot. Here's Why.",
+    excerpt: "The most engaging LinkedIn posts don't have professional photography. They have iPhone screenshots and vertical videos shot in cars. Here's the psychology behind why raw content wins.",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-01-19",
+    readingTime: "4 min read",
+    category: "LinkedIn",
+    content: `
+I've noticed something strange on LinkedIn.
+
+The posts with professional headshots and polished graphics? They get decent engagement.
+
+The posts with blurry selfies and vertical videos shot in parked cars? They go viral.
+
+This isn't random. There's real psychology behind why raw content wins.
+
+## The Scroll-Stopper Effect
+
+LinkedIn's feed is full of polished content that looks like polished content.
+
+Corporate announcements with designed graphics. Professional headshots with perfect lighting. Infographics that clearly took hours to create.
+
+Your brain processes these instantly: "This is marketing. Keep scrolling."
+
+But a raw photo stops you. A vertical video that looks like someone just grabbed their phone and hit record? That triggers a different response: "This is real. Pay attention."
+
+The term for this is "pattern interrupt." When everything in the feed looks produced, unproduced content stands out.
+
+## The Authenticity Signal
+
+There's a deeper reason raw content works: it signals authenticity.
+
+When someone posts a perfect photo, you assume there were 47 takes. You assume it was edited. You assume they're performing.
+
+When someone posts a slightly blurry selfie with bad lighting, you think: "They just wanted to share something real."
+
+That perception might not even be accurate. The blurry selfie could be just as calculated as the professional shot. But it doesn't matter. The perception of authenticity is what drives engagement.
+
+## Vertical Video Is Eating LinkedIn
+
+If you haven't noticed, LinkedIn is pushing vertical video hard.
+
+The format works for the same reasons raw photos work—plus one more: it feels native to how we actually use our phones.
+
+Professional horizontal video says "I hired a videographer."
+
+Vertical video shot handheld says "I had a thought and wanted to share it."
+
+The second one gets watched. The first one gets scrolled past.
+
+## What This Means for Your Content
+
+I'm not saying you should intentionally make your content look bad. That would be manipulation, and people eventually see through it.
+
+I'm saying you should stop over-producing.
+
+**Instead of:** Getting professional headshots for every post
+**Try:** Using a recent selfie or candid photo
+
+**Instead of:** Scripting and editing videos for hours
+**Try:** Recording your take in one or two takes and posting
+
+**Instead of:** Creating elaborate graphics
+**Try:** Sharing a screenshot of something interesting
+
+The goal isn't to look unprofessional. It's to look like a real person with a real perspective—not a brand with a content calendar.
+
+## The Best Performing Content I've Seen
+
+Let me tell you what actually performs:
+
+- Screenshots of interesting emails or messages (with permission)
+- Selfies taken right after something meaningful happened
+- Vertical videos recorded in cars, airports, or walking around
+- Photos of whiteboards, notebooks, or work in progress
+- Behind-the-scenes shots that aren't perfectly lit
+
+Notice what's NOT on the list: stock photos, professional graphics, highly produced video.
+
+## The Trust Equation
+
+Here's the real insight: LinkedIn is a trust game.
+
+People do business with people they trust. They follow people they trust. They engage with people they trust.
+
+Trust comes from authenticity. And raw content signals authenticity in a way polished content can't.
+
+Every professional graphic says "I'm a brand trying to market to you."
+
+Every raw photo says "I'm a person trying to connect with you."
+
+Which one would you rather engage with?
+
+## How to Apply This
+
+1. **Lower your bar for "good enough."** That photo you almost posted but thought wasn't polished enough? Post it.
+
+2. **Use your phone more.** Professional cameras and editing software create distance. Your phone creates intimacy.
+
+3. **Share the behind-the-scenes.** The messy desk, the early morning coffee, the work in progress. That's the good stuff.
+
+4. **Try vertical video.** Even if it feels awkward. The format is being pushed by the algorithm, and it stops scrollers.
+
+## The Bottom Line
+
+LinkedIn isn't Instagram. It's not about aesthetic perfection.
+
+The content that wins is the content that feels real.
+
+Raw photos. Vertical video. Unscripted thoughts.
+
+Stop polishing. Start posting.
+
+The imperfect version of you is more compelling than the perfect version of a brand.
+`,
+  },
+  {
+    slug: "magic-drafts-feature-always-wanted",
+    title: "You're Sitting on a Goldmine of LinkedIn Content. You Just Don't Know It Yet.",
+    excerpt: "If you've ever written a blog post, given a podcast interview, or spoken at an event—you're sitting on a goldmine of content. Magic Drafts turns that content into LinkedIn posts automatically.",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-01-25",
+    readingTime: "5 min read",
+    category: "Product",
+    content: `
+Let me tell you about a problem I had.
+
+I've been creating content for years. Blog posts, podcast appearances, conference talks, newsletter essays. Hours and hours of thinking, writing, and speaking about topics I care about.
+
+And yet, when it came time to post on LinkedIn, I'd stare at a blank screen.
+
+All that content existed. But it wasn't LinkedIn content. It was long-form. It was scattered. It was in the wrong format.
+
+I built Magic Drafts to solve this problem for myself. Now it's solving it for everyone.
+
+## The Problem: Content Exists, But It's Trapped
+
+Here's who Magic Drafts is perfect for:
+
+**Podcast guests**: You've done 20 interviews. Each one has 10+ valuable insights. But those insights are buried in hour-long audio files that nobody will ever listen to twice.
+
+**Blog writers**: You've written thousands of words on your blog or company website. Great content, but it's not getting seen because it's not on LinkedIn.
+
+**Conference speakers**: You've given talks with slides full of valuable ideas. But slides aren't posts.
+
+**Newsletter writers**: You send great content to your subscribers weekly. But non-subscribers never see it.
+
+The content exists. The thinking has been done. But it's in the wrong format, on the wrong platform.
+
+Magic Drafts fixes this.
+
+## How It Works
+
+1. **Build your library**: Add URLs to your blog posts. Paste transcripts from podcasts. Upload PDFs of presentations. Drop in text from anywhere.
+
+2. **Generate drafts**: Click "Generate Draft" and Magic Drafts pulls insights from your library. It creates LinkedIn-ready posts based on YOUR existing content.
+
+3. **Edit and schedule**: Refine the draft, pick a time, and schedule. The whole process takes minutes.
+
+That podcast you recorded six months ago? It can become ten LinkedIn posts.
+
+That blog series you wrote last year? Each article can spawn multiple posts.
+
+All without starting from scratch.
+
+## Why This Is Different From Generic AI
+
+Generic AI writing tools work like this: you give it a topic, it generates generic content about that topic.
+
+The problem is obvious. The content doesn't sound like you. It doesn't contain YOUR insights. It's just... competent filler.
+
+Magic Drafts works differently because it starts with YOUR content.
+
+The insights come from your podcast appearances. The frameworks come from your blog posts. The examples come from your talks.
+
+AI just transforms the format. The substance is yours.
+
+This is why Magic Drafts posts actually sound like you—because they're built from content you created.
+
+## Real Example
+
+Let's say you were interviewed on a podcast about hiring.
+
+In the interview, you mentioned a story about your worst hire and what you learned.
+
+Without Magic Drafts: That story is buried at minute 47 of a podcast that 500 people listened to.
+
+With Magic Drafts: You paste the transcript into your library. Generate a draft. AI pulls out that hiring story and transforms it into a LinkedIn post that reaches 50,000 people.
+
+Same insight. Same story. Completely different reach.
+
+## The Autopilot Option
+
+Here's where it gets even better.
+
+You can set Magic Drafts to generate new posts on a schedule—daily, weekly, whatever works for you.
+
+It pulls from your library and creates drafts automatically. You wake up, review, tweak, and post.
+
+The hard part—having ideas—is handled. The library holds your ideas. Magic Drafts transforms them.
+
+## Who This Is For
+
+Magic Drafts is especially powerful if you:
+
+- Have a podcast or have been a guest on podcasts
+- Write for your company blog or personal blog
+- Give talks at conferences or internal events
+- Send a newsletter or have an email archive
+- Have documentation, SOPs, or internal content that could be public
+
+Basically: if you've created content anywhere, you have raw material for LinkedIn.
+
+Magic Drafts turns that raw material into posts.
+
+## Why I Built This
+
+I built Magic Drafts because I was frustrated.
+
+I had all this content—podcast appearances, blog posts, talks—and none of it was working for me on LinkedIn.
+
+Every LinkedIn post felt like starting from scratch. But I knew the insights already existed somewhere.
+
+Magic Drafts is the tool I wished I had. Now it exists for everyone.
+
+## The Bottom Line
+
+LinkedIn consistency is hard because people think they need new ideas every day.
+
+You don't.
+
+You need to RESURFACE the ideas you've already had—in a format that works for LinkedIn.
+
+That's what Magic Drafts does.
+
+Your content library is a goldmine. Magic Drafts helps you extract the gold.
+`,
+  },
+  {
+    slug: "getting-over-linkedin-cringe",
+    title: "You're Not Cringy. You're Just Scared. Here's How to Finally Start Posting.",
+    excerpt: "If posting on LinkedIn makes you uncomfortable, you're not alone. Here's how I learned to stop cringing and start seeing LinkedIn for what it really is: a tool for your career.",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-02-01",
+    readingTime: "5 min read",
+    category: "LinkedIn",
+    content: `
+Let's talk about the cringe.
+
+You know what I mean. You write a LinkedIn post, you're about to hit publish, and then a voice in your head says:
+
+"Is this too self-promotional?"
+"What will my colleagues think?"
+"Am I becoming one of those LinkedIn people?"
+
+The cringe is real. And it's one of the biggest reasons smart, capable professionals never build presence on LinkedIn.
+
+I want to help you get past it.
+
+## Why LinkedIn Feels Cringy
+
+First, let's acknowledge what's happening.
+
+LinkedIn has a reputation problem. For years, the platform was dominated by humble brags, 4 a.m. wake-up posts, and engagement bait that made everyone roll their eyes.
+
+If that's your mental model of LinkedIn, of course posting feels gross.
+
+But here's what's changed: LinkedIn evolved. The cringe posts still exist, but they're increasingly ignored by the algorithm. What works now is genuine insight, real expertise, and authentic perspective.
+
+The platform has grown up. The question is whether you'll grow with it.
+
+## The Reframe That Changed Everything
+
+Here's the perspective shift that helped me:
+
+Your audience isn't there to judge you. They're there to learn and consume professional content.
+
+Think about why YOU open LinkedIn. You're not scrolling to mock people. You're looking for interesting insights, industry news, career ideas, and perspectives from people you respect.
+
+That's what your audience wants too.
+
+When you share something valuable, you're not being self-promotional. You're being useful. You're giving people what they came for.
+
+## Everyone Is Doing This Now
+
+Here's another reality check: posting on LinkedIn is now a normal part of doing your job.
+
+CEOs do it. Investors do it. Lawyers, doctors, engineers, and teachers do it.
+
+It's not some fringe behavior for attention-seekers. It's how professionals communicate in 2026.
+
+When you post, nobody thinks "wow, they're really trying to be famous." They think "oh, that person has interesting things to say."
+
+Or more likely, they just read your post, get value from it, and move on.
+
+The judgment you're afraid of? It mostly doesn't exist.
+
+## The Real Fear
+
+If I'm being honest, the cringe feeling often isn't really about other people.
+
+It's about vulnerability.
+
+Posting your ideas publicly means they can be criticized. It means you're saying "this is what I think" and inviting the world to disagree.
+
+That's scary. Especially if you're used to staying in the background.
+
+But here's the thing: the benefits of building your voice far outweigh the risks of occasional disagreement.
+
+One valuable connection can change your career. One post can lead to your next job. One idea can establish you as the person to talk to in your field.
+
+The vulnerability is worth it.
+
+## How to Start Without Cringing
+
+**1. Begin with sharing, not creating.**
+
+Share an article you found interesting and add your quick take. Share someone else's post with a comment about why it resonated.
+
+This feels less exposed than creating from scratch.
+
+**2. Write for one person.**
+
+When you write for "your audience," it feels like a performance.
+
+Instead, imagine one specific person who would benefit from your insight. Write for them. This makes it feel like helping, not showing off.
+
+**3. Remember that 99% of people won't see it.**
+
+LinkedIn's algorithm shows your post to a fraction of your connections. Most people won't see it at all.
+
+You're not broadcasting to the world. You're sharing with a small subset of people who might be interested.
+
+**4. Focus on being useful, not impressive.**
+
+The posts that feel cringy are usually the ones trying to impress.
+
+Posts that try to help feel different. "Here's what I learned" hits different than "look at what I achieved."
+
+**5. Give yourself permission to be imperfect.**
+
+Your first posts won't be your best. That's fine.
+
+The only way to get good at LinkedIn is to practice. The cringe fades with repetition.
+
+## What I Tell Myself Before Posting
+
+Before I hit publish, I ask one question:
+
+"Would someone find this useful?"
+
+If yes, I post. Regardless of how it might make me look, regardless of who might judge, regardless of the cringe.
+
+Because being useful is never cringe.
+
+## The Bottom Line
+
+The discomfort you feel about LinkedIn is based on an outdated perception of the platform.
+
+LinkedIn in 2026 is where professionals share ideas, learn from each other, and build their careers.
+
+Posting isn't showing off. It's participating.
+
+The cringe fades. The benefits compound.
+
+Start posting.
+`,
+  },
+  {
+    slug: "how-often-post-linkedin",
+    title: "You're Not Posting Too Much on LinkedIn. You're Posting Too Little.",
+    excerpt: "Daily? Weekly? Whenever you feel like it? Here's the data-informed answer—and why you're probably overthinking it.",
+    author: "Rohan Pavuluri",
+    authorRole: "Creator, TeamPost",
+    publishedAt: "2026-02-02",
+    readingTime: "4 min read",
+    category: "LinkedIn",
+    content: `
+"How often should I post on LinkedIn?"
+
+I get this question constantly. And I get why—nobody wants to be the person who posts too much and annoys everyone.
+
+Here's the truth: you're almost certainly not posting enough.
+
+## The Algorithm Reality
+
+First, let's understand how LinkedIn actually works.
+
+When you post, LinkedIn doesn't show your content to all your followers. Not even close.
+
+A typical post is shown to maybe 2-5% of your network initially. If it performs well, it reaches more. If it doesn't, it fades quickly.
+
+This means something counterintuitive: most of your followers never see most of your posts.
+
+You think you're posting into a room where everyone is watching. You're actually posting into a room where most people aren't looking, and the few who are change constantly.
+
+## Why Daily Is Fine
+
+Given the algorithm reality, posting daily is totally fine.
+
+Your followers aren't seeing every post. They're seeing a random sample. If you post 7 times in a week, a given follower might see 1-2 of those posts.
+
+That's not overwhelming. That's barely maintaining presence.
+
+The creators who dominate LinkedIn often post 1-2 times per day. They know that more content means more chances to reach their audience.
+
+You don't have to post daily. But you shouldn't be afraid to.
+
+## Some Content Sticks, Some Doesn't
+
+Here's another reality: you can't predict which posts will perform.
+
+I've written posts I thought were brilliant that got 12 likes.
+
+I've written posts I almost didn't publish that went viral.
+
+There's skill involved, but there's also randomness. The algorithm, your followers' schedules, what else is in the feed—all of it matters.
+
+The only way to find what works is to post enough content that some of it sticks.
+
+If you only post once a month, you're buying one lottery ticket. You might win, but the odds aren't in your favor.
+
+If you post twice a week, you're buying more tickets. Some will flop. Some will hit. The math works in your favor.
+
+## Your Followers Will Enjoy It
+
+Here's something people don't realize: regular followers actually enjoy following along.
+
+When someone posts consistently, you start to feel like you know them. Their perspective becomes familiar. Their content becomes something you look forward to.
+
+When someone posts sporadically, they never build that connection. Each post feels like a stranger showing up at random.
+
+Consistency creates relationship. Sporadic posting keeps you anonymous.
+
+## The Minimum Viable Frequency
+
+If daily feels like too much, start with weekly.
+
+One thoughtful post per week is enough to build momentum. It's enough for the algorithm to recognize you as an active user. It's enough for followers to start recognizing your name.
+
+Weekly is the floor. Below that, you're not really building presence—you're just occasionally showing up.
+
+## The Real Answer
+
+So how often should you post?
+
+As often as you can maintain quality.
+
+For some people, that's daily. They have lots of insights, they enjoy writing, and they can produce consistently.
+
+For others, that's 2-3 times per week. They need more time to develop ideas but can sustain a regular rhythm.
+
+For others, that's weekly. One really good post that says something meaningful.
+
+Any of these frequencies work. What doesn't work is zero.
+
+## How to Make It Sustainable
+
+The biggest mistake people make is setting an unsustainable pace.
+
+They commit to daily posting, burn out after two weeks, and then disappear for three months.
+
+Better: start conservatively and increase gradually.
+
+Week 1-4: Post once per week.
+Month 2: Post twice per week.
+Month 3: Post three times per week.
+
+Let your habit build before you increase volume. Consistency over intensity.
+
+## What TeamPost Does
+
+This is exactly why I built scheduling and autopilot into TeamPost.
+
+Creating content takes energy. Posting consistently takes systems.
+
+When you batch-create content and schedule it ahead, you separate creation from publishing. You write when you have energy. The posts go out when your audience is active.
+
+Autopilot takes this further—generating drafts from your library so you never start from scratch.
+
+The goal is making consistency automatic.
+
+## The Bottom Line
+
+You're not posting too much. You're almost certainly posting too little.
+
+The algorithm doesn't show everyone everything. Your followers enjoy regular content. More posts mean more chances for something to hit.
+
+Daily is fine. Weekly is the minimum. Anything less is sporadic.
+
+Pick a frequency you can sustain. Build systems to maintain it. And stop worrying about annoying people.
+
+The only way to build presence is to be present.
+
+Start posting.
+`,
+  },
+  {
     slug: "marc-andreessen-going-direct-a16z-media-empire",
     title: "How a16z Built a Media Empire by Refusing to Talk to Journalists",
     excerpt: "Marc Andreessen's firm went from courting reporters to completely ignoring them. Here's why that strategy is working, and what it means for every company trying to tell their story.",

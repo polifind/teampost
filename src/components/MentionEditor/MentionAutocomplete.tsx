@@ -143,7 +143,11 @@ export function MentionAutocomplete({
           {filteredContacts.map((contact, index) => (
             <button
               key={contact.id}
-              onClick={() => onSelect(contact)}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(contact);
+              }}
               className={`w-full p-2 text-left flex items-center gap-2 transition-colors ${
                 index === selectedIndex
                   ? "bg-accent-coral/10 text-accent-coral"
@@ -183,18 +187,23 @@ export function MentionAutocomplete({
 
       {/* Add new contact option */}
       <button
-        onClick={() => onAddNew(query)}
-        className={`w-full p-2 text-left border-t border-claude-border flex items-center gap-2 transition-colors ${
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onAddNew(query);
+        }}
+        className={`w-full p-3 text-left border-t border-claude-border flex items-center gap-2 transition-colors cursor-pointer ${
           selectedIndex === filteredContacts.length
             ? "bg-accent-coral/10 text-accent-coral"
             : "hover:bg-claude-bg-secondary text-accent-coral"
         }`}
       >
-        <div className="w-8 h-8 rounded-full bg-accent-coral/10 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-accent-coral/10 flex items-center justify-center flex-shrink-0">
           <PlusIcon />
         </div>
         <span className="text-sm font-medium">
-          Add "{query || "new contact"}"
+          Add New Contact
         </span>
       </button>
     </div>
