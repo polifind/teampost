@@ -195,13 +195,23 @@ export function MentionEditor({
     return parts;
   }, [internalValue, selectedTags]);
 
+  // Sync scroll between textarea and overlay
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    if (textareaRef.current && overlayRef.current) {
+      overlayRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  }, []);
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Container for textarea and overlay */}
       <div className="relative" style={{ minHeight }}>
         {/* Highlight overlay - shows formatted text */}
         <div
-          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-hidden border border-transparent rounded-lg"
+          ref={overlayRef}
+          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-auto border border-transparent rounded-lg"
           style={{ minHeight }}
           aria-hidden="true"
         >
@@ -230,9 +240,10 @@ export function MentionEditor({
           ref={textareaRef}
           defaultValue={value}
           onInput={handleInput}
+          onScroll={handleScroll}
           placeholder=""
           disabled={disabled || addingContact}
-          className="w-full h-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900"
+          className="w-full h-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 overflow-auto"
           style={{
             minHeight,
             color: "transparent",
