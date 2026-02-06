@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/lib/prisma";
+import { formatWritingSamplesForPrompt } from "@/lib/writing-samples";
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,12 +50,21 @@ What opportunity are you too scared to take?`,
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    // Get user's LinkedIn profile context if available
+    // Get user's LinkedIn profile context and writing samples if available
     let profileContext = "";
+    let samplesContext = "";
     if (session?.user?.id) {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { linkedinProfileContext: true },
+        select: {
+          linkedinProfileContext: true,
+          writingSamples: {
+            where: { isActive: true },
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            select: { content: true, source: true },
+          },
+        },
       });
       if (user?.linkedinProfileContext) {
         profileContext = `
@@ -65,10 +75,11 @@ ${user.linkedinProfileContext}
 
 `;
       }
+      samplesContext = formatWritingSamplesForPrompt(user?.writingSamples || []);
     }
 
     const prompt = `You are a LinkedIn ghostwriter who writes viral, authentic posts. Generate ONE post based on this voice note.
-${profileContext}
+${profileContext}${samplesContext}
 Question asked: "${questionText}"
 
 Voice note transcription:
@@ -110,7 +121,7 @@ The post should feel like it was written in 2 minutes by someone who just experi
 Return ONLY the post content, nothing else.`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 1024,
       messages: [
         {

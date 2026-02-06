@@ -8,6 +8,7 @@ interface LinkedInTagPickerProps {
   onTagsChange: (tags: LinkedInContact[]) => void;
   disabled?: boolean;
   onInsertMention?: (contact: LinkedInContact) => void; // For inline mention insertion
+  onContactAdded?: (contact: LinkedInContact) => void; // Notify parent when a new contact is created
 }
 
 const PersonIcon = () => (
@@ -45,6 +46,7 @@ export default function LinkedInTagPicker({
   onTagsChange,
   disabled = false,
   onInsertMention,
+  onContactAdded,
 }: LinkedInTagPickerProps) {
   const [contacts, setContacts] = useState<LinkedInContact[]>([]);
   const [showPicker, setShowPicker] = useState(false);
@@ -120,6 +122,9 @@ export default function LinkedInTagPicker({
           if (existingContact && !selectedTags.find((t) => t.id === existingContact.id)) {
             onTagsChange([...selectedTags, existingContact]);
           }
+          if (existingContact) {
+            onContactAdded?.(existingContact);
+          }
           setShowAddForm(false);
           resetAddForm();
         } else {
@@ -131,6 +136,7 @@ export default function LinkedInTagPicker({
       // Add the new contact to selected tags
       onTagsChange([...selectedTags, data.contact]);
       setContacts((prev) => [data.contact, ...prev]);
+      onContactAdded?.(data.contact);
       setShowAddForm(false);
       resetAddForm();
     } catch (error) {

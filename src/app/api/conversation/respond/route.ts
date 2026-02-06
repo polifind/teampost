@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { formatWritingSamplesForPrompt } from "@/lib/writing-samples";
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
@@ -45,10 +46,18 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // Fetch user's LinkedIn profile context
+    // Fetch user's LinkedIn profile context and writing samples
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { linkedinProfileContext: true },
+      select: {
+        linkedinProfileContext: true,
+        writingSamples: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: { content: true, source: true },
+        },
+      },
     });
 
     if (!messages || !Array.isArray(messages)) {
@@ -97,6 +106,9 @@ ${user.linkedinProfileContext}
 Use this background to make posts more personalized and authentic to their professional identity.
 `;
     }
+
+    // Build writing samples section
+    const samplesSection = formatWritingSamplesForPrompt(user?.writingSamples || []);
 
     // Build the system prompt for the ghostwriter
     const systemPrompt = `You are a LinkedIn ghostwriter having a conversation with someone to help them create a viral post. Your job is to:
@@ -190,7 +202,7 @@ Even the guy who said I wasn't customer service material.
 </draft>
 
 What do you think?"
-${preferencesSection}${guidelinesSection}${profileSection}`;
+${preferencesSection}${guidelinesSection}${profileSection}${samplesSection}`;
 
     // Convert messages to Anthropic format
     const anthropicMessages = messages.map((m: { role: string; content: string }) => ({
@@ -199,7 +211,7 @@ ${preferencesSection}${guidelinesSection}${profileSection}`;
     }));
 
     const response = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 2048,
       system: systemPrompt,
       messages: anthropicMessages,

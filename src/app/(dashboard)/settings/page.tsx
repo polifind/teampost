@@ -36,6 +36,16 @@ interface Guideline {
   createdAt: string;
 }
 
+interface WritingSample {
+  id: string;
+  content: string;
+  source: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+type SettingsTab = "general" | "writing-style";
+
 
 const LinkedInIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -110,6 +120,12 @@ const GlobeIcon = () => (
   </svg>
 );
 
+const DocumentTextIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+  </svg>
+);
+
 function SettingsForm() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -132,6 +148,16 @@ function SettingsForm() {
   // Timezone state
   const [userTimezone, setUserTimezone] = useState<string>(DEFAULT_TIMEZONE);
   const [savingTimezone, setSavingTimezone] = useState(false);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
+
+  // Writing samples state
+  const [writingSamples, setWritingSamples] = useState<WritingSample[]>([]);
+  const [samplesLoading, setSamplesLoading] = useState(true);
+  const [newSampleContent, setNewSampleContent] = useState("");
+  const [newSampleSource, setNewSampleSource] = useState("");
+  const [addingSample, setAddingSample] = useState(false);
 
 
   // Check for LinkedIn/Slack connection status from URL params
@@ -202,6 +228,27 @@ function SettingsForm() {
 
     if (session?.user) {
       fetchGuidelines();
+    }
+  }, [session]);
+
+  // Fetch writing samples
+  useEffect(() => {
+    const fetchWritingSamples = async () => {
+      try {
+        const response = await fetch("/api/personalization/writing-samples");
+        if (response.ok) {
+          const result = await response.json();
+          setWritingSamples(result.samples || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch writing samples:", error);
+      } finally {
+        setSamplesLoading(false);
+      }
+    };
+
+    if (session?.user) {
+      fetchWritingSamples();
     }
   }, [session]);
 
@@ -337,6 +384,51 @@ function SettingsForm() {
     setTimeout(() => setMessage(""), 3000);
   };
 
+  // Writing samples handlers
+  const handleAddSample = async () => {
+    if (!newSampleContent.trim() || !newSampleSource.trim()) return;
+    setAddingSample(true);
+    try {
+      const response = await fetch("/api/personalization/writing-samples", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: newSampleContent.trim(),
+          source: newSampleSource.trim(),
+        }),
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setWritingSamples((prev) => [result.sample, ...prev]);
+        setNewSampleContent("");
+        setNewSampleSource("");
+      } else {
+        const result = await response.json();
+        setMessage(result.error || "Failed to add sample");
+        setTimeout(() => setMessage(""), 3000);
+      }
+    } catch (error) {
+      console.error("Failed to add writing sample:", error);
+    } finally {
+      setAddingSample(false);
+    }
+  };
+
+  const handleDeleteSample = async (id: string) => {
+    try {
+      const response = await fetch("/api/personalization/writing-samples", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (response.ok) {
+        setWritingSamples((prev) => prev.filter((s) => s.id !== id));
+      }
+    } catch (error) {
+      console.error("Failed to delete writing sample:", error);
+    }
+  };
+
 
   if (status === "loading" || loading) {
     return (
@@ -349,7 +441,31 @@ function SettingsForm() {
   return (
     <>
       <main className="max-w-2xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold text-claude-text mb-8">Settings</h1>
+        <h1 className="text-3xl font-bold text-claude-text mb-4">Settings</h1>
+
+        {/* Tab Navigation */}
+        <div className="flex border-b border-claude-border mb-8">
+          <button
+            onClick={() => setActiveTab("general")}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "general"
+                ? "border-accent-coral text-accent-coral"
+                : "border-transparent text-claude-text-secondary hover:text-claude-text"
+            }`}
+          >
+            General
+          </button>
+          <button
+            onClick={() => setActiveTab("writing-style")}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "writing-style"
+                ? "border-accent-coral text-accent-coral"
+                : "border-transparent text-claude-text-secondary hover:text-claude-text"
+            }`}
+          >
+            Writing Style
+          </button>
+        </div>
 
         {message && (
           <div className={`mb-6 p-4 rounded-claude ${
@@ -360,6 +476,10 @@ function SettingsForm() {
             {message}
           </div>
         )}
+
+        {/* ===== GENERAL TAB ===== */}
+        {activeTab === "general" && (
+        <>
 
         {/* Profile Section */}
         <div className="card mb-6">
@@ -536,25 +656,6 @@ function SettingsForm() {
           </div>
         </div>
 
-        {/* Writing Style */}
-        <div className="card mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
-              <PencilIcon />
-            </div>
-            <h2 className="text-lg font-semibold text-claude-text">Writing Style</h2>
-          </div>
-
-          <p className="text-sm text-claude-text-secondary mb-4">
-            Your writing style affects how AI-generated posts sound. Take the quiz or choose manually.
-          </p>
-
-          <WritingStyleSelector
-            onStyleSelected={handleWritingStyleSelected}
-            mode="cards"
-          />
-        </div>
-
         {/* Organization & Account Level Section */}
         {settings?.organizations && settings.organizations.length > 0 && (
           <div className="card mb-6">
@@ -601,6 +702,44 @@ function SettingsForm() {
             </p>
           </div>
         )}
+
+        {/* Account Section */}
+        <div className="card">
+          <h2 className="text-lg font-semibold text-claude-text mb-6">Account</h2>
+          <button
+            onClick={handleLogout}
+            className="btn-ghost text-claude-text-secondary hover:text-error hover:bg-error/10"
+          >
+            <LogoutIcon />
+            Sign out
+          </button>
+        </div>
+
+        </>
+        )}
+
+        {/* ===== WRITING STYLE TAB ===== */}
+        {activeTab === "writing-style" && (
+        <>
+
+        {/* Writing Style */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+              <PencilIcon />
+            </div>
+            <h2 className="text-lg font-semibold text-claude-text">Writing Style</h2>
+          </div>
+
+          <p className="text-sm text-claude-text-secondary mb-4">
+            Your writing style affects how your posts sound. Take the quiz or choose manually.
+          </p>
+
+          <WritingStyleSelector
+            onStyleSelected={handleWritingStyleSelected}
+            mode="cards"
+          />
+        </div>
 
         {/* Ghostwriter Personalization */}
         <div id="personalization" className="card mb-6">
@@ -710,17 +849,119 @@ function SettingsForm() {
 
         </div>
 
-        {/* Account Section */}
-        <div className="card">
-          <h2 className="text-lg font-semibold text-claude-text mb-6">Account</h2>
-          <button
-            onClick={handleLogout}
-            className="btn-ghost text-claude-text-secondary hover:text-error hover:bg-error/10"
-          >
-            <LogoutIcon />
-            Sign out
-          </button>
+        {/* Writing Samples */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+              <DocumentTextIcon />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-claude-text">Writing Samples</h2>
+              <p className="text-sm text-claude-text-secondary">
+                Paste examples of your past writing so TeamPost can learn your voice
+              </p>
+            </div>
+          </div>
+
+          {/* Add new sample form */}
+          <div className="space-y-3 mb-6">
+            <div>
+              <label className="label">Source type</label>
+              <select
+                value={newSampleSource}
+                onChange={(e) => setNewSampleSource(e.target.value)}
+                className="input w-full"
+              >
+                <option value="">Select source type...</option>
+                <option value="LinkedIn post">LinkedIn post</option>
+                <option value="Blog article">Blog article</option>
+                <option value="Newsletter">Newsletter</option>
+                <option value="Slack message">Slack message</option>
+                <option value="Tweet/X post">Tweet/X post</option>
+                <option value="Email">Email</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="label mb-0">Your writing</label>
+                <span className={`text-xs ${newSampleContent.length > 5000 ? "text-error" : "text-claude-text-tertiary"}`}>
+                  {newSampleContent.length}/5,000
+                </span>
+              </div>
+              <textarea
+                value={newSampleContent}
+                onChange={(e) => setNewSampleContent(e.target.value)}
+                placeholder="Paste your writing here..."
+                rows={5}
+                maxLength={5000}
+                className="input w-full resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-claude-text-tertiary">
+                {writingSamples.length}/10 samples
+              </span>
+              <button
+                onClick={handleAddSample}
+                disabled={addingSample || !newSampleContent.trim() || !newSampleSource || writingSamples.length >= 10}
+                className="btn-primary"
+              >
+                {addingSample ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <PlusIcon />
+                )}
+                Add Sample
+              </button>
+            </div>
+          </div>
+
+          {/* Samples list */}
+          {samplesLoading ? (
+            <div className="py-4 text-center text-claude-text-tertiary">Loading...</div>
+          ) : writingSamples.length === 0 ? (
+            <div className="py-6 text-center border border-dashed border-claude-border rounded-claude">
+              <DocumentTextIcon />
+              <p className="text-claude-text-tertiary text-sm mt-2">
+                No writing samples yet
+              </p>
+              <p className="text-claude-text-tertiary text-xs mt-1">
+                Add examples of your best writing to help TeamPost match your voice
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {writingSamples.map((sample) => (
+                <div key={sample.id} className="p-4 bg-claude-bg-secondary rounded-claude group relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="inline-block text-xs px-2 py-0.5 bg-accent-coral/10 text-accent-coral rounded-full font-medium">
+                      {sample.source}
+                    </span>
+                    <span className="text-xs text-claude-text-tertiary">
+                      {new Date(sample.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-claude-text line-clamp-4 whitespace-pre-wrap">
+                    {sample.content}
+                  </p>
+                  <button
+                    onClick={() => handleDeleteSample(sample.id)}
+                    className="absolute top-3 right-3 p-1 text-claude-text-tertiary hover:text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        </>
+        )}
+
       </main>
     </>
   );

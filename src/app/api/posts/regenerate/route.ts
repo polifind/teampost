@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/lib/prisma";
+import { formatWritingSamplesForPrompt } from "@/lib/writing-samples";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user's existing writing preferences and profile context
+    // Get user's existing writing preferences, profile context, and writing samples
     const [preferences, user] = await Promise.all([
       prisma.writingPreference.findMany({
         where: { userId: session.user.id, isActive: true },
@@ -29,9 +30,19 @@ export async function POST(request: NextRequest) {
       }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { linkedinProfileContext: true },
+        select: {
+          linkedinProfileContext: true,
+          writingSamples: {
+            where: { isActive: true },
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            select: { content: true, source: true },
+          },
+        },
       }),
     ]);
+
+    const samplesSection = formatWritingSamplesForPrompt(user?.writingSamples || []);
 
     const preferencesText = preferences.length > 0
       ? `\n\nIMPORTANT - User's writing preferences (learned from past feedback):\n${preferences.map(p => `- ${p.preference}`).join('\n')}`
@@ -54,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // First, regenerate the post based on feedback
     const regeneratePrompt = `You are a LinkedIn ghostwriter helping a user improve their post.
-${profileContext}
+${profileContext}${samplesSection}
 CURRENT POST:
 """
 ${currentPost}
@@ -85,7 +96,7 @@ STYLE REQUIREMENTS:
 Return ONLY the revised post content, nothing else.`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 1024,
       messages: [
         {
@@ -126,7 +137,7 @@ Respond in JSON format:
 If no clear preferences can be extracted, return: {"preferences": []}`;
 
     const preferencesMessage = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 500,
       messages: [
         {

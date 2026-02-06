@@ -1576,6 +1576,9 @@ You can type or record a voice note - whatever feels more natural.`,
                         onTagsChange={setSelectedTags}
                         disabled={draftPost.isApproved}
                         onInsertMention={handleInsertMention}
+                        onContactAdded={(contact) => {
+                          setContacts(prev => prev.some(c => c.id === contact.id) ? prev : [contact, ...prev]);
+                        }}
                       />
                     </div>
                   )}

@@ -239,7 +239,7 @@ async function summarizeContent(
   const truncatedContent = content.substring(0, 30000);
 
   const response = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-4-5-20251101",
     max_tokens: 2000,
     messages: [
       {

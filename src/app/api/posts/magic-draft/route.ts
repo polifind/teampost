@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { formatWritingSamplesForPrompt } from "@/lib/writing-samples";
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
@@ -39,6 +40,12 @@ export async function POST(request: NextRequest) {
           where: { isActive: true },
           orderBy: { createdAt: "desc" },
           take: 10,
+        },
+        writingSamples: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: { content: true, source: true },
         },
       },
     });
@@ -108,6 +115,8 @@ ${user.writingPreferences.map((p) => `- ${p.preference}`).join("\n")}
 `;
     }
 
+    const samplesContext = formatWritingSamplesForPrompt(user?.writingSamples || []);
+
     const libraryContent = libraryItems
       .map(
         (item) => `
@@ -137,6 +146,7 @@ ${customInstructions.trim()}
 ${profileContext}
 ${guidelinesContext}
 ${preferencesContext}
+${samplesContext}
 ${customInstructionsContext}
 POST STYLE - THIS IS CRITICAL:
 - Start with a PUNCHY hook line that grabs attention. Examples:
@@ -164,7 +174,7 @@ IMPORTANT:
 Return ONLY the post content, nothing else.`;
 
     const response = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 1500,
       system: systemPrompt,
       messages: [

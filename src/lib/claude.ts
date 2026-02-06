@@ -73,7 +73,7 @@ ${transcriptionsText}
 Return exactly ${voiceNotes.length} posts, separated by "---POST---". No commentary. Just the posts.`;
 
   const message = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-4-5-20251101",
     max_tokens: 4096,
     messages: [
       {
@@ -146,7 +146,7 @@ ${preferencesSection}
 Generate a new version:`;
 
   const message = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-4-5-20251101",
     max_tokens: 1024,
     messages: [
       {
@@ -211,7 +211,7 @@ ${variationContext || "Create a personalized version that sounds authentic to th
 Generate the adapted post (just the post content, no commentary):`;
 
     const message = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 1024,
       messages: [
         {

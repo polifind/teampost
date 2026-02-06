@@ -48,6 +48,13 @@ Manual testing checklist before deploying to production. Run through these tests
 - [ ] Save as draft works
 - [ ] Draft appears in Drafts tab
 
+### @Mentions & Tagging
+- [ ] Type @ in editor → autocomplete dropdown appears
+- [ ] Autocomplete shows both people and companies
+- [ ] Add a company via "Insert @Mention" tag picker → type @CompanyName in editor → autocomplete finds it
+- [ ] Selected @mentions appear highlighted in blue in post text
+- [ ] Tagged contacts show below editor with correct person/company icons
+
 ### Editing Posts
 - [ ] Click edit on post → edit mode activates
 - [ ] Can modify text content

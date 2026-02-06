@@ -82,6 +82,7 @@ model User {
   adminCreatedPosts      Post[]    @relation("AdminCreatedPosts")
   invitesSent            OrganizationMember[] @relation("InvitedMembers")
   ghostwriterGuidelines  GhostwriterGuideline[]
+  writingSamples         WritingSample[]
   lifeLibraryItems       LifeLibraryItem[]
   linkedinContacts       LinkedInContact[]
   slackIntegration       SlackIntegration?
@@ -391,6 +392,22 @@ model GhostwriterGuideline {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   content   String   // The guideline text (e.g., "Always mention I'm a founder", "Avoid talking about competitors")
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Writing samples - past writing examples for AI to learn user's voice
+model WritingSample {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String   @db.Text // The actual writing sample
+  source    String             // Label: "LinkedIn post", "Blog article", etc.
   isActive  Boolean  @default(true)
 
   createdAt DateTime @default(now())

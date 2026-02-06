@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { formatWritingSamplesForPrompt } from "@/lib/writing-samples";
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -31,6 +33,21 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Fetch writing samples
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        writingSamples: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: { content: true, source: true },
+        },
+      },
+    });
+
+    const samplesSection = formatWritingSamplesForPrompt(user?.writingSamples || []);
 
     // Extract the conversation context
     const conversationContext = messages
@@ -45,7 +62,7 @@ ${conversationContext}
 
 CURRENT DRAFT (don't copy this structure):
 ${currentDraft}
-
+${samplesSection}
 REQUIREMENTS:
 - Use the SAME story/content but tell it differently
 - Try a DIFFERENT hook - start with a shocking/surprising first line
@@ -61,7 +78,7 @@ REQUIREMENTS:
 Return ONLY the new post, nothing else.`;
 
     const response = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 1024,
       messages: [
         {

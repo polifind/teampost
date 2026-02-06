@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
+import { formatWritingSamplesForPrompt } from "@/lib/writing-samples";
 
 // This endpoint is called by a cron job to generate drafts based on user cadences
 // Run every hour: 0 * * * *
@@ -91,6 +92,12 @@ async function generateMagicDraft(
           orderBy: { createdAt: "desc" },
           take: 10,
         },
+        writingSamples: {
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: { content: true, source: true },
+        },
       },
     });
 
@@ -152,6 +159,8 @@ ${user.writingPreferences.map((p) => `- ${p.preference}`).join("\n")}
 `;
     }
 
+    const samplesContext = formatWritingSamplesForPrompt(user?.writingSamples || []);
+
     const libraryContent = libraryItems
       .map(
         (item) => `
@@ -171,6 +180,7 @@ ${item.extractedContent || item.extractedSummary || "No content extracted"}
 ${profileContext}
 ${guidelinesContext}
 ${preferencesContext}
+${samplesContext}
 
 POST STYLE - THIS IS CRITICAL:
 - Start with a PUNCHY hook line that grabs attention. Examples:
@@ -198,7 +208,7 @@ IMPORTANT:
 Return ONLY the post content, nothing else.`;
 
     const response = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 1500,
       system: systemPrompt,
       messages: [

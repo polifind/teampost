@@ -327,6 +327,12 @@ async function handleDMMessage(event: {
         include: {
           writingPreferences: { where: { isActive: true } },
           ghostwriterGuidelines: { where: { isActive: true } },
+          writingSamples: {
+            where: { isActive: true },
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            select: { content: true, source: true },
+          },
         },
       },
     },
@@ -432,7 +438,8 @@ async function handleDMMessage(event: {
         user.writingPreferences,
         user.ghostwriterGuidelines,
         user.linkedinProfileContext || undefined,
-        (user as { writingStyleId?: string | null }).writingStyleId || undefined
+        (user as { writingStyleId?: string | null }).writingStyleId || undefined,
+        user.writingSamples
       ),
     ]);
 

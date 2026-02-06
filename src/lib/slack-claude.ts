@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { WRITING_STYLES, formatStyleForPrompt } from "./writing-styles";
+import { formatWritingSamplesForPrompt } from "./writing-samples";
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
@@ -47,7 +48,7 @@ Return ONLY the JSON object, no other text.`;
 
   try {
     const message = await getAnthropicClient().messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-5-20251101",
       max_tokens: 256,
       messages: [{ role: "user", content: prompt }],
     });
@@ -78,7 +79,8 @@ export async function generateSlackPost(
   writingPreferences?: WritingPreference[],
   ghostwriterGuidelines?: GhostwriterGuideline[],
   linkedinProfileContext?: string,
-  writingStyleId?: string
+  writingStyleId?: string,
+  writingSamples?: Array<{ content: string; source: string }>
 ): Promise<string> {
   // Build context sections
   let contextSection = "";
@@ -100,6 +102,10 @@ export async function generateSlackPost(
   if (writingPreferences && writingPreferences.length > 0) {
     const preferences = writingPreferences.map((p) => `- ${p.preference}`).join("\n");
     contextSection += `\n**ADDITIONAL WRITING PREFERENCES:**\n${preferences}\n`;
+  }
+
+  if (writingSamples && writingSamples.length > 0) {
+    contextSection += `\n${formatWritingSamplesForPrompt(writingSamples)}\n`;
   }
 
   // Use style-specific or default guidance
@@ -142,7 +148,7 @@ The post should feel like it was written by${userName ? ` ${userName}` : " the u
 Generate one LinkedIn post. No commentary. No explanation. Just the post content.`;
 
   const message = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-4-5-20251101",
     max_tokens: 1024,
     messages: [
       {
@@ -201,7 +207,7 @@ ${preferencesSection}
 Generate the improved post. No commentary. No explanation. Just the post content.`;
 
   const message = await getAnthropicClient().messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-4-5-20251101",
     max_tokens: 1024,
     messages: [
       {
