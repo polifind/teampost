@@ -249,6 +249,16 @@ export default function PostsPage() {
   }, []);
 
   const draftPosts = posts.filter((p) => p.status === "DRAFT");
+  const scheduledPosts = posts.filter((p) => p.status === "SCHEDULED").sort((a, b) => {
+    if (a.schedule && b.schedule) {
+      return new Date(a.schedule.scheduledFor).getTime() - new Date(b.schedule.scheduledFor).getTime();
+    }
+    return 0;
+  });
+  const postedPosts = posts.filter((p) => p.status === "POSTED");
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"scheduled" | "drafts" | "posted">("scheduled");
 
   const handleBulkSchedule = async () => {
     if (!linkedInConnected) {
@@ -814,6 +824,22 @@ export default function PostsPage() {
     );
   }
 
+  // Determine which posts to show based on active tab
+  const getVisiblePosts = () => {
+    switch (activeTab) {
+      case "scheduled":
+        return scheduledPosts;
+      case "drafts":
+        return draftPosts;
+      case "posted":
+        return postedPosts;
+      default:
+        return scheduledPosts;
+    }
+  };
+
+  const visiblePosts = getVisiblePosts();
+
   return (
     <>
       <main className="max-w-4xl mx-auto px-6 py-12">
@@ -821,27 +847,14 @@ export default function PostsPage() {
           <div>
             <h1 className="text-3xl font-bold text-claude-text">Your LinkedIn Posts</h1>
             <p className="text-claude-text-secondary mt-1">
-              {posts.length} posts ready for scheduling
+              {scheduledPosts.length} scheduled • {draftPosts.length} drafts • {postedPosts.length} posted
             </p>
           </div>
 
-          {posts.length > 0 && (
-            <div className="flex items-center gap-3">
-              {draftPosts.length > 0 && linkedInConnected && (
-                <button
-                  onClick={() => setShowBulkScheduleModal(true)}
-                  className="btn-secondary flex items-center gap-2"
-                >
-                  <CalendarIcon />
-                  Schedule All ({draftPosts.length})
-                </button>
-              )}
-              <Link href="/create" className="btn-primary flex items-center gap-2">
-                <PlusIcon />
-                New Post
-              </Link>
-            </div>
-          )}
+          <Link href="/create" className="btn-primary flex items-center gap-2">
+            <PlusIcon />
+            New Post
+          </Link>
         </div>
 
         {posts.length === 0 ? (
@@ -860,8 +873,145 @@ export default function PostsPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-6">
-            {posts.map((post) => (
+          <>
+            {/* Tabs */}
+            <div className="flex items-center gap-1 mb-6 border-b border-claude-border">
+              <button
+                onClick={() => setActiveTab("scheduled")}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "scheduled"
+                    ? "border-accent-coral text-accent-coral"
+                    : "border-transparent text-claude-text-secondary hover:text-claude-text"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <ClockIcon />
+                  Scheduled
+                  {scheduledPosts.length > 0 && (
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-accent-coral/10 text-accent-coral">
+                      {scheduledPosts.length}
+                    </span>
+                  )}
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("drafts")}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "drafts"
+                    ? "border-accent-coral text-accent-coral"
+                    : "border-transparent text-claude-text-secondary hover:text-claude-text"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <EditIcon />
+                  Drafts
+                  {draftPosts.length > 0 && (
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-claude-bg-tertiary text-claude-text-secondary">
+                      {draftPosts.length}
+                    </span>
+                  )}
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab("posted")}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === "posted"
+                    ? "border-accent-coral text-accent-coral"
+                    : "border-transparent text-claude-text-secondary hover:text-claude-text"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <CheckIcon />
+                  Posted
+                  {postedPosts.length > 0 && (
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-success/10 text-success">
+                      {postedPosts.length}
+                    </span>
+                  )}
+                </span>
+              </button>
+            </div>
+
+            {/* Bulk schedule button for drafts */}
+            {activeTab === "drafts" && draftPosts.length > 0 && linkedInConnected && (
+              <div className="mb-6 p-4 bg-accent-coral/5 border border-accent-coral/20 rounded-claude flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-claude-text">Ready to schedule your drafts?</p>
+                  <p className="text-sm text-claude-text-secondary">
+                    Schedule all {draftPosts.length} draft{draftPosts.length !== 1 ? "s" : ""} to post weekly on LinkedIn
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowBulkScheduleModal(true)}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <CalendarIcon />
+                  Schedule All
+                </button>
+              </div>
+            )}
+
+            {/* Empty state for each tab */}
+            {visiblePosts.length === 0 ? (
+              <div className="card text-center py-12">
+                {activeTab === "scheduled" ? (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-claude-bg-tertiary flex items-center justify-center mx-auto mb-4">
+                      <CalendarIcon />
+                    </div>
+                    <h2 className="text-xl font-semibold text-claude-text mb-2">
+                      No scheduled posts
+                    </h2>
+                    <p className="text-claude-text-secondary mb-6">
+                      {draftPosts.length > 0
+                        ? `You have ${draftPosts.length} draft${draftPosts.length !== 1 ? "s" : ""} ready to schedule.`
+                        : "Create a post and schedule it to appear here."}
+                    </p>
+                    {draftPosts.length > 0 && linkedInConnected ? (
+                      <button
+                        onClick={() => setActiveTab("drafts")}
+                        className="btn-primary"
+                      >
+                        View Drafts
+                      </button>
+                    ) : (
+                      <Link href="/create" className="btn-primary">
+                        Create Post
+                      </Link>
+                    )}
+                  </>
+                ) : activeTab === "drafts" ? (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-claude-bg-tertiary flex items-center justify-center mx-auto mb-4">
+                      <EditIcon />
+                    </div>
+                    <h2 className="text-xl font-semibold text-claude-text mb-2">
+                      No drafts
+                    </h2>
+                    <p className="text-claude-text-secondary mb-6">
+                      All your drafts have been scheduled or posted!
+                    </p>
+                    <Link href="/create" className="btn-primary">
+                      Create New Post
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-claude-bg-tertiary flex items-center justify-center mx-auto mb-4">
+                      <LinkedInIcon />
+                    </div>
+                    <h2 className="text-xl font-semibold text-claude-text mb-2">
+                      No posted content yet
+                    </h2>
+                    <p className="text-claude-text-secondary mb-6">
+                      Posts you publish will appear here.
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {visiblePosts.map((post) => (
               <div key={post.id} className="post-card">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-center gap-3">
@@ -1242,7 +1392,9 @@ export default function PostsPage() {
                 )}
               </div>
             ))}
-          </div>
+              </div>
+            )}
+          </>
         )}
 
         {!linkedInConnected && posts.length > 0 && (
