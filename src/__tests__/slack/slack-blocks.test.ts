@@ -122,35 +122,23 @@ describe("Slack Block Builders", () => {
       expect(modal.private_metadata).toContain("draft-123");
     });
 
-    it("should include day options", () => {
+    it("should include date picker", () => {
       const modal = buildScheduleModal("draft-123");
 
-      const dayBlock = modal.blocks.find((b) => b.block_id === "schedule_day");
-      expect(dayBlock).toBeDefined();
-
-      const options = dayBlock?.element?.options;
-      expect(options).toHaveLength(7);
-      expect(options?.[0].value).toBe("monday");
-      expect(options?.[6].value).toBe("sunday");
+      const dateBlock = modal.blocks.find((b) => b.block_id === "schedule_date");
+      expect(dateBlock).toBeDefined();
+      expect(dateBlock?.element?.type).toBe("datepicker");
+      expect(dateBlock?.element?.action_id).toBe("date_select");
     });
 
-    it("should include time options from 6AM to 9PM", () => {
+    it("should include time picker", () => {
       const modal = buildScheduleModal("draft-123");
 
       const timeBlock = modal.blocks.find((b) => b.block_id === "schedule_time");
       expect(timeBlock).toBeDefined();
-
-      const options = timeBlock?.element?.options;
-      // 6AM to 9PM (inclusive) = 16 hours, with :00 and :30 = 32 options
-      expect(options?.length).toBe(32);
-
-      // First option should be 6:00 AM
-      expect(options?.[0].text.text).toBe("6:00 AM");
-      expect(options?.[0].value).toBe("06:00");
-
-      // Last option should be 9:30 PM
-      expect(options?.[options.length - 1].text.text).toBe("9:30 PM");
-      expect(options?.[options.length - 1].value).toBe("21:30");
+      expect(timeBlock?.element?.type).toBe("timepicker");
+      expect(timeBlock?.element?.action_id).toBe("time_select");
+      expect(timeBlock?.element?.initial_time).toBe("09:00");
     });
 
     it("should display user timezone", () => {
