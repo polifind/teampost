@@ -276,9 +276,6 @@ async function handleFileUpload(event: {
   }
 }
 
-// Track processed messages to prevent duplicates
-const processedMessages = new Set<string>();
-
 async function handleDMMessage(event: {
   user?: string;
   channel?: string;
@@ -294,16 +291,19 @@ async function handleDMMessage(event: {
     return;
   }
 
-  // Deduplicate - prevent processing the same message twice
-  const messageKey = `${channel}:${ts}`;
-  if (processedMessages.has(messageKey)) {
-    console.log(`[Slack DM] Skipping duplicate message: ${messageKey}`);
+  // Database-level deduplication using SlackDraft with unique constraint on slackThreadTs
+  // Check if we've already processed this message (exists in database)
+  const existingDraft = await prisma.slackDraft.findFirst({
+    where: {
+      slackChannelId: channel,
+      slackThreadTs: ts,
+    },
+  });
+
+  if (existingDraft) {
+    console.log(`[Slack DM] Skipping already processed message: ${channel}:${ts}`);
     return;
   }
-  processedMessages.add(messageKey);
-
-  // Clean up old entries after 5 minutes to prevent memory leak
-  setTimeout(() => processedMessages.delete(messageKey), 5 * 60 * 1000);
 
   // Find the Slack integration for this user
   console.log(`[Slack DM] Looking up integration for slackUserId: ${slackUserId}`);
@@ -333,15 +333,20 @@ async function handleDMMessage(event: {
 
   const { botToken, user } = integration;
 
-  // Check for simple greetings - only match short greeting phrases, not longer messages
+  // Check for simple greetings - ONLY exact matches or very short greeting messages
+  // We want to be conservative - only treat as greeting if it's CLEARLY just a greeting
   const lowerText = text.toLowerCase().trim();
-  const greetingPhrases = ["hi", "hello", "hey", "help", "what can you do", "how does this work", "get started"];
-  // Only treat as greeting if the message is short (< 30 chars) to avoid treating real content as greetings
-  const isShortMessage = text.length < 30;
-  const startsWithGreeting = greetingPhrases.some(g => lowerText === g || lowerText.startsWith(g + " ") || lowerText.startsWith(g + ",") || lowerText.startsWith(g + "!"));
-  const isGreeting = isShortMessage && startsWithGreeting;
+  const exactGreetings = ["hi", "hello", "hey", "help", "hey there", "hi there", "hello there", "what can you do", "how does this work", "get started"];
+  const isExactGreeting = exactGreetings.includes(lowerText);
 
-  console.log(`[Slack DM] Message analysis: length=${text.length}, isShortMessage=${isShortMessage}, startsWithGreeting=${startsWithGreeting}, isGreeting=${isGreeting}`);
+  // Also match greetings with punctuation like "hi!" or "hello?"
+  const greetingWithPunctuation = exactGreetings.some(g =>
+    lowerText === g + "!" || lowerText === g + "?" || lowerText === g + "."
+  );
+
+  const isGreeting = isExactGreeting || greetingWithPunctuation;
+
+  console.log(`[Slack DM] Message analysis: length=${text.length}, text="${lowerText.substring(0, 30)}", isGreeting=${isGreeting}`);
 
   if (isGreeting) {
     console.log(`[Slack DM] Sending welcome message to ${slackUserId} for greeting: "${text}"`);
@@ -352,6 +357,26 @@ async function handleDMMessage(event: {
 
   console.log(`[Slack DM] Not a greeting, proceeding to generate post for: "${text.substring(0, 50)}..."`);
 
+  // Create a placeholder draft IMMEDIATELY to prevent duplicate processing
+  // This acts as a lock - other requests will see this draft exists and skip
+  let draft;
+  try {
+    draft = await prisma.slackDraft.create({
+      data: {
+        slackIntegrationId: integration.id,
+        slackChannelId: channel,
+        slackThreadTs: ts,
+        originalInput: text,
+        draftContent: "", // Will be filled in later
+        status: "GENERATING", // New status to indicate in-progress
+      },
+    });
+    console.log(`[Slack DM] Created placeholder draft: ${draft.id}`);
+  } catch (createError) {
+    // If creation fails due to unique constraint, another request is already processing
+    console.log(`[Slack DM] Draft already being processed for ${channel}:${ts}`);
+    return;
+  }
 
   // Send "generating" message
   const genResult = await sendSlackMessage(
@@ -362,12 +387,22 @@ async function handleDMMessage(event: {
 
   if (!genResult.ok || !genResult.ts) {
     console.error("Failed to send generating message:", genResult.error);
+    // Clean up the draft we created
+    await prisma.slackDraft.delete({ where: { id: draft.id } }).catch(() => {});
     return;
   }
+
+  // Store the Slack message timestamp for later updates
+  await prisma.slackDraft.update({
+    where: { id: draft.id },
+    data: { slackMessageTs: genResult.ts },
+  }).catch(() => {});
 
   try {
     // Run both API calls in parallel to stay within Vercel's timeout
     console.log(`[Slack DM] Starting parallel API calls for post generation`);
+    const startTime = Date.now();
+
     const [parsedSchedule, draftContent] = await Promise.all([
       // Parse scheduling info from the message (e.g., "Monday at 8:55am EST")
       parseScheduleFromMessage(text),
@@ -380,15 +415,14 @@ async function handleDMMessage(event: {
         user.linkedinProfileContext || undefined
       ),
     ]);
-    console.log(`[Slack DM] API calls completed, draft length: ${draftContent.length}`);
 
-    // Create draft in database with parsed schedule
-    const draft = await prisma.slackDraft.create({
+    const elapsed = Date.now() - startTime;
+    console.log(`[Slack DM] API calls completed in ${elapsed}ms, draft length: ${draftContent.length}`);
+
+    // Update the draft with the actual content
+    await prisma.slackDraft.update({
+      where: { id: draft.id },
       data: {
-        slackIntegrationId: integration.id,
-        slackChannelId: channel,
-        slackThreadTs: ts,
-        originalInput: text,
         draftContent,
         scheduleDayOfWeek: parsedSchedule.dayOfWeek,
         scheduleTime: parsedSchedule.time,
@@ -404,8 +438,15 @@ async function handleDMMessage(event: {
       genResult.ts,
       buildDraftMessage(draft.id, draftContent, parsedSchedule)
     );
+    console.log(`[Slack DM] Successfully updated Slack message with draft`);
   } catch (error) {
     console.error("[Slack DM] Error generating post:", error);
+
+    // Mark draft as failed
+    await prisma.slackDraft.update({
+      where: { id: draft.id },
+      data: { status: "FAILED" },
+    }).catch(() => {});
 
     // Update message with error
     const updateResult = await updateSlackMessage(
