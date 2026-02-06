@@ -151,32 +151,6 @@ export const WRITING_STYLES: Record<string, WritingStyle> = {
     avoids: ["Unsupported claims", "Vague generalizations", "Emotional arguments without evidence"],
   },
 
-  minimalist: {
-    id: "minimalist",
-    name: "The Minimalist",
-    description: "You say more with less. Your posts are punchy, memorable, and leave space for the reader to think.",
-    characteristics: [
-      "Very short posts (under 100 words often)",
-      "One powerful idea per post",
-      "Lots of white space",
-      "Punchy one-liners",
-      "No filler words",
-    ],
-    exampleOpener: "The best career advice I ever got:\n\n\"Stop asking for permission.\"\n\nThat's it.\n\nThat's the post.",
-    promptGuidance: `Write in a minimalist style:
-- Keep it SHORT - ideally under 100 words
-- One idea per post. That's it.
-- Use lots of line breaks and white space
-- Every word must earn its place
-- No filler phrases like "I think" or "In my opinion"
-- Let the reader do some of the work
-- Punchy endings that hit hard
-- If you can cut a word, cut it
-- Sometimes a single line is the whole post`,
-    bestFor: ["Powerful quotes", "Simple truths", "Memorable moments", "Bold statements"],
-    avoids: ["Explanations", "Context", "Multiple points", "Anything that dilutes the message"],
-  },
-
   builder: {
     id: "builder",
     name: "The Builder",
@@ -243,7 +217,6 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "Break down the steps so others can replicate it", style: "educator" },
       { text: "Keep it casual - a quick reflection and move on", style: "conversational" },
       { text: "Share the numbers and what they mean", style: "data_driven" },
-      { text: "One punchy line that captures the moment", style: "minimalist" },
       { text: "Curate a list of resources or insights for others", style: "curator" },
     ],
   },
@@ -256,7 +229,6 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "However long it takes to explain clearly", style: "educator" },
       { text: "Short paragraphs, lots of white space", style: "conversational" },
       { text: "Depends on how much data I need to share", style: "data_driven" },
-      { text: "As short as possible - under 100 words ideally", style: "minimalist" },
       { text: "A curated list with my key takeaways", style: "curator" },
     ],
   },
@@ -269,7 +241,6 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "Provide a clear, actionable framework", style: "educator" },
       { text: "Have a genuine conversation about it", style: "conversational" },
       { text: "Back it up with research or data", style: "data_driven" },
-      { text: "Distill it to one unforgettable line", style: "minimalist" },
       { text: "Point them to the best resources I've found", style: "curator" },
     ],
   },
@@ -282,7 +253,6 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "Something I learned that others should know", style: "educator" },
       { text: "A thought I can't stop thinking about", style: "conversational" },
       { text: "Interesting data or research I came across", style: "data_driven" },
-      { text: "A truth that needs to be said simply", style: "minimalist" },
       { text: "A great resource, tool, or content I want to share", style: "curator" },
     ],
   },
