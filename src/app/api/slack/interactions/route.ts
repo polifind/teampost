@@ -8,6 +8,9 @@ import {
   buildFeedbackModal,
   buildConfirmationMessage,
   buildErrorMessage,
+  buildSavingMessage,
+  buildSchedulingMessage,
+  buildRegeneratingMessage,
 } from "@/lib/slack-blocks";
 
 interface SlackInteraction {
@@ -22,7 +25,12 @@ interface SlackInteraction {
     callback_id: string;
     private_metadata: string;
     state: {
-      values: Record<string, Record<string, { value?: string; selected_option?: { value: string } }>>;
+      values: Record<string, Record<string, {
+        value?: string;
+        selected_option?: { value: string };
+        selected_date?: string;  // For datepicker elements
+        selected_time?: string;  // For timepicker elements
+      }>>;
     };
   };
   channel?: { id: string };
@@ -136,8 +144,22 @@ export async function POST(request: NextRequest) {
         });
 
         if (draft?.scheduleDayOfWeek || draft?.scheduleTime) {
+          // Show immediate feedback by updating the message
+          if (interaction.channel?.id && interaction.message?.ts) {
+            await updateSlackMessage(
+              integration.botToken,
+              interaction.channel.id,
+              interaction.message.ts,
+              buildSavingMessage()
+            );
+          }
           // Draft has a parsed schedule - approve immediately with that schedule
-          handleApproveWithParsedSchedule(integration, draft).catch(console.error);
+          handleApproveWithParsedSchedule(
+            integration,
+            draft,
+            interaction.channel?.id,
+            interaction.message?.ts
+          ).catch(console.error);
         } else {
           // No parsed schedule - open modal to let user choose
           await openSlackModal(
@@ -203,15 +225,17 @@ export async function POST(request: NextRequest) {
         const draftId = metadata.draftId;
 
         const scheduleType = state.values.schedule_type?.schedule_type_select?.selected_option?.value;
-        const scheduleDay = state.values.schedule_day?.day_select?.selected_option?.value;
-        const scheduleTime = state.values.schedule_time?.time_select?.selected_option?.value;
+        // Date comes from datepicker as "YYYY-MM-DD" string
+        const scheduleDate = state.values.schedule_date?.date_select?.selected_date;
+        // Time comes from timepicker as "HH:MM" string
+        const scheduleTime = state.values.schedule_time?.time_select?.selected_time;
 
         // Process asynchronously
         handleScheduleSubmission(
           integration,
           draftId,
           scheduleType || "draft",
-          scheduleDay,
+          scheduleDate,
           scheduleTime
         ).catch(console.error);
 
@@ -257,7 +281,9 @@ async function handleApproveWithParsedSchedule(
     scheduleTime: string | null;
     scheduleTimezone: string | null;
     imageUrl: string | null;
-  }
+  },
+  channelId?: string,
+  messageTs?: string
 ) {
   const hasSchedule = draft.scheduleDayOfWeek || draft.scheduleTime;
 
@@ -320,8 +346,8 @@ async function handleScheduleSubmission(
   },
   draftId: string,
   scheduleType: string,
-  scheduleDay?: string,
-  scheduleTime?: string
+  scheduleDate?: string,  // "YYYY-MM-DD" format from datepicker
+  scheduleTime?: string   // "HH:MM" format from timepicker
 ) {
   const draft = await prisma.slackDraft.findUnique({
     where: { id: draftId },
@@ -332,7 +358,15 @@ async function handleScheduleSubmission(
     return;
   }
 
-  const isScheduled = !!(scheduleType === "scheduled" && scheduleDay && scheduleTime);
+  const isScheduled = !!(scheduleType === "scheduled" && scheduleDate && scheduleTime);
+
+  // Send immediate feedback that we're processing
+  await sendSlackMessage(
+    integration.botToken,
+    draft.slackChannelId,
+    isScheduled ? buildSchedulingMessage() : buildSavingMessage(),
+    draft.slackThreadTs
+  );
 
   // Create the post (include image if attached)
   const post = await prisma.post.create({
@@ -357,8 +391,8 @@ async function handleScheduleSubmission(
   // If scheduling, create schedule record
   let scheduledForDisplay: string | undefined;
   if (isScheduled) {
-    const scheduledFor = calculateScheduledDate(
-      scheduleDay,
+    const scheduledFor = calculateScheduledDateTime(
+      scheduleDate,
       scheduleTime,
       integration.user.timezone
     );
@@ -403,6 +437,14 @@ async function handleRegeneration(
     console.error("Draft not found:", draftId);
     return;
   }
+
+  // Send "regenerating" message immediately for user feedback
+  await sendSlackMessage(
+    integration.botToken,
+    draft.slackChannelId,
+    buildRegeneratingMessage(),
+    draft.slackThreadTs
+  );
 
   try {
     // Regenerate with feedback
@@ -514,11 +556,44 @@ function calculateScheduledDate(
 }
 
 /**
+ * Calculate the scheduled date from a specific date and time
+ * @param dateStr - Date in "YYYY-MM-DD" format from Slack datepicker
+ * @param timeStr - Time in "HH:MM" format from Slack timepicker
+ * @param timezone - User's timezone
+ * @returns Date object representing the correct UTC moment
+ */
+function calculateScheduledDateTime(
+  dateStr: string,
+  timeStr: string,
+  timezone: string
+): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
+
+  // Create a date object for the target time, treating it as UTC first
+  const asIfUtc = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
+
+  // Get what this UTC time looks like in the user's timezone
+  const utcInTzStr = asIfUtc.toLocaleString("en-US", { timeZone: timezone });
+  const utcInTz = new Date(utcInTzStr);
+
+  // Calculate the offset: how many ms ahead/behind is the timezone from UTC?
+  const offset = utcInTz.getTime() - asIfUtc.getTime();
+
+  // Apply the offset to get the actual UTC time
+  const scheduledUtc = new Date(asIfUtc.getTime() - offset);
+
+  return scheduledUtc;
+}
+
+/**
  * Format schedule date for display
  */
 function formatScheduleDisplay(date: Date, timezone: string): string {
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",
+    month: "short",
+    day: "numeric",
     hour: "numeric",
     minute: "2-digit",
     timeZone: timezone,

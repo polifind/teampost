@@ -138,7 +138,7 @@ export function buildDraftMessage(
             type: "button",
             text: {
               type: "plain_text",
-              text: "🔄 Regenerate",
+              text: "🔄 Give Feedback & Update",
               emoji: true,
             },
             action_id: "regenerate_post",
@@ -151,30 +151,12 @@ export function buildDraftMessage(
 }
 
 /**
- * Build schedule modal with day/time picker
+ * Build schedule modal with date/time picker
  */
 export function buildScheduleModal(
   draftId: string,
   userTimezone: string = "America/New_York"
 ): ScheduleModal {
-  // Generate time options (every 30 minutes)
-  const timeOptions = [];
-  for (let hour = 6; hour <= 21; hour++) {
-    for (const minute of [0, 30]) {
-      const h = hour.toString().padStart(2, "0");
-      const m = minute.toString().padStart(2, "0");
-      const period = hour < 12 ? "AM" : "PM";
-      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-      timeOptions.push({
-        text: {
-          type: "plain_text" as const,
-          text: `${displayHour}:${m} ${period}`,
-        },
-        value: `${h}:${m}`,
-      });
-    }
-  }
-
   return {
     type: "modal",
     callback_id: "schedule_post",
@@ -215,7 +197,7 @@ export function buildScheduleModal(
               value: "draft",
             },
             {
-              text: { type: "plain_text", text: "Schedule for a specific time" },
+              text: { type: "plain_text", text: "Schedule for a specific date & time" },
               value: "scheduled",
             },
           ],
@@ -227,28 +209,19 @@ export function buildScheduleModal(
       },
       {
         type: "input",
-        block_id: "schedule_day",
+        block_id: "schedule_date",
         optional: true,
         element: {
-          type: "static_select",
-          action_id: "day_select",
+          type: "datepicker",
+          action_id: "date_select",
           placeholder: {
             type: "plain_text",
-            text: "Select a day",
+            text: "Select a date",
           },
-          options: [
-            { text: { type: "plain_text", text: "Monday" }, value: "monday" },
-            { text: { type: "plain_text", text: "Tuesday" }, value: "tuesday" },
-            { text: { type: "plain_text", text: "Wednesday" }, value: "wednesday" },
-            { text: { type: "plain_text", text: "Thursday" }, value: "thursday" },
-            { text: { type: "plain_text", text: "Friday" }, value: "friday" },
-            { text: { type: "plain_text", text: "Saturday" }, value: "saturday" },
-            { text: { type: "plain_text", text: "Sunday" }, value: "sunday" },
-          ],
         },
         label: {
           type: "plain_text",
-          text: "Day of Week",
+          text: "Date",
         },
       },
       {
@@ -256,13 +229,13 @@ export function buildScheduleModal(
         block_id: "schedule_time",
         optional: true,
         element: {
-          type: "static_select",
+          type: "timepicker",
           action_id: "time_select",
           placeholder: {
             type: "plain_text",
             text: "Select a time",
           },
-          options: timeOptions,
+          initial_time: "09:00",
         },
         label: {
           type: "plain_text",
@@ -274,7 +247,7 @@ export function buildScheduleModal(
         elements: [
           {
             type: "mrkdwn",
-            text: `🕐 Times shown in your timezone: *${userTimezone}*`,
+            text: `🕐 Times are in your timezone: *${userTimezone}*`,
           },
         ],
       },
@@ -390,6 +363,60 @@ export function buildGeneratingMessage(): SlackMessage {
         text: {
           type: "mrkdwn",
           text: "✨ *Generating your LinkedIn post...*\n\nThis usually takes 5-10 seconds.",
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Build saving message (shown when saving draft)
+ */
+export function buildSavingMessage(): SlackMessage {
+  return {
+    text: "Saving your draft...",
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "💾 *Saving your draft...*\n\nJust a moment!",
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Build scheduling message (shown when scheduling post)
+ */
+export function buildSchedulingMessage(): SlackMessage {
+  return {
+    text: "Scheduling your post...",
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "📅 *Scheduling your post...*\n\nJust a moment!",
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Build regenerating message (shown when updating with feedback)
+ */
+export function buildRegeneratingMessage(): SlackMessage {
+  return {
+    text: "Updating your post with your feedback...",
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "🔄 *Updating your post with your feedback...*\n\nThis usually takes 5-10 seconds.",
         },
       },
     ],

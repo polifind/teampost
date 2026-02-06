@@ -107,11 +107,41 @@ export function MentionEditor({
       }
 
       if (onAddContact) {
+        // Capture current positions BEFORE awaiting, as state will reset during the modal
+        const capturedStartIndex = startIndex;
+        const capturedCursorPos = textareaRef.current?.selectionStart ?? 0;
+        const capturedValue = internalValue;
+
         setAddingContact(true);
         try {
           const newContact = await onAddContact(name.trim());
-          if (newContact) {
-            handleSelectContact(newContact);
+          if (newContact && textareaRef.current) {
+            // Use captured values to insert the mention at the correct position
+            const { newContent, newCursorPosition } = insertMention(
+              capturedValue,
+              newContact.name,
+              capturedStartIndex,
+              capturedCursorPos
+            );
+
+            setInternalValue(newContent);
+            onChange(newContent);
+
+            // Add to selectedTags if not already present
+            if (!selectedTags.find((t) => t.id === newContact.id)) {
+              onTagsChange([...selectedTags, newContact]);
+            }
+
+            closeAutocomplete();
+
+            // Restore focus and cursor position
+            setTimeout(() => {
+              if (textareaRef.current) {
+                textareaRef.current.value = newContent;
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+              }
+            }, 0);
           }
         } catch (error) {
           console.error("Failed to add contact:", error);
@@ -123,7 +153,7 @@ export function MentionEditor({
         closeAutocomplete();
       }
     },
-    [onAddContact, handleSelectContact, closeAutocomplete]
+    [onAddContact, startIndex, internalValue, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
   // Auto-detect mentions in content and sync with selectedTags
