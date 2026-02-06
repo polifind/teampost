@@ -96,7 +96,8 @@
       "Bash(npm show:*)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(npm info:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

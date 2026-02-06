@@ -277,6 +277,7 @@ async function handleApproveWithParsedSchedule(
     draftContent: string;
     slackChannelId: string;
     slackThreadTs: string;
+    slackMessageTs: string | null;
     scheduleDayOfWeek: string | null;
     scheduleTime: string | null;
     scheduleTimezone: string | null;
@@ -330,13 +331,24 @@ async function handleApproveWithParsedSchedule(
     scheduledForDisplay = formatScheduleDisplay(scheduledFor, integration.user.timezone);
   }
 
-  // Send confirmation message
-  await sendSlackMessage(
-    integration.botToken,
-    draft.slackChannelId,
-    buildConfirmationMessage(post.id, !!hasSchedule, scheduledForDisplay),
-    draft.slackThreadTs
-  );
+  // Update the original message to show confirmation (instead of sending a new message)
+  const msgTs = draft.slackMessageTs || messageTs;
+  if (msgTs) {
+    await updateSlackMessage(
+      integration.botToken,
+      draft.slackChannelId,
+      msgTs,
+      buildConfirmationMessage(post.id, !!hasSchedule, scheduledForDisplay)
+    );
+  } else {
+    // Fallback: send a new message if we don't have the original message timestamp
+    await sendSlackMessage(
+      integration.botToken,
+      draft.slackChannelId,
+      buildConfirmationMessage(post.id, !!hasSchedule, scheduledForDisplay),
+      draft.slackThreadTs
+    );
+  }
 }
 
 async function handleScheduleSubmission(
@@ -360,13 +372,16 @@ async function handleScheduleSubmission(
 
   const isScheduled = !!(scheduleType === "scheduled" && scheduleDate && scheduleTime);
 
-  // Send immediate feedback that we're processing
-  await sendSlackMessage(
-    integration.botToken,
-    draft.slackChannelId,
-    isScheduled ? buildSchedulingMessage() : buildSavingMessage(),
-    draft.slackThreadTs
-  );
+  // Update the original draft message to show "Saving..." or "Scheduling..."
+  // Use the stored message timestamp if available
+  if (draft.slackMessageTs) {
+    await updateSlackMessage(
+      integration.botToken,
+      draft.slackChannelId,
+      draft.slackMessageTs,
+      isScheduled ? buildSchedulingMessage() : buildSavingMessage()
+    );
+  }
 
   // Create the post (include image if attached)
   const post = await prisma.post.create({
@@ -409,13 +424,23 @@ async function handleScheduleSubmission(
     scheduledForDisplay = formatScheduleDisplay(scheduledFor, integration.user.timezone);
   }
 
-  // Send confirmation message
-  await sendSlackMessage(
-    integration.botToken,
-    draft.slackChannelId,
-    buildConfirmationMessage(post.id, isScheduled, scheduledForDisplay),
-    draft.slackThreadTs
-  );
+  // Update the message to show confirmation (replaces the "Saving..." message)
+  if (draft.slackMessageTs) {
+    await updateSlackMessage(
+      integration.botToken,
+      draft.slackChannelId,
+      draft.slackMessageTs,
+      buildConfirmationMessage(post.id, isScheduled, scheduledForDisplay)
+    );
+  } else {
+    // Fallback: send a new message if we don't have the original message timestamp
+    await sendSlackMessage(
+      integration.botToken,
+      draft.slackChannelId,
+      buildConfirmationMessage(post.id, isScheduled, scheduledForDisplay),
+      draft.slackThreadTs
+    );
+  }
 }
 
 async function handleRegeneration(
