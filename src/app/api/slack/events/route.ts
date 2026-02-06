@@ -284,7 +284,7 @@ async function handleDMMessage(event: {
 }) {
   const { user: slackUserId, channel, text, ts } = event;
 
-  console.log(`[Slack DM] Received message from ${slackUserId}: "${text?.substring(0, 50)}..." ts: ${ts}`);
+  console.log(`[Slack DM] START handleDMMessage - slackUserId=${slackUserId}, channel=${channel}, ts=${ts}, text="${text?.substring(0, 50)}..."`);
 
   if (!slackUserId || !channel || !text || !ts) {
     console.error("[Slack DM] Missing required event fields:", { slackUserId, channel, text: !!text, ts });
@@ -293,6 +293,7 @@ async function handleDMMessage(event: {
 
   // Database-level deduplication using SlackDraft with unique constraint on slackThreadTs
   // Check if we've already processed this message (exists in database)
+  console.log(`[Slack DM] Checking for existing draft...`);
   const existingDraft = await prisma.slackDraft.findFirst({
     where: {
       slackChannelId: channel,
@@ -304,9 +305,18 @@ async function handleDMMessage(event: {
     console.log(`[Slack DM] Skipping already processed message: ${channel}:${ts}`);
     return;
   }
+  console.log(`[Slack DM] No existing draft found, proceeding...`);
 
   // Find the Slack integration for this user
   console.log(`[Slack DM] Looking up integration for slackUserId: ${slackUserId}`);
+
+  // First, let's see ALL integrations for this user (including inactive) for debugging
+  const allIntegrations = await prisma.slackIntegration.findMany({
+    where: { slackUserId },
+    select: { id: true, slackUserId: true, isActive: true, userId: true, workspaceId: true },
+  });
+  console.log(`[Slack DM] Found ${allIntegrations.length} total integrations for slackUserId ${slackUserId}:`, JSON.stringify(allIntegrations));
+
   const integration = await prisma.slackIntegration.findFirst({
     where: {
       slackUserId,
@@ -325,11 +335,11 @@ async function handleDMMessage(event: {
   if (!integration) {
     // User hasn't connected their TeamPost account
     // We can't send a message without a bot token, so just log
-    console.error(`[Slack DM] No active integration found for Slack user ${slackUserId}`);
+    console.error(`[Slack DM] NO ACTIVE INTEGRATION found for Slack user ${slackUserId}. Total integrations found: ${allIntegrations.length}. User may need to reconnect Slack.`);
     return;
   }
 
-  console.log(`[Slack DM] Found integration for user: ${integration.user.email}`);
+  console.log(`[Slack DM] Found active integration: id=${integration.id}, userId=${integration.userId}, email=${integration.user.email}, botToken exists=${!!integration.botToken}`);
 
   const { botToken, user } = integration;
 
@@ -349,9 +359,18 @@ async function handleDMMessage(event: {
   console.log(`[Slack DM] Message analysis: length=${text.length}, text="${lowerText.substring(0, 30)}", isGreeting=${isGreeting}`);
 
   if (isGreeting) {
-    console.log(`[Slack DM] Sending welcome message to ${slackUserId} for greeting: "${text}"`);
-    const result = await sendSlackMessage(botToken, channel, buildWelcomeMessage());
-    console.log(`[Slack DM] Welcome message sent:`, result.ok ? "success" : result.error);
+    console.log(`[Slack DM] Detected greeting, sending welcome message to channel=${channel}`);
+    try {
+      const welcomeMsg = buildWelcomeMessage();
+      console.log(`[Slack DM] Welcome message built, sending to Slack...`);
+      const result = await sendSlackMessage(botToken, channel, welcomeMsg);
+      console.log(`[Slack DM] Welcome message result:`, result.ok ? "success" : `error: ${result.error}`);
+      if (!result.ok) {
+        console.error(`[Slack DM] Failed to send welcome message:`, JSON.stringify(result));
+      }
+    } catch (err) {
+      console.error(`[Slack DM] Exception sending welcome message:`, err);
+    }
     return;
   }
 
