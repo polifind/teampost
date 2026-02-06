@@ -23,23 +23,26 @@ export const WRITING_STYLES: Record<string, WritingStyle> = {
     description: "You share experiences through compelling narratives. Your posts read like mini-stories with a beginning, middle, and end.",
     characteristics: [
       "Opens with a hook that draws readers in",
-      "Uses vivid, specific details",
+      "Uses vivid, specific details (times, ages, places)",
       "Builds tension before the insight",
-      "Ends with a memorable takeaway",
-      "Writes in flowing paragraphs",
+      "Ends with a memorable, earned takeaway",
+      "Writes in short paragraphs with rhythm",
     ],
-    exampleOpener: "3 years ago, I got fired on a Tuesday.\n\nI remember sitting in my car in the parking lot, staring at a box of my stuff.\n\nWhat happened next changed everything...",
+    exampleOpener: "Google sent me a cease and desist at 13 years old.\n\nI had 2.5M users for my previous app.\n\nAnd my parents had no idea.",
     promptGuidance: `Write in a narrative storytelling style:
-- Open with a specific moment or scene that hooks the reader
-- Use "I" statements and personal details
-- Build tension through the middle - show the struggle
-- Include sensory details and specific moments
-- End with the insight or lesson, but make it earned through the story
-- Write in flowing paragraphs, not bullet points
-- Keep sentences varied in length for rhythm
-- NO lists, NO numbered points - pure narrative`,
-    bestFor: ["Personal experiences", "Career pivots", "Lessons learned", "Failures and comebacks"],
-    avoids: ["Bullet points", "Generic advice", "Abstract concepts without story"],
+- Open with a SPECIFIC, SHOCKING hook - a moment that makes readers stop scrolling
+- Ground the story with concrete details: ages, times, numbers, places
+- Build an emotional arc: setup → tension → turning point → resolution
+- Show contrast (what people assumed vs. reality)
+- Include a "scene" moment where readers can visualize what happened
+- The insight/lesson must be EARNED through the story, not stated upfront
+- Use short paragraphs (1-3 sentences each) to control pacing
+- Vary sentence length for rhythm: long setup, short punch
+- End with a universal truth that connects personal story to reader's life
+- If listing lessons, make them flow FROM the story (e.g., "Limited screen time taught urgency")
+- Callback to present day to show relevance ("Those constraints still drive how I work today")`,
+    bestFor: ["Personal experiences", "Career pivots", "Origin stories", "Failures and comebacks"],
+    avoids: ["Abstract advice without story", "Insights before the story earns them", "Generic openings"],
   },
 
   thought_leader: {
@@ -170,6 +173,34 @@ export const WRITING_STYLES: Record<string, WritingStyle> = {
 - Sometimes a single line is the whole post`,
     bestFor: ["Powerful quotes", "Simple truths", "Memorable moments", "Bold statements"],
     avoids: ["Explanations", "Context", "Multiple points", "Anything that dilutes the message"],
+  },
+
+  builder: {
+    id: "builder",
+    name: "The Builder",
+    description: "You share what you're building and the hard problems you're solving. Your posts showcase technical depth and mission-driven work.",
+    characteristics: [
+      "Leads with an intriguing problem or challenge",
+      "Shows technical depth without being inaccessible",
+      "Uses specific metrics and numbers",
+      "Frames challenges as exciting, not complaints",
+      "Attracts talent and customers through authenticity",
+    ],
+    exampleOpener: "How do you train AI to hear people that whisper to it?\n\nHere's our challenge: Millions of users whisper in open offices - speaking so quietly their coworkers can't hear them.\n\nTraditional voice AI completely fails here.",
+    promptGuidance: `Write in a builder/founder style:
+- Open with the PROBLEM or CHALLENGE you're solving - make it intriguing
+- Show technical depth through specific details, not jargon
+- Use concrete metrics: growth numbers, latency targets, scale challenges
+- Frame each challenge as an exciting puzzle, not a complaint
+- List multiple hard problems to show the depth of what you're tackling
+- Include the "why it matters" - user impact, mission
+- Appeal to identity: "We need people who see 'impossible' as 'not yet solved'"
+- Short paragraphs with bold problem statements
+- End with a clear call to action or invitation
+- Sound like a founder who's genuinely excited about hard problems
+- Avoid: generic "we're hiring" energy, oversimplifying challenges, humble bragging`,
+    bestFor: ["Hiring posts", "Product updates", "Technical challenges", "Company building"],
+    avoids: ["Generic job postings", "Humble bragging", "Oversimplified problems"],
   },
 };
 
