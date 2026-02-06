@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
-import { YoutubeTranscript } from "youtube-transcript";
+import { EnhancedYouTubeTranscriptApi } from "@playzone/youtube-transcript";
 import * as cheerio from "cheerio";
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
@@ -54,25 +54,39 @@ async function extractYouTube(url: string): Promise<{ title: string; content: st
     // Keep default title
   }
 
-  // Try to get transcript
+  // Try to get transcript using @playzone/youtube-transcript with Invidious fallback
   let fullText = "";
   try {
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
-    if (transcript && transcript.length > 0) {
-      fullText = transcript.map((t) => t.text).join(" ");
+    console.log(`[YouTube Extract] Fetching transcript for video: ${videoId}`);
+    // Use EnhancedYouTubeTranscriptApi with Invidious fallback for better production support
+    const api = new EnhancedYouTubeTranscriptApi(
+      {}, // no proxy
+      {
+        enabled: true, // Enable Invidious fallback when YouTube blocks requests
+        instanceUrls: ["https://yewtu.be", "https://invidious.io", "https://vid.puffyan.us"],
+      }
+    );
+
+    // Fetch transcript with English language preference
+    const transcript = await api.fetch(videoId, ["en", "en-US", "en-GB"]);
+
+    if (transcript && transcript.snippets && transcript.snippets.length > 0) {
+      fullText = transcript.snippets.map((t: { text: string }) => t.text).join(" ");
+      console.log(`[YouTube Extract] Got transcript, length: ${fullText.length} chars`);
     }
   } catch (transcriptError) {
-    console.log("Transcript not available for video:", videoId, transcriptError);
+    console.log("[YouTube Extract] Transcript not available for video:", videoId, transcriptError);
     // Continue without transcript - we'll use video metadata
   }
 
   // If no transcript, create content from video metadata
   if (!fullText) {
+    console.log(`[YouTube Extract] No transcript available, using metadata for: ${videoId}`);
     // Fetch video page to get description
     try {
       const pageResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; TeamPostBot/1.0)",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         },
       });
       if (pageResponse.ok) {

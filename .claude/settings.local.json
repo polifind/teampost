@@ -92,7 +92,11 @@
       "Bash(/usr/local/bin/node /usr/local/bin/npm run build:*)",
       "Bash(/usr/local/bin/npx tsx scripts/list-users.ts)",
       "Bash(source:*)",
-      "Bash(/usr/local/bin/npx dotenv:*)"
+      "Bash(/usr/local/bin/npx dotenv:*)",
+      "Bash(npm show:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm info:*)",
+      "Bash(xargs cat:*)"
     ]
   }
 }
