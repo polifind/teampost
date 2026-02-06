@@ -26,10 +26,13 @@ interface WritingStyleSelectorProps {
   mode?: "cards" | "quiz";
 }
 
+// The core styles most users will relate to (shown in manual selection)
+const CORE_STYLES = ["storyteller", "thought_leader", "educator", "conversational"];
+
 export function WritingStyleSelector({
   onStyleSelected,
   currentStyleId,
-  mode = "cards",
+  mode = "quiz", // Default to quiz mode now
 }: WritingStyleSelectorProps) {
   const [styles, setStyles] = useState<WritingStyle[]>([]);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -42,6 +45,7 @@ export function WritingStyleSelector({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expandedStyle, setExpandedStyle] = useState<string | null>(null);
+  const [showAllStyles, setShowAllStyles] = useState(false);
 
   useEffect(() => {
     fetchStyles();
@@ -125,10 +129,16 @@ export function WritingStyleSelector({
     );
   }
 
-  // Quiz mode
+  // Quiz mode (default)
   if (isQuizMode && quizQuestions.length > 0) {
     const question = quizQuestions[currentQuestion];
     const isComplete = Object.keys(quizAnswers).length === quizQuestions.length;
+
+    // Filter to show only 4 options per question (the core styles)
+    // This makes the quiz less overwhelming
+    const filteredOptions = question.options.filter(opt =>
+      CORE_STYLES.includes(opt.style)
+    );
 
     return (
       <div className="space-y-6">
@@ -152,7 +162,7 @@ export function WritingStyleSelector({
         <div className="p-4 bg-gray-50 rounded-lg">
           <p className="font-medium text-gray-900 mb-4">{question.question}</p>
           <div className="space-y-2">
-            {question.options.map((option, idx) => (
+            {filteredOptions.map((option, idx) => (
               <button
                 key={idx}
                 onClick={() => handleQuizAnswer(question.id, option.style)}
@@ -198,7 +208,11 @@ export function WritingStyleSelector({
     );
   }
 
-  // Card selection mode
+  // Card selection mode - show core styles by default, option to see all
+  const displayedStyles = showAllStyles
+    ? styles
+    : styles.filter(s => CORE_STYLES.includes(s.id));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -207,7 +221,7 @@ export function WritingStyleSelector({
             Choose Your Writing Style
           </h3>
           <p className="text-sm text-gray-600">
-            Select the style that best matches how you want to come across on LinkedIn
+            Select the style that best matches how you want to come across
           </p>
         </div>
         {quizQuestions.length > 0 && (
@@ -225,7 +239,7 @@ export function WritingStyleSelector({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {styles.map((style) => (
+        {displayedStyles.map((style) => (
           <div
             key={style.id}
             className={`p-4 rounded-lg border cursor-pointer transition-all ${
@@ -286,6 +300,15 @@ export function WritingStyleSelector({
           </div>
         ))}
       </div>
+
+      {!showAllStyles && styles.length > CORE_STYLES.length && (
+        <button
+          onClick={() => setShowAllStyles(true)}
+          className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
+        >
+          Show {styles.length - displayedStyles.length} more styles →
+        </button>
+      )}
 
       {saving && (
         <div className="text-center text-sm text-gray-500">Saving...</div>
