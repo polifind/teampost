@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { WRITING_STYLES, formatStyleForPrompt } from "./writing-styles";
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
@@ -76,13 +77,19 @@ export async function generateSlackPost(
   userName?: string,
   writingPreferences?: WritingPreference[],
   ghostwriterGuidelines?: GhostwriterGuideline[],
-  linkedinProfileContext?: string
+  linkedinProfileContext?: string,
+  writingStyleId?: string
 ): Promise<string> {
   // Build context sections
   let contextSection = "";
 
   if (linkedinProfileContext) {
     contextSection += `\n**ABOUT THE USER:**\n${linkedinProfileContext}\n`;
+  }
+
+  // Add writing style if specified
+  if (writingStyleId && WRITING_STYLES[writingStyleId]) {
+    contextSection += `\n${formatStyleForPrompt(writingStyleId)}\n`;
   }
 
   if (ghostwriterGuidelines && ghostwriterGuidelines.length > 0) {
@@ -92,8 +99,20 @@ export async function generateSlackPost(
 
   if (writingPreferences && writingPreferences.length > 0) {
     const preferences = writingPreferences.map((p) => `- ${p.preference}`).join("\n");
-    contextSection += `\n**WRITING STYLE PREFERENCES (apply these):**\n${preferences}\n`;
+    contextSection += `\n**ADDITIONAL WRITING PREFERENCES:**\n${preferences}\n`;
   }
+
+  // Use style-specific or default guidance
+  const styleGuidance = writingStyleId && WRITING_STYLES[writingStyleId]
+    ? `Follow the writing style guidance above for ${WRITING_STYLES[writingStyleId].name}.`
+    : `**DEFAULT STYLE REQUIREMENTS:**
+1. STRUCTURE: Use very short sentences. One thought per line. Many line breaks.
+2. STORYTELLING: If they shared a story, use ONLY the specific details they provided.
+3. TENSION: Build tension using their actual words and experiences.
+4. PUNCHLINES: End sections with short, punchy lines that hit hard.
+5. AUTHENTICITY: Write like it was spoken, not written. Casual. Direct. Real.
+6. LENGTH: 150-300 words. Every word must earn its place.
+7. ENDING: End with a single powerful line or question.`;
 
   const prompt = `You are a LinkedIn ghostwriter who writes viral, authentic posts. Transform these rough ideas/bullet points into a polished LinkedIn post.
 
@@ -105,31 +124,17 @@ ${contextSection}
 - DO NOT invent or fabricate ANY specific details (dates, dollar amounts, company names, statistics, etc.)
 - If the user said something vague, keep it vague. Do not add specificity they didn't provide.
 - This is critical: making up facts destroys trust and credibility
+- However, you CAN draw from what you know about the user from the ABOUT THE USER section above, even if not mentioned in this specific input
 
-**STYLE REQUIREMENTS:**
+**UNIVERSAL REQUIREMENTS (apply to ALL styles):**
+- NO corporate jargon
+- NO hashtags
+- NO emojis
+- NO "I'm excited to announce"
+- NO generic advice or platitudes
+- NO "Here's what I learned" or similar cliches
 
-1. STRUCTURE: Use very short sentences. One thought per line. Many line breaks.
-
-2. STORYTELLING: If they shared a story, use ONLY the specific details they provided.
-   - Set the scene with moments THEY described
-   - Build tension through struggles THEY mentioned
-   - Show turning points THEY experienced
-
-3. TENSION: Build tension using their actual words and experiences.
-
-4. PUNCHLINES: End sections with short, punchy lines that hit hard.
-
-5. AUTHENTICITY: Write like it was spoken, not written. Casual. Direct. Real.
-   - NO corporate jargon
-   - NO hashtags
-   - NO emojis
-   - NO "I'm excited to announce"
-   - NO generic advice or platitudes
-   - NO "Here's what I learned"
-
-6. LENGTH: 150-300 words. Every word must earn its place.
-
-7. ENDING: End with a single powerful line or question. Not a generic call to action.
+${styleGuidance}
 
 The post should feel like it was written by${userName ? ` ${userName}` : " the user"} themselves.
 

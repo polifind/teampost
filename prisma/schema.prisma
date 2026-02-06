@@ -57,6 +57,10 @@ model User {
   // LinkedIn Profile Context (extracted from screenshots)
   linkedinProfileContext String? // AI-extracted summary of their professional background
 
+  // Writing Style Personalization
+  writingStyleId String? // storyteller, thought_leader, educator, conversational, data_driven, minimalist
+  writingStyleQuizAnswers Json? // Stores quiz answers for future reference
+
   // Stripe subscription
   stripeCustomerId       String?   @unique
   stripeSubscriptionId   String?   @unique

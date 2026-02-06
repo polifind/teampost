@@ -431,7 +431,8 @@ async function handleDMMessage(event: {
         user.name || undefined,
         user.writingPreferences,
         user.ghostwriterGuidelines,
-        user.linkedinProfileContext || undefined
+        user.linkedinProfileContext || undefined,
+        (user as { writingStyleId?: string | null }).writingStyleId || undefined
       ),
     ]);
 
