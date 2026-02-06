@@ -59,15 +59,17 @@ export const WRITING_STYLES: Record<string, WritingStyle> = {
     exampleOpener: "Unpopular opinion: Most \"best practices\" are just popular mistakes.\n\nHere's what actually works (after 10 years of getting it wrong):",
     promptGuidance: `Write in a thought leader style:
 - Open with a bold, contrarian, or surprising statement
-- Use numbered points or a clear framework structure
+- Challenge conventional wisdom or reframe popular narratives
+- If disagreeing with someone, propose your own alternative framework
+- Explain WHY the old model existed before arguing against it
+- Use numbered points or a clear framework structure when listing
 - Keep individual points punchy - one idea per point
-- Add brief explanations after key points (1-2 sentences max)
+- Be opinionated - take a clear stance, don't hedge
 - Include insider references your audience will recognize
-- Be opinionated - take a clear stance
-- Use self-deprecating humor to stay relatable
-- End with a thought-provoking question or call to reflection
+- End with a punchy one-liner that crystallizes your point
+- Lowercase and casual tone is okay if it feels authentic
 - Parenthetical asides add personality (like this)`,
-    bestFor: ["Industry insights", "Frameworks", "Contrarian takes", "Professional advice"],
+    bestFor: ["Industry insights", "Frameworks", "Contrarian takes", "Professional advice", "Reframing narratives"],
     avoids: ["Vague platitudes", "Playing it safe", "Long-winded explanations"],
   },
 
