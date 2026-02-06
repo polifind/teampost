@@ -3,8 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
-import { EnhancedYouTubeTranscriptApi } from "@playzone/youtube-transcript";
 import * as cheerio from "cheerio";
+
+// Note: @playzone/youtube-transcript is imported dynamically in extractYouTube()
+// to avoid CLI output during build time
 
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
@@ -58,6 +60,10 @@ async function extractYouTube(url: string): Promise<{ title: string; content: st
   let fullText = "";
   try {
     console.log(`[YouTube Extract] Fetching transcript for video: ${videoId}`);
+
+    // Dynamic import to avoid CLI output during build
+    const { EnhancedYouTubeTranscriptApi } = await import("@playzone/youtube-transcript");
+
     // Use EnhancedYouTubeTranscriptApi with Invidious fallback for better production support
     const api = new EnhancedYouTubeTranscriptApi(
       {}, // no proxy
