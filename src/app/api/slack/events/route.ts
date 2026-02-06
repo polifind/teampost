@@ -319,14 +319,18 @@ async function handleDMMessage(event: {
 
   const { botToken, user } = integration;
 
-  // Check for simple greetings (match greetings at start of message)
+  // Check for simple greetings - only match short greeting phrases, not longer messages
   const lowerText = text.toLowerCase().trim();
-  const greetings = ["hi", "hello", "hey", "help", "what can you do", "how does this work", "get started"];
-  const isGreeting = greetings.some(g => lowerText === g || lowerText.startsWith(g + " ") || lowerText.startsWith(g + ",") || lowerText.startsWith(g + "!"));
+  const greetingPhrases = ["hi", "hello", "hey", "help", "what can you do", "how does this work", "get started"];
+  // Only treat as greeting if the message is short (< 30 chars) to avoid treating real content as greetings
+  const isShortMessage = text.length < 30;
+  const startsWithGreeting = greetingPhrases.some(g => lowerText === g || lowerText.startsWith(g + " ") || lowerText.startsWith(g + ",") || lowerText.startsWith(g + "!"));
+  const isGreeting = isShortMessage && startsWithGreeting;
 
   if (isGreeting) {
-    console.log(`Sending welcome message to ${slackUserId} for greeting: "${text}"`);
-    await sendSlackMessage(botToken, channel, buildWelcomeMessage());
+    console.log(`[Slack DM] Sending welcome message to ${slackUserId} for greeting: "${text}"`);
+    const result = await sendSlackMessage(botToken, channel, buildWelcomeMessage());
+    console.log(`[Slack DM] Welcome message sent:`, result.ok ? "success" : result.error);
     return;
   }
 
