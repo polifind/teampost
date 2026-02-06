@@ -202,6 +202,33 @@ export const WRITING_STYLES: Record<string, WritingStyle> = {
     bestFor: ["Hiring posts", "Product updates", "Technical challenges", "Company building"],
     avoids: ["Generic job postings", "Humble bragging", "Oversimplified problems"],
   },
+
+  curator: {
+    id: "curator",
+    name: "The Curator",
+    description: "You aggregate insights, share valuable resources, and synthesize trends for your audience. Your posts are go-to sources for curated wisdom.",
+    characteristics: [
+      "Opens with a bold interpretation or framing",
+      "Synthesizes insights from multiple sources",
+      "Uses numbered lists of resources or takeaways",
+      "Includes specific stats or social proof",
+      "Provides clear value through curation",
+    ],
+    exampleOpener: "I asked 1,000 people: What's a tool you vibe-coded that you actually use regularly?\n\nThe response was overwhelming.\n\nHere are 50+ of my favorite examples and 5 key takeaways:",
+    promptGuidance: `Write in a curator/synthesizer style:
+- Open with a bold claim, interpretation, or the "why this matters" framing
+- Reference credible sources or data (surveys, experts, trends you've noticed)
+- Use numbered lists for resources, takeaways, or recommendations
+- Include specific numbers for social proof (views, responses, results)
+- Frame yourself as the helpful filter - you did the work so they don't have to
+- Add your own interpretation layer - don't just list, provide insight
+- Use arrows (→) and short paragraphs for scanability
+- End with a clear call to action or resource link
+- If promoting something, lead with genuine value first
+- Sound like a trusted guide who curates the best of what's out there`,
+    bestFor: ["Resource roundups", "Trend analysis", "Course/tool recommendations", "Community insights"],
+    avoids: ["Pure self-promotion", "Lists without context", "Sharing without adding value"],
+  },
 };
 
 export const STYLE_QUIZ_QUESTIONS = [
@@ -215,6 +242,7 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "Keep it casual - a quick reflection and move on", style: "conversational" },
       { text: "Share the numbers and what they mean", style: "data_driven" },
       { text: "One punchy line that captures the moment", style: "minimalist" },
+      { text: "Curate a list of resources or insights for others", style: "curator" },
     ],
   },
   {
@@ -227,6 +255,7 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "Short paragraphs, lots of white space", style: "conversational" },
       { text: "Depends on how much data I need to share", style: "data_driven" },
       { text: "As short as possible - under 100 words ideally", style: "minimalist" },
+      { text: "A curated list with my key takeaways", style: "curator" },
     ],
   },
   {
@@ -239,6 +268,7 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "Have a genuine conversation about it", style: "conversational" },
       { text: "Back it up with research or data", style: "data_driven" },
       { text: "Distill it to one unforgettable line", style: "minimalist" },
+      { text: "Point them to the best resources I've found", style: "curator" },
     ],
   },
   {
@@ -251,6 +281,7 @@ export const STYLE_QUIZ_QUESTIONS = [
       { text: "A thought I can't stop thinking about", style: "conversational" },
       { text: "Interesting data or research I came across", style: "data_driven" },
       { text: "A truth that needs to be said simply", style: "minimalist" },
+      { text: "A great resource, tool, or content I want to share", style: "curator" },
     ],
   },
 ];
