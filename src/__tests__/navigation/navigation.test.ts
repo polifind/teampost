@@ -13,12 +13,13 @@ describe("Dashboard Navigation", () => {
     { name: "Dashboard", href: "/dashboard" },
     { name: "Posts", href: "/posts" },
     { name: "Magic Drafts", href: "/magic-drafts" },
+    { name: "Writing Style", href: "/writing-style" },
     { name: "Settings", href: "/settings" },
   ];
 
   describe("Navigation Structure", () => {
-    it("should have exactly 4 navigation items", () => {
-      expect(expectedNavigation).toHaveLength(4);
+    it("should have exactly 5 navigation items", () => {
+      expect(expectedNavigation).toHaveLength(5);
     });
 
     it("should include Dashboard link", () => {
@@ -37,6 +38,12 @@ describe("Dashboard Navigation", () => {
       const magicDraftsNav = expectedNavigation.find((n) => n.name === "Magic Drafts");
       expect(magicDraftsNav).toBeDefined();
       expect(magicDraftsNav?.href).toBe("/magic-drafts");
+    });
+
+    it("should include Writing Style link", () => {
+      const writingStyleNav = expectedNavigation.find((n) => n.name === "Writing Style");
+      expect(writingStyleNav).toBeDefined();
+      expect(writingStyleNav?.href).toBe("/writing-style");
     });
 
     it("should include Settings link", () => {
@@ -75,6 +82,10 @@ describe("Dashboard Navigation", () => {
     it("should highlight Magic Drafts on prefix match", () => {
       expect(isActiveLink("/magic-drafts", "/magic-drafts")).toBe(true);
       expect(isActiveLink("/magic-drafts/generate", "/magic-drafts")).toBe(true);
+    });
+
+    it("should highlight Writing Style on prefix match", () => {
+      expect(isActiveLink("/writing-style", "/writing-style")).toBe(true);
     });
 
     it("should highlight Settings on prefix match", () => {
@@ -122,6 +133,7 @@ describe("Route Validation", () => {
     "/dashboard",
     "/posts",
     "/magic-drafts",
+    "/writing-style",
     "/settings",
     "/create",
     "/onboarding",
