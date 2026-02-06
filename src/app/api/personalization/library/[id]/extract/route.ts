@@ -5,9 +5,6 @@ import prisma from "@/lib/prisma";
 import Anthropic from "@anthropic-ai/sdk";
 import * as cheerio from "cheerio";
 
-// Note: @playzone/youtube-transcript is imported dynamically in extractYouTube()
-// to avoid CLI output during build time
-
 // Lazy initialization to avoid build errors when ANTHROPIC_API_KEY is not set
 let _anthropic: Anthropic | null = null;
 
@@ -56,29 +53,58 @@ async function extractYouTube(url: string): Promise<{ title: string; content: st
     // Keep default title
   }
 
-  // Try to get transcript using @playzone/youtube-transcript with Invidious fallback
+  // Try to get transcript using YouTube's timedtext API directly
   let fullText = "";
   try {
     console.log(`[YouTube Extract] Fetching transcript for video: ${videoId}`);
 
-    // Dynamic import to avoid CLI output during build
-    const { EnhancedYouTubeTranscriptApi } = await import("@playzone/youtube-transcript");
+    // Fetch the video page to find caption tracks
+    const videoPageResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    });
 
-    // Use EnhancedYouTubeTranscriptApi with Invidious fallback for better production support
-    const api = new EnhancedYouTubeTranscriptApi(
-      {}, // no proxy
-      {
-        enabled: true, // Enable Invidious fallback when YouTube blocks requests
-        instanceUrls: ["https://yewtu.be", "https://invidious.io", "https://vid.puffyan.us"],
+    if (videoPageResponse.ok) {
+      const html = await videoPageResponse.text();
+
+      // Look for caption track URL in the page
+      const captionMatch = html.match(/"captionTracks":\s*\[([^\]]+)\]/);
+      if (captionMatch) {
+        // Find English caption URL
+        const captionData = captionMatch[1];
+        const urlMatch = captionData.match(/"baseUrl":\s*"([^"]+)"/);
+
+        if (urlMatch) {
+          const captionUrl = urlMatch[1].replace(/\\u0026/g, "&");
+          console.log(`[YouTube Extract] Found caption URL, fetching...`);
+
+          // Fetch the captions
+          const captionResponse = await fetch(captionUrl);
+          if (captionResponse.ok) {
+            const captionXml = await captionResponse.text();
+            // Parse the XML to extract text
+            const textMatches = captionXml.matchAll(/<text[^>]*>([^<]*)<\/text>/g);
+            const texts: string[] = [];
+            for (const match of textMatches) {
+              // Decode HTML entities
+              const text = match[1]
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\n/g, " ");
+              if (text.trim()) {
+                texts.push(text.trim());
+              }
+            }
+            fullText = texts.join(" ");
+            console.log(`[YouTube Extract] Got transcript, length: ${fullText.length} chars`);
+          }
+        }
       }
-    );
-
-    // Fetch transcript with English language preference
-    const transcript = await api.fetch(videoId, ["en", "en-US", "en-GB"]);
-
-    if (transcript && transcript.snippets && transcript.snippets.length > 0) {
-      fullText = transcript.snippets.map((t: { text: string }) => t.text).join(" ");
-      console.log(`[YouTube Extract] Got transcript, length: ${fullText.length} chars`);
     }
   } catch (transcriptError) {
     console.log("[YouTube Extract] Transcript not available for video:", videoId, transcriptError);
