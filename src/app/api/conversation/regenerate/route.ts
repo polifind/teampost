@@ -61,7 +61,7 @@ REQUIREMENTS:
 Return ONLY the new post, nothing else.`;
 
     const response = await getAnthropicClient().messages.create({
-      model: "claude-opus-4-20250514",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
       messages: [
         {

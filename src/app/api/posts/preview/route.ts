@@ -110,7 +110,7 @@ The post should feel like it was written in 2 minutes by someone who just experi
 Return ONLY the post content, nothing else.`;
 
     const message = await anthropic.messages.create({
-      model: "claude-opus-4-20250514",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
       messages: [
         {

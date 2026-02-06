@@ -137,7 +137,7 @@ The post should feel like it was written by${userName ? ` ${userName}` : " the u
 Generate one LinkedIn post. No commentary. No explanation. Just the post content.`;
 
   const message = await getAnthropicClient().messages.create({
-    model: "claude-opus-4-20250514",
+    model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
     messages: [
       {
@@ -196,7 +196,7 @@ ${preferencesSection}
 Generate the improved post. No commentary. No explanation. Just the post content.`;
 
   const message = await getAnthropicClient().messages.create({
-    model: "claude-opus-4-20250514",
+    model: "claude-sonnet-4-20250514",
     max_tokens: 1024,
     messages: [
       {
