@@ -366,17 +366,21 @@ async function handleDMMessage(event: {
   }
 
   try {
-    // Parse scheduling info from the message (e.g., "Monday at 8:55am EST")
-    const parsedSchedule = await parseScheduleFromMessage(text);
-
-    // Generate the post
-    const draftContent = await generateSlackPost(
-      text,
-      user.name || undefined,
-      user.writingPreferences,
-      user.ghostwriterGuidelines,
-      user.linkedinProfileContext || undefined
-    );
+    // Run both API calls in parallel to stay within Vercel's timeout
+    console.log(`[Slack DM] Starting parallel API calls for post generation`);
+    const [parsedSchedule, draftContent] = await Promise.all([
+      // Parse scheduling info from the message (e.g., "Monday at 8:55am EST")
+      parseScheduleFromMessage(text),
+      // Generate the post
+      generateSlackPost(
+        text,
+        user.name || undefined,
+        user.writingPreferences,
+        user.ghostwriterGuidelines,
+        user.linkedinProfileContext || undefined
+      ),
+    ]);
+    console.log(`[Slack DM] API calls completed, draft length: ${draftContent.length}`);
 
     // Create draft in database with parsed schedule
     const draft = await prisma.slackDraft.create({
