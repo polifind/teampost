@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { selectedLibraryItemIds: itemIds } = await request.json();
+    const { selectedLibraryItemIds: itemIds, customInstructions } = await request.json();
 
     // Fetch user data
     const user = await prisma.user.findUnique({
@@ -118,6 +118,16 @@ ${item.extractedContent || item.extractedSummary || "No content extracted"}
       )
       .join("\n---\n");
 
+    // Build custom instructions section if provided
+    let customInstructionsContext = "";
+    if (customInstructions && customInstructions.trim()) {
+      customInstructionsContext = `
+CUSTOM INSTRUCTIONS FROM USER (PRIORITIZE THESE):
+${customInstructions.trim()}
+
+`;
+    }
+
     const systemPrompt = `You are a LinkedIn ghostwriter creating a post based on the user's personal library of content. Your job is to:
 
 1. Read through the source material from their library
@@ -127,7 +137,7 @@ ${item.extractedContent || item.extractedSummary || "No content extracted"}
 ${profileContext}
 ${guidelinesContext}
 ${preferencesContext}
-
+${customInstructionsContext}
 POST STYLE - THIS IS CRITICAL:
 - Start with a PUNCHY hook line that grabs attention. Examples:
   - "I'm a Harvard dropout."

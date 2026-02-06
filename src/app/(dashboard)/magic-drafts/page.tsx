@@ -160,6 +160,7 @@ export default function MagicDraftsPage() {
   // Magic Draft generation state
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [customInstructions, setCustomInstructions] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generatedDrafts, setGeneratedDrafts] = useState<GeneratedDraft[]>([]);
   const draftIdCounter = useRef(0);
@@ -433,6 +434,7 @@ export default function MagicDraftsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           selectedLibraryItemIds: selectedItems.length > 0 ? selectedItems : undefined,
+          customInstructions: customInstructions.trim() || undefined,
         }),
       });
       if (response.ok) {
@@ -449,6 +451,7 @@ export default function MagicDraftsPage() {
         ]);
         setShowGenerateModal(false);
         setSelectedItems([]);
+        setCustomInstructions("");
         setMessage("Draft generated! You can save it to your posts.");
         setTimeout(() => setMessage(""), 3000);
       } else {
@@ -1217,6 +1220,23 @@ export default function MagicDraftsPage() {
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
+              {/* Custom Instructions */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-claude-text mb-2">
+                  Customize your draft (optional)
+                </label>
+                <textarea
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                  placeholder="e.g., Focus on leadership lessons, make it more personal, emphasize the technical challenges we overcame..."
+                  className="w-full p-3 text-sm border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  rows={2}
+                />
+                <p className="text-xs text-claude-text-tertiary mt-1">
+                  Tell the AI what angle, topic, or style you want
+                </p>
+              </div>
+
               {completedItems.length === 0 ? (
                 <div className="text-center py-8 text-claude-text-tertiary">
                   <BookOpenIcon />
