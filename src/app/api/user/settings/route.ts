@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { timezone } = body;
+    const { timezone, linkedinProfileContext, appendToContext } = body;
 
     if (timezone && typeof timezone !== "string") {
       return NextResponse.json(
@@ -91,18 +91,35 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Handle linkedinProfileContext updates
+    let contextToSave = linkedinProfileContext;
+    if (appendToContext && linkedinProfileContext) {
+      // Fetch existing context and append
+      const existingUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { linkedinProfileContext: true },
+      });
+      const existing = existingUser?.linkedinProfileContext || "";
+      contextToSave = existing
+        ? `${existing}\n\n---\n\n${linkedinProfileContext}`
+        : linkedinProfileContext;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         ...(timezone && { timezone }),
+        ...(contextToSave !== undefined && { linkedinProfileContext: contextToSave }),
       },
       select: {
         timezone: true,
+        linkedinProfileContext: true,
       },
     });
 
     return NextResponse.json({
       timezone: updatedUser.timezone,
+      linkedinProfileContext: updatedUser.linkedinProfileContext,
     });
   } catch (error) {
     console.error("Error updating user settings:", error);
