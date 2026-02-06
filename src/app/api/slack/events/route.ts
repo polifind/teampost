@@ -276,6 +276,9 @@ async function handleFileUpload(event: {
   }
 }
 
+// Track processed messages to prevent duplicates
+const processedMessages = new Set<string>();
+
 async function handleDMMessage(event: {
   user?: string;
   channel?: string;
@@ -284,12 +287,23 @@ async function handleDMMessage(event: {
 }) {
   const { user: slackUserId, channel, text, ts } = event;
 
-  console.log(`[Slack DM] Received message from ${slackUserId}: "${text?.substring(0, 50)}..."`);
+  console.log(`[Slack DM] Received message from ${slackUserId}: "${text?.substring(0, 50)}..." ts: ${ts}`);
 
   if (!slackUserId || !channel || !text || !ts) {
     console.error("[Slack DM] Missing required event fields:", { slackUserId, channel, text: !!text, ts });
     return;
   }
+
+  // Deduplicate - prevent processing the same message twice
+  const messageKey = `${channel}:${ts}`;
+  if (processedMessages.has(messageKey)) {
+    console.log(`[Slack DM] Skipping duplicate message: ${messageKey}`);
+    return;
+  }
+  processedMessages.add(messageKey);
+
+  // Clean up old entries after 5 minutes to prevent memory leak
+  setTimeout(() => processedMessages.delete(messageKey), 5 * 60 * 1000);
 
   // Find the Slack integration for this user
   console.log(`[Slack DM] Looking up integration for slackUserId: ${slackUserId}`);
@@ -327,12 +341,17 @@ async function handleDMMessage(event: {
   const startsWithGreeting = greetingPhrases.some(g => lowerText === g || lowerText.startsWith(g + " ") || lowerText.startsWith(g + ",") || lowerText.startsWith(g + "!"));
   const isGreeting = isShortMessage && startsWithGreeting;
 
+  console.log(`[Slack DM] Message analysis: length=${text.length}, isShortMessage=${isShortMessage}, startsWithGreeting=${startsWithGreeting}, isGreeting=${isGreeting}`);
+
   if (isGreeting) {
     console.log(`[Slack DM] Sending welcome message to ${slackUserId} for greeting: "${text}"`);
     const result = await sendSlackMessage(botToken, channel, buildWelcomeMessage());
     console.log(`[Slack DM] Welcome message sent:`, result.ok ? "success" : result.error);
     return;
   }
+
+  console.log(`[Slack DM] Not a greeting, proceeding to generate post for: "${text.substring(0, 50)}..."`);
+
 
   // Send "generating" message
   const genResult = await sendSlackMessage(
@@ -382,14 +401,15 @@ async function handleDMMessage(event: {
       buildDraftMessage(draft.id, draftContent, parsedSchedule)
     );
   } catch (error) {
-    console.error("Error generating post:", error);
+    console.error("[Slack DM] Error generating post:", error);
 
     // Update message with error
-    await updateSlackMessage(
+    const updateResult = await updateSlackMessage(
       botToken,
       channel,
       genResult.ts,
       buildErrorMessage("Failed to generate post. Please try again.")
     );
+    console.log(`[Slack DM] Error message update result:`, updateResult.ok ? "success" : updateResult.error);
   }
 }
