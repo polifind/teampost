@@ -438,6 +438,7 @@ enum LifeLibraryType {
   YOUTUBE
   PDF
   DOCX
+  TEXT  // Raw text pasted by user
 }
 
 enum ProcessingStatus {

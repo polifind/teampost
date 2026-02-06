@@ -154,11 +154,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ item });
     }
 
-    // Handle JSON (URL submission)
-    const { url } = await request.json();
+    // Handle JSON (URL submission or raw text)
+    const { url, text, title: textTitle } = await request.json();
+
+    // Handle raw text submission
+    if (text) {
+      const item = await prisma.lifeLibraryItem.create({
+        data: {
+          userId: session.user.id,
+          type: "TEXT",
+          title: textTitle || `Text note - ${new Date().toLocaleDateString()}`,
+          extractedContent: text,
+          extractedSummary: text.substring(0, 500) + (text.length > 500 ? "..." : ""),
+          processingStatus: "COMPLETED",
+        },
+      });
+      return NextResponse.json({ item });
+    }
 
     if (!url) {
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+      return NextResponse.json({ error: "URL or text is required" }, { status: 400 });
     }
 
     // Validate URL format

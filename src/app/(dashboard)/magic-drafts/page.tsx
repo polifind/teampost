@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from "react";
 
 interface LibraryItem {
   id: string;
-  type: "LINK" | "YOUTUBE" | "PDF" | "DOCX";
+  type: "LINK" | "YOUTUBE" | "PDF" | "DOCX" | "TEXT";
   sourceUrl: string | null;
   fileName: string | null;
   title: string | null;
@@ -86,6 +86,12 @@ const FileIcon = () => (
   </svg>
 );
 
+const TextIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+  </svg>
+);
+
 const UserCircleIcon = () => (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -151,6 +157,12 @@ export default function MagicDraftsPage() {
   const [addingUrl, setAddingUrl] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [libraryDragActive, setLibraryDragActive] = useState(false);
+
+  // Text input state
+  const [showTextInput, setShowTextInput] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [textTitle, setTextTitle] = useState("");
+  const [addingText, setAddingText] = useState(false);
 
   // LinkedIn screenshot state
   const [linkedInScreenshots, setLinkedInScreenshots] = useState<LinkedInScreenshot[]>([]);
@@ -290,6 +302,31 @@ export default function MagicDraftsPage() {
       console.error("Failed to add URL:", error);
     } finally {
       setAddingUrl(false);
+    }
+  };
+
+  const handleAddText = async () => {
+    if (!textInput.trim()) return;
+    setAddingText(true);
+    try {
+      const response = await fetch("/api/personalization/library", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textInput.trim(), title: textTitle.trim() || undefined }),
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setLibraryItems((prev) => [result.item, ...prev]);
+        setTextInput("");
+        setTextTitle("");
+        setShowTextInput(false);
+        setMessage("Text added to your library!");
+        setTimeout(() => setMessage(""), 3000);
+      }
+    } catch (error) {
+      console.error("Failed to add text:", error);
+    } finally {
+      setAddingText(false);
     }
   };
 
@@ -688,6 +725,7 @@ export default function MagicDraftsPage() {
     switch (type) {
       case "YOUTUBE": return <VideoIcon />;
       case "PDF": case "DOCX": return <FileIcon />;
+      case "TEXT": return <TextIcon />;
       default: return <LinkIcon />;
     }
   };
@@ -1049,6 +1087,63 @@ export default function MagicDraftsPage() {
           </button>
         </div>
 
+        {/* Text input toggle and area */}
+        {showTextInput ? (
+          <div className="mb-4 p-4 border border-claude-border rounded-claude bg-claude-bg-secondary">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-claude-text">
+                Paste text content
+              </label>
+              <button
+                onClick={() => {
+                  setShowTextInput(false);
+                  setTextInput("");
+                  setTextTitle("");
+                }}
+                className="text-sm text-claude-text-tertiary hover:text-claude-text"
+              >
+                Cancel
+              </button>
+            </div>
+            <input
+              type="text"
+              value={textTitle}
+              onChange={(e) => setTextTitle(e.target.value)}
+              placeholder="Title (optional)"
+              className="input w-full mb-2"
+            />
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Paste your text here... (transcript, article, notes, etc.)"
+              className="input w-full min-h-[120px] resize-y"
+              rows={5}
+            />
+            <div className="flex justify-end mt-3">
+              <button
+                onClick={handleAddText}
+                disabled={addingText || !textInput.trim()}
+                className="btn-primary"
+              >
+                {addingText ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <PlusIcon />
+                )}
+                Add Text
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowTextInput(true)}
+            className="w-full mb-4 p-3 border-2 border-dashed border-claude-border rounded-claude text-sm text-claude-text-secondary hover:border-claude-border-strong hover:text-claude-text transition-colors flex items-center justify-center gap-2"
+          >
+            <TextIcon />
+            Or paste text directly (transcript, notes, etc.)
+          </button>
+        )}
+
         {/* File upload zone */}
         <div
           onDragEnter={handleLibraryDrag}
@@ -1161,6 +1256,7 @@ export default function MagicDraftsPage() {
                   item.type === "YOUTUBE" ? "bg-red-100 text-red-600" :
                   item.type === "PDF" ? "bg-orange-100 text-orange-600" :
                   item.type === "DOCX" ? "bg-blue-100 text-blue-600" :
+                  item.type === "TEXT" ? "bg-purple-100 text-purple-600" :
                   "bg-claude-bg-tertiary text-claude-text-secondary"
                 }`}>
                   {getLibraryTypeIcon(item.type)}
@@ -1278,6 +1374,7 @@ export default function MagicDraftsPage() {
                           item.type === "YOUTUBE" ? "bg-red-100 text-red-600" :
                           item.type === "PDF" ? "bg-orange-100 text-orange-600" :
                           item.type === "DOCX" ? "bg-blue-100 text-blue-600" :
+                          item.type === "TEXT" ? "bg-purple-100 text-purple-600" :
                           "bg-claude-bg-tertiary text-claude-text-secondary"
                         }`}>
                           {getLibraryTypeIcon(item.type)}
