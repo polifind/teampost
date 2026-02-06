@@ -245,6 +245,69 @@ npm run qa
 5. **Build failures**: Run `npm run build` to catch TypeScript errors before deploying
 6. **Slack content too long**: Slack block text has 3000 char limit - use `truncateForSlack()` in `slack-blocks.ts`
 7. **Slack scopes missing**: If adding new Slack features, check if new OAuth scopes are needed
+8. **NPM packages with CLI side effects**: Some npm packages run CLI output during import/build (e.g., `@playzone/youtube-transcript`). These break Vercel builds. Prefer native fetch implementations over third-party packages when possible.
+9. **Tests must match UI changes**: When changing UI components (buttons, modals, forms), ALWAYS update corresponding tests. Check `/src/__tests__/` for related test files.
+10. **Slack message updates vs sends**: Use `updateSlackMessage` to update existing messages (prevents duplicates). Use `sendSlackMessage` only for new messages. Store `slackMessageTs` to track message IDs.
+11. **React async state capture**: In React callbacks with async operations (like modals), capture state values BEFORE the await. State may reset during async operations. Example: capture `startIndex` before `await onAddContact()`.
+
+### Pre-Push Checklist (CRITICAL)
+**ALWAYS run these commands before pushing any changes:**
+```bash
+npm run test:run   # Tests must pass - catches UI/test mismatches
+npm run build      # Build must succeed - catches TypeScript errors and package issues
+```
+
+If either command fails, FIX THE ISSUES before pushing. Failed deployments waste time and leave broken code in production.
+
+### Lessons Learned from Past Failures
+
+#### NPM Packages with CLI Tools Break Builds
+**Problem**: The `@playzone/youtube-transcript` package had a CLI that output help text during Vercel builds, causing deployment failures.
+
+**Solution**: Removed the package entirely and implemented native fetch-based YouTube caption extraction using YouTube's timedtext API directly.
+
+**Rule**: Before adding a new npm package:
+1. Check if it has CLI tools that might run during import
+2. Consider if native fetch/APIs can accomplish the same task
+3. Test the build locally with `npm run build` after adding
+
+#### Tests Must Be Updated When UI Changes
+**Problem**: Changed Slack schedule modal from day-of-week dropdown to datepicker, but forgot to update the corresponding tests. Tests expected 7 options for days of week.
+
+**Solution**: Updated tests in `/src/__tests__/slack/slack-blocks.test.ts` to check for datepicker and timepicker elements instead.
+
+**Rule**: When changing any UI component:
+1. Search for related test files: `grep -r "component name" src/__tests__/`
+2. Update tests to match new behavior
+3. Run `npm run test:run` to verify
+
+#### React Async Callbacks Lose State
+**Problem**: In MentionEditor, when adding a new contact via modal, `startIndex` was captured AFTER the modal closed, resulting in wrong cursor position.
+
+**Solution**: Capture all needed values (startIndex, cursorPos, internalValue) BEFORE the async `await onAddContact()` call:
+```typescript
+const handleAddNew = useCallback(async (name: string) => {
+  // Capture BEFORE await - state resets during modal
+  const capturedStartIndex = startIndex;
+  const capturedCursorPos = textareaRef.current?.selectionStart ?? 0;
+  const capturedValue = internalValue;
+
+  const newContact = await onAddContact(name); // Modal opens here
+  // Use captured values, not current state
+}, [startIndex, internalValue, ...]);
+```
+
+**Rule**: In React callbacks with async operations, always capture any state/ref values you need BEFORE the await.
+
+#### Slack Duplicate Messages
+**Problem**: Using `sendSlackMessage` when updating feedback caused duplicate "Post saved" messages.
+
+**Solution**: Use `updateSlackMessage` with the stored `slackMessageTs` to update existing messages in place.
+
+**Rule**:
+- `sendSlackMessage` = new message (use sparingly)
+- `updateSlackMessage` = update existing (preferred for status updates)
+- Store `slackMessageTs` on drafts to track message IDs
 
 ## Testing
 
