@@ -26,7 +26,7 @@ interface LinkedInScreenshot {
 interface GeneratedDraft {
   id: string;
   content: string;
-  sourcedFrom: { title: string }[];
+  sourcedFrom: { id: string; title: string; type: string }[];
   createdAt: Date;
 }
 
@@ -163,6 +163,14 @@ export default function MagicDraftsPage() {
   const [generating, setGenerating] = useState(false);
   const [generatedDrafts, setGeneratedDrafts] = useState<GeneratedDraft[]>([]);
   const draftIdCounter = useRef(0);
+
+  // Draft interaction state
+  const [expandedDrafts, setExpandedDrafts] = useState<Set<string>>(new Set());
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [regeneratingDraftId, setRegeneratingDraftId] = useState<string | null>(null);
+  const [regenerateFeedback, setRegenerateFeedback] = useState("");
+  const [regenerating, setRegenerating] = useState<string | null>(null);
 
   // Message state
   const [message, setMessage] = useState("");
@@ -580,6 +588,99 @@ export default function MagicDraftsPage() {
     }
   };
 
+  const handleStartEdit = (draft: GeneratedDraft) => {
+    setEditingDraftId(draft.id);
+    setEditingContent(draft.content);
+  };
+
+  const handleSaveEdit = (draftId: string) => {
+    setGeneratedDrafts((prev) =>
+      prev.map((d) =>
+        d.id === draftId ? { ...d, content: editingContent } : d
+      )
+    );
+    setEditingDraftId(null);
+    setEditingContent("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDraftId(null);
+    setEditingContent("");
+  };
+
+  const handleQuickRegenerate = async (draft: GeneratedDraft) => {
+    setRegenerating(draft.id);
+    try {
+      const response = await fetch("/api/posts/magic-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          selectedLibraryItemIds: draft.sourcedFrom.map((s) => s.id),
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGeneratedDrafts((prev) =>
+          prev.map((d) =>
+            d.id === draft.id
+              ? { ...d, content: data.draft, sourcedFrom: data.sourcedFrom }
+              : d
+          )
+        );
+        setMessage("Draft regenerated!");
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        const error = await response.json();
+        setMessage(error.error || "Failed to regenerate. Please try again.");
+        setTimeout(() => setMessage(""), 5000);
+      }
+    } catch (error) {
+      console.error("Failed to regenerate:", error);
+      setMessage("Failed to regenerate. Please try again.");
+      setTimeout(() => setMessage(""), 5000);
+    } finally {
+      setRegenerating(null);
+    }
+  };
+
+  const handleRegenerateWithFeedback = async (draft: GeneratedDraft) => {
+    if (!regenerateFeedback.trim()) return;
+
+    setRegenerating(draft.id);
+    try {
+      const response = await fetch("/api/posts/regenerate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPost: draft.content,
+          feedback: regenerateFeedback,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGeneratedDrafts((prev) =>
+          prev.map((d) =>
+            d.id === draft.id ? { ...d, content: data.content } : d
+          )
+        );
+        setRegeneratingDraftId(null);
+        setRegenerateFeedback("");
+        setMessage("Draft updated with your feedback!");
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        const error = await response.json();
+        setMessage(error.error || "Failed to regenerate. Please try again.");
+        setTimeout(() => setMessage(""), 5000);
+      }
+    } catch (error) {
+      console.error("Failed to regenerate:", error);
+      setMessage("Failed to regenerate. Please try again.");
+      setTimeout(() => setMessage(""), 5000);
+    } finally {
+      setRegenerating(null);
+    }
+  };
+
   const getLibraryTypeIcon = (type: string) => {
     switch (type) {
       case "YOUTUBE": return <VideoIcon />;
@@ -654,8 +755,138 @@ export default function MagicDraftsPage() {
           <div className="space-y-4">
             {generatedDrafts.map((draft) => (
               <div key={draft.id} className="p-4 bg-claude-bg-secondary rounded-claude border border-claude-border">
-                <p className="text-claude-text whitespace-pre-wrap line-clamp-4 mb-3">{draft.content}</p>
-                <div className="flex items-center justify-between">
+                {/* Action buttons row */}
+                <div className="flex items-center justify-end gap-1 mb-3">
+                  <button
+                    onClick={() => handleQuickRegenerate(draft)}
+                    disabled={regenerating === draft.id}
+                    className="p-2 text-claude-text-tertiary hover:text-claude-text hover:bg-claude-bg-tertiary rounded-lg transition-colors disabled:opacity-50"
+                    title="Regenerate"
+                  >
+                    {regenerating === draft.id ? (
+                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (regeneratingDraftId === draft.id) {
+                        setRegeneratingDraftId(null);
+                        setRegenerateFeedback("");
+                      } else {
+                        setRegeneratingDraftId(draft.id);
+                        setRegenerateFeedback("");
+                      }
+                    }}
+                    className={`p-2 rounded-lg transition-colors ${
+                      regeneratingDraftId === draft.id
+                        ? "text-accent-coral bg-accent-coral/10"
+                        : "text-claude-text-tertiary hover:text-claude-text hover:bg-claude-bg-tertiary"
+                    }`}
+                    title="Regenerate with feedback"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleStartEdit(draft)}
+                    className="p-2 text-claude-text-tertiary hover:text-claude-text hover:bg-claude-bg-tertiary rounded-lg transition-colors"
+                    title="Edit"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Content area - editing or display */}
+                {editingDraftId === draft.id ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      className="w-full p-3 text-sm leading-relaxed bg-white border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent"
+                      rows={10}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveEdit(draft.id)}
+                        className="btn-primary text-sm"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="btn-ghost text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className={`text-claude-text whitespace-pre-wrap leading-relaxed ${!expandedDrafts.has(draft.id) ? "line-clamp-4" : ""}`}>
+                      {draft.content}
+                    </p>
+                    {draft.content.length > 300 && (
+                      <button
+                        onClick={() => {
+                          const newExpanded = new Set(expandedDrafts);
+                          if (expandedDrafts.has(draft.id)) {
+                            newExpanded.delete(draft.id);
+                          } else {
+                            newExpanded.add(draft.id);
+                          }
+                          setExpandedDrafts(newExpanded);
+                        }}
+                        className="text-accent-coral text-sm hover:underline mt-2"
+                      >
+                        {expandedDrafts.has(draft.id) ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </>
+                )}
+
+                {/* Regenerate with feedback UI */}
+                {regeneratingDraftId === draft.id && (
+                  <div className="mt-4 p-3 bg-white rounded-lg border border-claude-border">
+                    <p className="text-xs text-claude-text-secondary mb-2">
+                      Your feedback will help improve this draft
+                    </p>
+                    <textarea
+                      value={regenerateFeedback}
+                      onChange={(e) => setRegenerateFeedback(e.target.value)}
+                      placeholder="e.g., Make it shorter, add more specific details, change the tone to be more casual..."
+                      className="w-full p-2 text-sm border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent"
+                      rows={2}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleRegenerateWithFeedback(draft)}
+                        disabled={regenerating === draft.id || !regenerateFeedback.trim()}
+                        className="btn-primary text-sm disabled:opacity-50"
+                      >
+                        {regenerating === draft.id ? "Regenerating..." : "Regenerate"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRegeneratingDraftId(null);
+                          setRegenerateFeedback("");
+                        }}
+                        className="btn-ghost text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer with source and main actions */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-claude-border/50">
                   <p className="text-xs text-claude-text-tertiary">
                     Based on: {draft.sourcedFrom.map((s) => s.title).join(", ")}
                   </p>

@@ -85,7 +85,9 @@
       "Bash(PATH=\"/usr/local/bin:$PATH\" git diff:*)",
       "Bash(PATH=\"/usr/local/bin:$PATH\" git add:*)",
       "Bash(PATH=\"/usr/local/bin:$PATH\" git push:*)",
-      "Bash(PATH=\"/usr/local/bin:$PATH\" npm run build:*)"
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm run build:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git commit:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git log:*)"
     ]
   }
 }
