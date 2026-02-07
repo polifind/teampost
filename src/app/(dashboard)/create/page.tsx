@@ -353,6 +353,16 @@ export default function CreatePostPage() {
   const [quickScheduleSuccess, setQuickScheduleSuccess] = useState(false);
   const [quickScheduledTime, setQuickScheduledTime] = useState<string | null>(null);
   const quickFileInputRef = useRef<HTMLInputElement>(null);
+  const [isPolishing, setIsPolishing] = useState(false);
+  const [prePolishContent, setPrePolishContent] = useState<string | null>(null);
+
+  // Support deep-linking to Quick Post tab via ?tab=quick
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "quick") {
+      setActiveTab("quick-schedule");
+    }
+  }, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -1292,6 +1302,45 @@ You can type or record a voice note - whatever feels more natural.`,
     const nextMonday = getNextMonday();
     setQuickScheduleDate(nextMonday.toISOString().split("T")[0]);
     setQuickScheduleTime("08:55");
+    setPrePolishContent(null);
+  };
+
+  // Polish post with AI
+  const handlePolishPost = async () => {
+    if (!quickContent.trim() || isPolishing) return;
+
+    setPrePolishContent(quickContent);
+    setIsPolishing(true);
+
+    try {
+      const response = await fetch("/api/posts/polish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: quickContent }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.content) {
+          setQuickContent(data.content);
+        }
+      } else {
+        console.error("Polish failed:", await response.text());
+        setPrePolishContent(null);
+      }
+    } catch (error) {
+      console.error("Failed to polish post:", error);
+      setPrePolishContent(null);
+    } finally {
+      setIsPolishing(false);
+    }
+  };
+
+  const handleUndoPolish = () => {
+    if (prePolishContent !== null) {
+      setQuickContent(prePolishContent);
+      setPrePolishContent(null);
+    }
   };
 
   if (status === "loading") {
@@ -1369,7 +1418,7 @@ You can type or record a voice note - whatever feels more natural.`,
             >
               <span className="flex items-center gap-2">
                 <CalendarIcon />
-                Quick Schedule
+                Quick Post
               </span>
             </button>
           </div>
@@ -1561,6 +1610,19 @@ You can type or record a voice note - whatever feels more natural.`,
               ))}
 
               {isLoading && <ThinkingIndicator />}
+
+              {/* Quick Post tip - show on fresh conversation */}
+              {messages.length === 1 && messages[0].id === "welcome" && !isLoading && !draftPost && (
+                <div className="flex justify-start">
+                  <button
+                    onClick={() => setActiveTab("quick-schedule")}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-claude-lg border border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-accent-coral/5 hover:from-purple-500/10 hover:to-accent-coral/10 transition-colors text-sm text-claude-text-secondary hover:text-claude-text"
+                  >
+                    <WandIcon />
+                    <span>Already have a post written? <span className="font-medium text-purple-600">Quick Post →</span> Polish &amp; schedule it instantly.</span>
+                  </button>
+                </div>
+              )}
 
               {/* Draft ready indicator - shows inline when draft exists */}
               {draftPost && !draftPost.isApproved && (
@@ -1971,10 +2033,10 @@ You can type or record a voice note - whatever feels more natural.`,
               <div className="bg-white rounded-claude-lg border border-claude-border p-6">
                 <h2 className="text-lg font-semibold text-claude-text mb-4 flex items-center gap-2">
                   <CalendarIcon />
-                  Quick Schedule
+                  Quick Post
                 </h2>
                 <p className="text-sm text-claude-text-secondary mb-4">
-                  Paste your post content and schedule it directly, no AI conversation needed.
+                  Write or paste your post, polish it with AI, and schedule it.
                 </p>
 
                 {quickScheduleSuccess ? (
@@ -2024,11 +2086,43 @@ You can type or record a voice note - whatever feels more natural.`,
                         placeholder="Paste or write your LinkedIn post here..."
                         className="w-full h-48 p-4 text-sm border border-claude-border rounded-claude resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral"
                       />
-                      <div className="flex justify-between text-xs text-claude-text-tertiary">
+                      <div className="flex justify-between items-center text-xs text-claude-text-tertiary">
                         <span>{quickContent.length} characters</span>
                         <span className={quickContent.length > 3000 ? "text-error" : ""}>
                           {quickContent.length > 3000 ? "Over limit!" : `${3000 - quickContent.length} remaining`}
                         </span>
+                      </div>
+
+                      {/* Polish with AI */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handlePolishPost}
+                          disabled={!quickContent.trim() || isPolishing}
+                          className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500/10 to-accent-coral/10 text-purple-600 border border-purple-500/20 rounded-claude hover:from-purple-500/20 hover:to-accent-coral/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isPolishing ? (
+                            <>
+                              <div className="animate-spin w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full" />
+                              Polishing...
+                            </>
+                          ) : (
+                            <>
+                              <WandIcon />
+                              Polish with AI
+                            </>
+                          )}
+                        </button>
+                        {prePolishContent !== null && !isPolishing && (
+                          <button
+                            onClick={handleUndoPolish}
+                            className="px-3 py-2 text-sm text-claude-text-secondary hover:text-claude-text transition-colors flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                            </svg>
+                            Undo
+                          </button>
+                        )}
                       </div>
                     </div>
 

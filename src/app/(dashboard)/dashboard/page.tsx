@@ -408,6 +408,26 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Quick Post CTA */}
+        <div className="card p-6 border-dashed mb-8">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-claude-lg bg-gradient-to-br from-purple-500/10 to-accent-coral/10 text-purple-600 flex items-center justify-center flex-shrink-0">
+              <SparklesIcon />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-claude-text mb-1">
+                Already have a post?
+              </h3>
+              <p className="text-sm text-claude-text-secondary mb-3">
+                Paste it in, polish it with AI in one click, and schedule it — all in seconds.
+              </p>
+              <Link href="/create?tab=quick" className="text-purple-600 text-sm font-medium hover:underline">
+                Quick Post →
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Photos Section */}
         <div className="card p-5">
           <div className="flex items-center gap-3 mb-4">
