@@ -102,7 +102,9 @@
       "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_qKIoTfL4lM3s@ep-damp-glade-ah78vagj-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require\" npx prisma db push:*)",
       "WebFetch(domain:www.youtube.com)",
       "Bash(brew install:*)",
-      "Bash(yt-dlp:*)"
+      "Bash(yt-dlp:*)",
+      "WebFetch(domain:tld-list.com)",
+      "WebFetch(domain:www.namecheap.com)"
     ]
   }
 }

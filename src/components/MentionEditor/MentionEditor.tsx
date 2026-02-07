@@ -34,6 +34,7 @@ export function MentionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
 
   // Store pending cursor position to apply after React re-render
   const pendingCursor = useRef<number | null>(null);
@@ -266,12 +267,14 @@ export function MentionEditor({
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Auto-resize textarea to fit content
+  // Auto-resize textarea to fit content and keep overlay height in sync
   const autoResize = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    const nextHeight = textarea.scrollHeight;
+    textarea.style.height = `${nextHeight}px`;
+    setContentHeight(nextHeight);
   }, []);
 
   useEffect(() => {
@@ -282,60 +285,77 @@ export function MentionEditor({
     autoResize();
   }, [autoResize]);
 
+  const scrollTop = containerRef.current?.scrollTop ?? 0;
+  const scrollLeft = containerRef.current?.scrollLeft ?? 0;
+  const adjustedPosition = {
+    top: Math.max(0, position.top - scrollTop),
+    left: Math.max(0, position.left - scrollLeft),
+  };
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Scrollable container for textarea and overlay */}
       <div className="relative overflow-auto" style={{ minHeight, maxHeight: "400px" }}>
-        {/* Highlight overlay - shows formatted text */}
         <div
-          ref={overlayRef}
-          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-hidden border border-transparent rounded-lg"
-          aria-hidden="true"
-        >
-          {highlightedContent?.map((part, i) => {
-            if (part.isMention) {
-              const atSymbol = part.text.charAt(0);
-              const name = part.text.slice(1);
-              return (
-                <span key={i}>
-                  <span className="text-transparent">{atSymbol}</span>
-                  <span className="font-semibold text-blue-600">{name}</span>
-                </span>
-              );
-            }
-            return <span key={i}>{part.text}</span>;
-          })}
-          {!value && (
-            <span className="text-gray-400">{placeholder}</span>
-          )}
-        </div>
-
-        {/* Textarea - controlled, transparent text, user types here */}
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={handleChange}
-          placeholder=""
-          disabled={disabled || addingContact}
-          className="w-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 overflow-hidden relative z-10"
+          className="relative"
           style={{
             minHeight,
-            color: "transparent",
-            caretColor: "#111827",
+            height: contentHeight ? `${contentHeight}px` : undefined,
           }}
-        />
+        >
+          {/* Highlight overlay - shows formatted text */}
+          <div
+            ref={overlayRef}
+            className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-hidden border border-transparent rounded-lg"
+            aria-hidden="true"
+          >
+            {highlightedContent?.map((part, i) => {
+              if (part.isMention) {
+                const atSymbol = part.text.charAt(0);
+                const name = part.text.slice(1);
+                return (
+                  <span key={i}>
+                    <span className="text-transparent">{atSymbol}</span>
+                    <span className="font-semibold text-blue-600">{name}</span>
+                  </span>
+                );
+              }
+              return <span key={i}>{part.text}</span>;
+            })}
+            {!value && (
+              <span className="text-gray-400">{placeholder}</span>
+            )}
+            <span className="invisible">|</span>
+          </div>
 
-        {/* Autocomplete dropdown */}
-        {showAutocomplete && !addingContact && (
-          <MentionAutocomplete
-            query={query}
-            position={position}
-            contacts={contacts}
-            onSelect={handleSelectContact}
-            onAddNew={handleAddNew}
-            onClose={closeAutocomplete}
+          {/* Textarea - controlled, transparent text, user types here */}
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={handleChange}
+            placeholder=""
+            disabled={disabled || addingContact}
+            className="w-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 overflow-hidden relative z-10"
+            style={{
+              minHeight,
+              height: contentHeight ? `${contentHeight}px` : undefined,
+              color: "transparent",
+              caretColor: "#111827",
+            }}
           />
-        )}
+
+          {/* Autocomplete dropdown */}
+          {showAutocomplete && !addingContact && (
+            <MentionAutocomplete
+              query={query}
+              position={adjustedPosition}
+              contacts={contacts}
+              onSelect={handleSelectContact}
+              onAddNew={handleAddNew}
+              onClose={closeAutocomplete}
+            />
+          )}
+        </div>
       </div>
 
       {/* Loading indicator when adding contact */}
