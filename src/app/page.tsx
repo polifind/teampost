@@ -406,7 +406,7 @@ export default function LandingPage() {
               </div>
               <div className="text-xs text-accent-coral font-medium mb-2">STEP 2</div>
               <h3 className="text-lg font-semibold text-claude-text mb-2">
-                AI Writes Posts
+                TeamPost Writes Posts
               </h3>
               <p className="text-claude-text-secondary text-sm">
                 Your ghostwriter transforms answers into polished LinkedIn posts in your authentic voice.
