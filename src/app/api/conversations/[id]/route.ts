@@ -55,14 +55,19 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { status } = await request.json();
+    const { status, title } = await request.json();
+
+    // Build dynamic update data so either field can be sent independently
+    const data: Record<string, string> = {};
+    if (status) data.status = status;
+    if (title !== undefined) data.title = title;
 
     const conversation = await prisma.conversation.update({
       where: {
         id,
         userId: session.user.id,
       },
-      data: { status },
+      data,
     });
 
     return NextResponse.json({ conversation });

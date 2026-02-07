@@ -150,6 +150,24 @@ const DocumentIcon = () => (
   </svg>
 );
 
+const EllipsisIcon = () => (
+  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+  </svg>
+);
+
+const PencilIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+  </svg>
+);
+
+const SmallTrashIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+  </svg>
+);
+
 // Helper to get next Monday at 8:55 AM
 const getNextMonday = (): Date => {
   const now = new Date();
@@ -316,6 +334,11 @@ export default function CreatePostPage() {
 
   // Timezone state
   const [userTimezone, setUserTimezone] = useState<string>(DEFAULT_TIMEZONE);
+
+  // Conversation sidebar menu state
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [renamingConversationId, setRenamingConversationId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   // Tab state for AI Conversation vs Quick Schedule
   const [activeTab, setActiveTab] = useState<"conversation" | "quick-schedule">("conversation");
@@ -683,6 +706,39 @@ export default function CreatePostPage() {
       console.error("Failed to delete conversation:", error);
     }
   };
+
+  // Rename a conversation
+  const renameConversation = async (id: string, newTitle: string) => {
+    const trimmed = newTitle.trim();
+    if (!trimmed) {
+      setRenamingConversationId(null);
+      return;
+    }
+
+    // Optimistic update
+    setSavedConversations(prev =>
+      prev.map(c => c.id === id ? { ...c, title: trimmed } : c)
+    );
+    setRenamingConversationId(null);
+
+    try {
+      await fetch(`/api/conversations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: trimmed }),
+      });
+    } catch (error) {
+      console.error("Failed to rename conversation:", error);
+    }
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!menuOpenId) return;
+    const handleClickOutside = () => setMenuOpenId(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [menuOpenId]);
 
   // Initial greeting
   useEffect(() => {
@@ -1362,7 +1418,11 @@ You can type or record a voice note - whatever feels more natural.`,
                   {savedConversations.map((conv) => (
                     <div
                       key={conv.id}
-                      onClick={() => loadConversation(conv.id)}
+                      onClick={() => {
+                        if (renamingConversationId !== conv.id) {
+                          loadConversation(conv.id);
+                        }
+                      }}
                       className={`group p-3 rounded-lg cursor-pointer transition-colors mb-1 ${
                         conversationId === conv.id
                           ? "bg-accent-coral/10 border border-accent-coral/20"
@@ -1371,9 +1431,28 @@ You can type or record a voice note - whatever feels more natural.`,
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-claude-text truncate font-medium">
-                            {conv.title}
-                          </p>
+                          {renamingConversationId === conv.id ? (
+                            <input
+                              type="text"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  renameConversation(conv.id, renameValue);
+                                } else if (e.key === "Escape") {
+                                  setRenamingConversationId(null);
+                                }
+                              }}
+                              onBlur={() => renameConversation(conv.id, renameValue)}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              className="text-sm font-medium bg-transparent border border-accent-coral/50 rounded px-1 py-0.5 outline-none w-full text-claude-text focus:ring-1 focus:ring-accent-coral/30"
+                            />
+                          ) : (
+                            <p className="text-sm text-claude-text truncate font-medium">
+                              {conv.title}
+                            </p>
+                          )}
                           <p className="text-xs text-claude-text-tertiary mt-0.5">
                             {formatTimeAgo(conv.updatedAt)}
                           </p>
@@ -1384,12 +1463,45 @@ You can type or record a voice note - whatever feels more natural.`,
                             </div>
                           )}
                         </div>
-                        <button
-                          onClick={(e) => deleteConversation(conv.id, e)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-claude-text-tertiary hover:text-error transition-all"
-                        >
-                          <TrashIcon />
-                        </button>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMenuOpenId(menuOpenId === conv.id ? null : conv.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-claude-text-tertiary hover:text-claude-text transition-all"
+                          >
+                            <EllipsisIcon />
+                          </button>
+                          {menuOpenId === conv.id && (
+                            <div
+                              className="absolute right-0 top-full mt-1 bg-white border border-claude-border shadow-lg rounded-lg py-1 z-20 w-36"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                onClick={() => {
+                                  setRenamingConversationId(conv.id);
+                                  setRenameValue(conv.title);
+                                  setMenuOpenId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-sm text-claude-text hover:bg-claude-bg-tertiary flex items-center gap-2 text-left"
+                              >
+                                <PencilIcon />
+                                Rename
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  setMenuOpenId(null);
+                                  deleteConversation(conv.id, e);
+                                }}
+                                className="w-full px-3 py-1.5 text-sm text-error hover:bg-claude-bg-tertiary flex items-center gap-2 text-left"
+                              >
+                                <SmallTrashIcon />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
