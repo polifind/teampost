@@ -185,7 +185,7 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl font-bold text-claude-text mb-6 leading-tight text-balance">
-            Hire an AI Agent to Turn Your Company Into a
+            An AI Agent That Turns Your Company Into a
             <span className="gradient-text"> LinkedIn Content Machine</span>
           </h1>
 
