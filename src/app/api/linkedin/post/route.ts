@@ -18,7 +18,8 @@ interface MentionAttribute {
 }
 
 // Build content with mentions for LinkedIn API
-// Finds inline mentions in the format @CompanyName or @PersonName and creates proper LinkedIn attributes
+// Finds inline mentions in the format @CompanyName or @PersonName, strips the @ symbol,
+// and creates proper LinkedIn attributes pointing to just the display name
 function buildContentWithMentions(
   content: string,
   taggedContacts: LinkedInContact[]
@@ -29,12 +30,11 @@ function buildContentWithMentions(
     return { text: content, attributes: [] };
   }
 
-  // Find all inline mentions in the content and build attributes
-  const attributes: MentionAttribute[] = [];
-
+  // First pass: find all @Name occurrences and record their positions (sorted by position)
   const lowerContent = content.toLowerCase();
+  const mentions: Array<{ pos: number; mentionStr: string; contact: LinkedInContact }> = [];
+
   for (const contact of contactsWithUrns) {
-    // Look for the mention in the content (with @ prefix), case-insensitive
     const mentionStr = `@${contact.name}`;
     const lowerMentionStr = mentionStr.toLowerCase();
     let searchPos = 0;
@@ -42,35 +42,53 @@ function buildContentWithMentions(
     while (true) {
       const mentionPos = lowerContent.indexOf(lowerMentionStr, searchPos);
       if (mentionPos === -1) break;
-
-      const attr: MentionAttribute = {
-        start: mentionPos,
-        length: mentionStr.length,
-        value: {},
-      };
-
-      if (contact.type === "PERSON") {
-        attr.value["com.linkedin.common.MemberAttributedEntity"] = {
-          member: contact.linkedinUrn!,
-        };
-      } else {
-        attr.value["com.linkedin.common.CompanyAttributedEntity"] = {
-          company: contact.linkedinUrn!,
-        };
-      }
-
-      attributes.push(attr);
+      mentions.push({ pos: mentionPos, mentionStr, contact });
       searchPos = mentionPos + mentionStr.length;
     }
-
-    // Also check for the name without @ (for cases like "I joined Speechify")
-    // and if found with no @, we won't create a mention attribute as user didn't explicitly tag
   }
 
-  // Sort attributes by start position (LinkedIn requires this)
-  attributes.sort((a, b) => a.start - b.start);
+  // Sort by position
+  mentions.sort((a, b) => a.pos - b.pos);
 
-  return { text: content, attributes };
+  // Second pass: build new text with @ symbols stripped, and compute adjusted attribute positions
+  // LinkedIn expects attributes to point to the display name only (e.g., "Acme Corp" not "@Acme Corp")
+  let newText = "";
+  let lastIdx = 0;
+  let offset = 0; // tracks how many @ chars we've removed
+  const attributes: MentionAttribute[] = [];
+
+  for (const mention of mentions) {
+    // Add text before this mention
+    newText += content.slice(lastIdx, mention.pos);
+    // Skip the @ and add just the name
+    const nameOnly = mention.mentionStr.slice(1); // remove @
+    newText += nameOnly;
+
+    const attr: MentionAttribute = {
+      start: mention.pos - offset,
+      length: nameOnly.length,
+      value: {},
+    };
+
+    if (mention.contact.type === "PERSON") {
+      attr.value["com.linkedin.common.MemberAttributedEntity"] = {
+        member: mention.contact.linkedinUrn!,
+      };
+    } else {
+      attr.value["com.linkedin.common.CompanyAttributedEntity"] = {
+        company: mention.contact.linkedinUrn!,
+      };
+    }
+
+    attributes.push(attr);
+    lastIdx = mention.pos + mention.mentionStr.length;
+    offset += 1; // we removed one @ character
+  }
+
+  // Add remaining text after last mention
+  newText += content.slice(lastIdx);
+
+  return { text: newText, attributes };
 }
 
 // Post to LinkedIn using Share API

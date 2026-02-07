@@ -27,8 +27,11 @@ export function getCaretCoordinates(
     width: ${textarea.clientWidth}px;
   `;
 
+  // Clamp position to valid range
+  const safePosition = Math.min(position, textarea.value.length);
+
   // Get text before the caret position
-  const textBeforeCaret = textarea.value.substring(0, position);
+  const textBeforeCaret = textarea.value.substring(0, safePosition);
 
   // Create a span to mark the caret position
   const span = document.createElement("span");
@@ -40,14 +43,16 @@ export function getCaretCoordinates(
 
   document.body.appendChild(mirror);
 
-  const coords = {
-    top: span.offsetTop - textarea.scrollTop,
-    left: span.offsetLeft,
-  };
+  try {
+    const coords = {
+      top: span.offsetTop - textarea.scrollTop,
+      left: span.offsetLeft,
+    };
 
-  document.body.removeChild(mirror);
-
-  return coords;
+    return coords;
+  } finally {
+    document.body.removeChild(mirror);
+  }
 }
 
 /**
@@ -55,20 +60,37 @@ export function getCaretCoordinates(
  * Returns array of { name, start, end } for each mention
  */
 export function parseMentions(
-  content: string
+  content: string,
+  knownNames?: string[]
 ): Array<{ name: string; start: number; end: number }> {
   const mentions: Array<{ name: string; start: number; end: number }> = [];
-  // Match @followed by word characters and spaces (for multi-word names)
-  // But stop at punctuation or newlines
-  const regex = /@([\w][\w\s]*[\w]|[\w]+)/g;
-  let match;
 
-  while ((match = regex.exec(content)) !== null) {
-    mentions.push({
-      name: match[1],
-      start: match.index,
-      end: match.index + match[0].length,
-    });
+  if (knownNames && knownNames.length > 0) {
+    // Use known contact names for precise matching (sorted longest first to prevent partial matches)
+    const sorted = [...knownNames].sort((a, b) => b.length - a.length);
+    const escaped = sorted.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const regex = new RegExp(`@(${escaped.join("|")})(?=\\s|$|[^\\w])`, "gi");
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      mentions.push({
+        name: match[1],
+        start: match.index,
+        end: match.index + match[0].length,
+      });
+    }
+  } else {
+    // Fallback: match @word (single word only, no greedy multi-word capture)
+    const regex = /@(\w+)/g;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      mentions.push({
+        name: match[1],
+        start: match.index,
+        end: match.index + match[0].length,
+      });
+    }
   }
 
   return mentions;
@@ -90,7 +112,9 @@ export function getActiveMentionQuery(
 
   if (match) {
     const query = match[1];
-    const atIndex = textBeforeCursor.lastIndexOf("@");
+    // Derive @ position from the match rather than using lastIndexOf
+    // match[0] includes the optional non-word char before @, so @ is at end minus query length minus 1
+    const atIndex = textBeforeCursor.length - match[1].length - 1;
     return { query, startIndex: atIndex };
   }
 
