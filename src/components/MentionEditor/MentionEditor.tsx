@@ -34,23 +34,21 @@ export function MentionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
+  // Track internal value for uncontrolled textarea
+  const [internalValue, setInternalValue] = useState(value);
+  // Flag to prevent external sync from overwriting internal changes
+  const isInternalChange = useRef(false);
 
-  // Store pending cursor position to apply after React re-render
-  const pendingCursor = useRef<number | null>(null);
-
-  // Undo/redo stack for controlled textarea (browser undo breaks with React controlled inputs)
-  const undoStack = useRef<Array<{ value: string; cursor: number }>>([]);
-  const redoStack = useRef<Array<{ value: string; cursor: number }>>([]);
-  const isUndoRedo = useRef(false);
-
-  // Apply pending cursor position after value prop updates the textarea
+  // Sync from parent prop → textarea (only when parent changes value externally)
   useEffect(() => {
-    if (pendingCursor.current !== null && textareaRef.current) {
-      const pos = pendingCursor.current;
-      textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(pos, pos);
-      pendingCursor.current = null;
+    if (isInternalChange.current) {
+      isInternalChange.current = false;
+      return;
     }
+    if (textareaRef.current && textareaRef.current.value !== value) {
+      textareaRef.current.value = value;
+    }
+    setInternalValue(value);
   }, [value]);
 
   const {
@@ -59,64 +57,23 @@ export function MentionEditor({
     position,
     startIndex,
     closeAutocomplete,
-  } = useMentionDetection(textareaRef, value);
+  } = useMentionDetection(textareaRef, internalValue);
 
-  // Handle input changes (user typing)
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!isUndoRedo.current) {
-      // Push current state to undo stack before applying the change
-      undoStack.current.push({
-        value,
-        cursor: e.target.selectionStart,
-      });
-      // Cap undo stack at 100 entries
-      if (undoStack.current.length > 100) undoStack.current.shift();
-      // Clear redo stack on new input
-      redoStack.current = [];
-    }
-    isUndoRedo.current = false;
-    onChange(e.target.value);
-  }, [onChange, value]);
-
-  // Handle undo/redo keyboard shortcuts (Cmd+Z / Cmd+Shift+Z)
-  useEffect(() => {
+  // Handle native input events (user typing)
+  const handleInput = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMeta = e.metaKey || e.ctrlKey;
-      if (!isMeta || e.key !== "z") return;
-
-      e.preventDefault();
-
-      if (e.shiftKey) {
-        // Redo
-        if (redoStack.current.length === 0) return;
-        const redoEntry = redoStack.current.pop()!;
-        undoStack.current.push({
-          value,
-          cursor: textarea.selectionStart,
-        });
-        isUndoRedo.current = true;
-        pendingCursor.current = redoEntry.cursor;
-        onChange(redoEntry.value);
-      } else {
-        // Undo
-        if (undoStack.current.length === 0) return;
-        const undoEntry = undoStack.current.pop()!;
-        redoStack.current.push({
-          value,
-          cursor: textarea.selectionStart,
-        });
-        isUndoRedo.current = true;
-        pendingCursor.current = undoEntry.cursor;
-        onChange(undoEntry.value);
-      }
-    };
-
-    textarea.addEventListener("keydown", handleKeyDown);
-    return () => textarea.removeEventListener("keydown", handleKeyDown);
-  }, [value, onChange]);
+    const newValue = textarea.value;
+    setInternalValue(newValue);
+    isInternalChange.current = true;
+    onChange(newValue);
+    // Auto-resize
+    textarea.style.height = "auto";
+    const scrollH = textarea.scrollHeight;
+    const maxH = 400;
+    textarea.style.height = `${Math.min(scrollH, maxH)}px`;
+    textarea.style.overflowY = scrollH > maxH ? "auto" : "hidden";
+  }, [onChange]);
 
   // Handle selecting a contact from autocomplete
   const handleSelectContact = useCallback(
@@ -124,15 +81,21 @@ export function MentionEditor({
       if (!textareaRef.current) return;
 
       const cursorPos = textareaRef.current.selectionStart;
+      const currentValue = textareaRef.current.value;
       const { newContent, newCursorPosition } = insertMention(
-        value,
+        currentValue,
         contact.name,
         startIndex,
         cursorPos
       );
 
-      // Set pending cursor so it applies after React re-renders with new value
-      pendingCursor.current = newCursorPosition;
+      // Update the DOM directly (uncontrolled)
+      textareaRef.current.value = newContent;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+
+      setInternalValue(newContent);
+      isInternalChange.current = true;
       onChange(newContent);
 
       // Add to selectedTags if not already present
@@ -142,7 +105,7 @@ export function MentionEditor({
 
       closeAutocomplete();
     },
-    [value, startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
+    [startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
   // Handle adding a new contact
@@ -157,7 +120,7 @@ export function MentionEditor({
         // Capture current positions BEFORE awaiting, as state will reset during the modal
         const capturedStartIndex = startIndex;
         const capturedCursorPos = textareaRef.current?.selectionStart ?? 0;
-        const capturedValue = value;
+        const capturedValue = textareaRef.current?.value ?? "";
 
         setAddingContact(true);
         try {
@@ -170,7 +133,12 @@ export function MentionEditor({
               capturedCursorPos
             );
 
-            pendingCursor.current = newCursorPosition;
+            textareaRef.current.value = newContent;
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+
+            setInternalValue(newContent);
+            isInternalChange.current = true;
             onChange(newContent);
 
             if (!selectedTags.find((t) => t.id === newContact.id)) {
@@ -188,7 +156,7 @@ export function MentionEditor({
         closeAutocomplete();
       }
     },
-    [onAddContact, startIndex, value, selectedTags, onChange, onTagsChange, closeAutocomplete]
+    [onAddContact, startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
   // Helper: check if @Name appears as a proper mention at a given position
@@ -201,19 +169,19 @@ export function MentionEditor({
 
   // Auto-detect mentions in content and sync with selectedTags (add new + prune stale)
   useEffect(() => {
-    const lowerContent = value.toLowerCase();
+    const lowerContent = internalValue.toLowerCase();
     const matchedContacts = contacts.filter((c) => {
       const mentionStr = `@${c.name.toLowerCase()}`;
       const idx = lowerContent.indexOf(mentionStr);
       if (idx === -1) return false;
-      return isMentionAtBoundary(lowerContent, value, mentionStr, idx);
+      return isMentionAtBoundary(lowerContent, internalValue, mentionStr, idx);
     });
 
     const tagsToKeep = selectedTags.filter((t) => {
       const mentionStr = `@${t.name.toLowerCase()}`;
       const idx = lowerContent.indexOf(mentionStr);
       if (idx === -1) return false;
-      return isMentionAtBoundary(lowerContent, value, mentionStr, idx);
+      return isMentionAtBoundary(lowerContent, internalValue, mentionStr, idx);
     });
     const currentTagIds = new Set(selectedTags.map((t) => t.id));
     const newTags = matchedContacts.filter((c) => !currentTagIds.has(c.id));
@@ -224,7 +192,7 @@ export function MentionEditor({
       onTagsChange(updatedTags);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, contacts]);
+  }, [internalValue, contacts]);
 
   // Build list of mention names for display indicator
   const mentionNames = useMemo(() => {
@@ -232,8 +200,8 @@ export function MentionEditor({
     return selectedTags.map((t) => t.name);
   }, [selectedTags]);
 
-  // Auto-resize textarea to fit content (capped at 400px, then scroll)
-  const autoResize = useCallback(() => {
+  // Auto-resize on mount and when value changes externally
+  useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";
@@ -241,10 +209,7 @@ export function MentionEditor({
     const maxH = 400;
     textarea.style.height = `${Math.min(scrollH, maxH)}px`;
     textarea.style.overflowY = scrollH > maxH ? "auto" : "hidden";
-  }, []);
-
-  useEffect(() => { autoResize(); }, [value, autoResize]);
-  useEffect(() => { autoResize(); }, [autoResize]);
+  }, [value]);
 
   const scrollTop = textareaRef.current?.scrollTop ?? 0;
   const scrollLeft = textareaRef.current?.scrollLeft ?? 0;
@@ -255,11 +220,11 @@ export function MentionEditor({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Simple textarea - no overlay, just a real textarea */}
+      {/* Uncontrolled textarea — browser manages input natively */}
       <textarea
         ref={textareaRef}
-        value={value}
-        onChange={handleChange}
+        defaultValue={value}
+        onInput={handleInput}
         placeholder={placeholder}
         disabled={disabled || addingContact}
         className="w-full p-3 text-sm leading-relaxed border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900"
