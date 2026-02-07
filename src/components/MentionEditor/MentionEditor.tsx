@@ -38,6 +38,11 @@ export function MentionEditor({
   // Store pending cursor position to apply after React re-render
   const pendingCursor = useRef<number | null>(null);
 
+  // Undo/redo stack for controlled textarea (browser undo breaks with React controlled inputs)
+  const undoStack = useRef<Array<{ value: string; cursor: number }>>([]);
+  const redoStack = useRef<Array<{ value: string; cursor: number }>>([]);
+  const isUndoRedo = useRef(false);
+
   // Apply pending cursor position after value prop updates the textarea
   useEffect(() => {
     if (pendingCursor.current !== null && textareaRef.current) {
@@ -58,8 +63,60 @@ export function MentionEditor({
 
   // Handle input changes (user typing)
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!isUndoRedo.current) {
+      // Push current state to undo stack before applying the change
+      undoStack.current.push({
+        value,
+        cursor: e.target.selectionStart,
+      });
+      // Cap undo stack at 100 entries
+      if (undoStack.current.length > 100) undoStack.current.shift();
+      // Clear redo stack on new input
+      redoStack.current = [];
+    }
+    isUndoRedo.current = false;
     onChange(e.target.value);
-  }, [onChange]);
+  }, [onChange, value]);
+
+  // Handle undo/redo keyboard shortcuts (Cmd+Z / Cmd+Shift+Z)
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMeta = e.metaKey || e.ctrlKey;
+      if (!isMeta || e.key !== "z") return;
+
+      e.preventDefault();
+
+      if (e.shiftKey) {
+        // Redo
+        if (redoStack.current.length === 0) return;
+        const redoEntry = redoStack.current.pop()!;
+        undoStack.current.push({
+          value,
+          cursor: textarea.selectionStart,
+        });
+        isUndoRedo.current = true;
+        pendingCursor.current = redoEntry.cursor;
+        onChange(redoEntry.value);
+      } else {
+        // Undo
+        if (undoStack.current.length === 0) return;
+        const undoEntry = undoStack.current.pop()!;
+        redoStack.current.push({
+          value,
+          cursor: textarea.selectionStart,
+        });
+        isUndoRedo.current = true;
+        pendingCursor.current = undoEntry.cursor;
+        onChange(undoEntry.value);
+      }
+    };
+
+    textarea.addEventListener("keydown", handleKeyDown);
+    return () => textarea.removeEventListener("keydown", handleKeyDown);
+  }, [value, onChange]);
 
   // Handle selecting a contact from autocomplete
   const handleSelectContact = useCallback(
