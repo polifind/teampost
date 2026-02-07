@@ -285,14 +285,17 @@ export default function PostsPage() {
       );
     }
 
-    const mentionNames = new Set(postTags.map(t => t.name.toLowerCase()));
+    // Build regex from known contact names (longest first to avoid partial matches)
+    const sortedTags = [...postTags].sort((a, b) => b.name.length - a.name.length);
+    const escapedNames = sortedTags.map(t => t.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const regex = new RegExp(`@(${escapedNames.join("|")})(?=\\s|$|[^\\w])`, "gi");
+
     const parts: Array<{ text: string; isMention: boolean }> = [];
     let lastIdx = 0;
-    const regex = /@([\w][\w\s]*[\w]|[\w]+)/g;
     let m;
     while ((m = regex.exec(post.content)) !== null) {
       if (m.index > lastIdx) parts.push({ text: post.content.slice(lastIdx, m.index), isMention: false });
-      parts.push({ text: m[0], isMention: mentionNames.has(m[1].toLowerCase()) });
+      parts.push({ text: m[0], isMention: true });
       lastIdx = m.index + m[0].length;
     }
     if (lastIdx < post.content.length) parts.push({ text: post.content.slice(lastIdx), isMention: false });

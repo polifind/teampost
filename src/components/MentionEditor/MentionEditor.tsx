@@ -167,23 +167,23 @@ export function MentionEditor({
 
   // Auto-detect mentions in content and sync with selectedTags (add new + prune stale)
   useEffect(() => {
-    // Find all @mentions in content
-    const mentionRegex = /@([\w][\w\s]*[\w]|[\w]+)/g;
-    const mentionsInContent = new Set<string>();
-    let match;
-    while ((match = mentionRegex.exec(internalValue)) !== null) {
-      mentionsInContent.add(match[1].toLowerCase());
-    }
-
-    // Find contacts that match mentions in content
-    const matchedContacts = contacts.filter((c) =>
-      mentionsInContent.has(c.name.toLowerCase())
-    );
+    // Check which contacts have @Name present in the content
+    const lowerContent = internalValue.toLowerCase();
+    const matchedContacts = contacts.filter((c) => {
+      const mentionStr = `@${c.name.toLowerCase()}`;
+      const idx = lowerContent.indexOf(mentionStr);
+      if (idx === -1) return false;
+      // Ensure it's at a word boundary (preceded by start/non-word char)
+      if (idx > 0 && /\w/.test(internalValue[idx - 1])) return false;
+      return true;
+    });
 
     // Keep existing tags that still appear in content, add any new matches
-    const tagsToKeep = selectedTags.filter((t) =>
-      mentionsInContent.has(t.name.toLowerCase())
-    );
+    const matchedIds = new Set(matchedContacts.map((c) => c.id));
+    const tagsToKeep = selectedTags.filter((t) => {
+      const mentionStr = `@${t.name.toLowerCase()}`;
+      return lowerContent.includes(mentionStr);
+    });
     const currentTagIds = new Set(selectedTags.map((t) => t.id));
     const newTags = matchedContacts.filter((c) => !currentTagIds.has(c.id));
 
@@ -200,32 +200,33 @@ export function MentionEditor({
   const highlightedContent = useMemo(() => {
     if (!internalValue) return null;
 
-    // Create a set of contact names for quick lookup (case-insensitive)
-    const mentionNames = new Set(
-      selectedTags.map((t) => t.name.toLowerCase())
-    );
+    if (selectedTags.length === 0) {
+      return [{ text: internalValue, isMention: false }];
+    }
 
-    // Split content by @mentions
+    // Build a regex that matches @ContactName for each known tag (sorted longest first to avoid partial matches)
+    const sortedTags = [...selectedTags].sort((a, b) => b.name.length - a.name.length);
+    const escapedNames = sortedTags.map((t) =>
+      t.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    );
+    const mentionRegex = new RegExp(`@(${escapedNames.join("|")})(?=\\s|$|[^\\w])`, "gi");
+
+    // Split content by known @mentions
     const parts: Array<{ text: string; isMention: boolean }> = [];
     let lastIndex = 0;
-    const regex = /@([\w][\w\s]*[\w]|[\w]+)/g;
     let match;
 
-    while ((match = regex.exec(internalValue)) !== null) {
+    while ((match = mentionRegex.exec(internalValue)) !== null) {
       // Add text before the match
       if (match.index > lastIndex) {
         const text = internalValue.slice(lastIndex, match.index);
         parts.push({ text, isMention: false });
       }
 
-      // Check if this mention is in selectedTags
-      const mentionName = match[1];
-      const isTagged = mentionNames.has(mentionName.toLowerCase());
-
-      // Keep the full text including @ to maintain character alignment with textarea
+      // This is a known tagged mention
       parts.push({
         text: match[0],
-        isMention: isTagged,
+        isMention: true,
       });
 
       lastIndex = match.index + match[0].length;
