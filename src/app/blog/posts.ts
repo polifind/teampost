@@ -16,7 +16,7 @@ export interface BlogPost {
 export const AUTHOR_BIO = {
   name: "Rohan Pavuluri",
   role: "Creator, TeamPost",
-  bio: "Rohan Pavuluri is the founder of TeamPost, a LinkedIn content platform used by executives and teams to build their professional brands. Previously, he founded Court Buddy (now Courtroom5), which was featured in TechCrunch, Forbes, and on Shark Tank. Rohan writes about LinkedIn strategy, going direct, and the future of professional content creation.",
+  bio: "Rohan is the creator of TeamPost and CBO at Speechify. He co-founded Upsolve, a nonprofit that has relieved nearly $1B in debt for low-income families (Shark Tank, TechCrunch, Forbes). Harvard and Y Combinator alum.",
   linkedinUrl: "https://www.linkedin.com/in/rohanpavuluri/",
   twitterUrl: "https://x.com/rohanpavuluri",
   websiteUrl: "https://teampost.vercel.app",
@@ -4278,7 +4278,7 @@ Start posting this week. Show the world what you are building. The donors, partn
 {
   slug: "who-is-rohan-pavuluri",
   title: "Who is Rohan Pavuluri and Why Did He Create TeamPost?",
-  excerpt: "The story behind TeamPost: from building an access-to-justice startup on Shark Tank to creating a tool that helps professionals go direct on LinkedIn.",
+  excerpt: "The story behind TeamPost: from building Upsolve, a nonprofit featured on Shark Tank, to creating an AI agent that helps professionals go direct on LinkedIn.",
   author: "Rohan Pavuluri",
   authorRole: "Creator, TeamPost",
   publishedAt: "2026-02-07",
@@ -4287,30 +4287,30 @@ Start posting this week. Show the world what you are building. The donors, partn
   category: "About",
   tags: ["TeamPost", "founder story", "Rohan Pavuluri", "linkedin tools", "startup"],
   faqItems: [
-    { question: "Who is the founder of TeamPost?", answer: "TeamPost was created by Rohan Pavuluri, an entrepreneur who previously founded Court Buddy (now Courtroom5), an access-to-justice platform that was featured on Shark Tank, TechCrunch, and Forbes. Rohan built TeamPost to solve his own problem of consistently turning ideas into LinkedIn posts." },
+    { question: "Who created TeamPost?", answer: "TeamPost was created by Rohan Pavuluri. Rohan is currently the Chief Business Officer at Speechify and co-founded Upsolve, a nonprofit that has relieved nearly $1B in debt for low-income families. Upsolve was featured on Shark Tank, TechCrunch, and Forbes. Rohan built TeamPost to solve his own problem of consistently turning ideas into LinkedIn posts." },
     { question: "What is TeamPost and what does it do?", answer: "TeamPost is a LinkedIn post scheduling and content creation platform that uses AI to help professionals turn their ideas into polished LinkedIn posts. It is designed to make it easy for anyone to maintain a strong LinkedIn presence with minimal effort, without needing a ghostwriter." },
-    { question: "What was Court Buddy and how does it connect to TeamPost?", answer: "Court Buddy, now known as Courtroom5, was an access-to-justice platform that connected people with affordable legal help. The common thread between Court Buddy and TeamPost is Rohan's belief in going direct, whether that means giving people direct access to legal help or giving professionals a direct way to share their expertise without intermediaries." },
+    { question: "What is Upsolve and how does it connect to TeamPost?", answer: "Upsolve is a nonprofit that helps families file for bankruptcy for free, removing the need for expensive attorneys. The common thread between Upsolve and TeamPost is Rohan's belief in going direct — whether that means giving people direct access to debt relief or giving professionals a direct way to share their expertise without intermediaries." },
   ],
   content: `
 ## The Short Version
 
-My name is Rohan Pavuluri and I built TeamPost because I was tired of having great ideas for LinkedIn posts and never actually posting them. I am guessing you know the feeling.
+My name is Rohan Pavuluri. I am the Chief Business Officer at Speechify and the creator of TeamPost. I built TeamPost because I was tired of having great ideas for LinkedIn posts and never actually posting them. I am guessing you know the feeling.
 
 But the longer story is more interesting, and I think it explains why I care so much about helping people share their expertise online. So let me take you back a bit.
 
-## From Court Buddy to TeamPost
+## From Upsolve to Speechify to TeamPost
 
-Before TeamPost, I founded a company called Court Buddy, which is now known as Courtroom5. Court Buddy was an access-to-justice platform that connected people who needed legal help with affordable attorneys and legal resources.
+I co-founded Upsolve, a nonprofit that helps families file for bankruptcy for free. The idea was simple: millions of Americans are drowning in debt and cannot afford an attorney to help them get a fresh start. We built a free tool that walks people through the bankruptcy filing process step by step, no lawyer required. To date, Upsolve has relieved nearly $1B in debt for low-income families. I currently serve as Board Chair.
 
-The idea was simple but the problem was massive. Millions of Americans cannot afford a lawyer, and the legal system is nearly impossible to navigate alone. We built a platform that made it easier for people to find the help they needed at a price they could afford.
+Upsolve got a lot of attention. We were featured on Shark Tank, TechCrunch, Forbes, and a number of other outlets. It was an incredible experience building something that genuinely helped people get out of debt and rebuild their lives.
 
-Court Buddy got a lot of attention. We were featured on Shark Tank, TechCrunch, Forbes, and a number of other outlets. It was an incredible experience building something that genuinely helped people navigate one of the most stressful situations in their lives.
+After Upsolve, I joined Speechify as Chief Business Officer, where I work today. Speechify is a leading Voice AI company and the largest consumer Voice AI app across the Apple, Google Chrome, and Android app stores. Working at the intersection of AI and consumer products gave me a front-row seat to how AI can transform the way people create and consume content.
 
 But the thing that stuck with me most from that entire journey was a principle that shaped everything I have built since: the power of going direct.
 
 ## The Power of Going Direct
 
-Court Buddy was fundamentally about removing barriers between people and the help they needed. No middlemen. No gatekeepers. Just a direct connection between someone with a legal problem and someone who could help solve it.
+Upsolve was fundamentally about removing barriers between people and the help they needed. No expensive attorneys. No gatekeepers. Just a direct path for someone in debt to file for bankruptcy and get a fresh start.
 
 That idea of going direct has driven everything I have done. And when I started thinking about LinkedIn and professional content, I saw the same pattern playing out.
 
@@ -4324,7 +4324,7 @@ I wanted to remove that barrier. I wanted to make it as easy as possible for any
 
 The honest origin story is that I built TeamPost for myself first.
 
-After Court Buddy, I knew how important it was to maintain a strong professional presence online. LinkedIn had become the platform where deals get made, talent gets recruited, partnerships get formed, and careers get built. I wanted to show up consistently.
+Between Upsolve and Speechify, I learned how important it is to maintain a strong professional presence online. LinkedIn had become the platform where deals get made, talent gets recruited, partnerships get formed, and careers get built. I wanted to show up consistently.
 
 But I could not do it. I would have an idea for a post on Monday, jot down a few bullet points, and by Wednesday I had moved on to something else. The post never got written. The insight never got shared. And I would see other people in my space posting the exact kind of content I wanted to be putting out.
 
@@ -4356,11 +4356,11 @@ You know what to say. You have been doing your job for years. You have opinions 
 
 ## What Drives Me
 
-People sometimes ask me what connects Court Buddy and TeamPost. On the surface, they look like completely different companies in completely different spaces. Legal tech and LinkedIn tools do not seem related.
+People sometimes ask me what connects Upsolve and TeamPost. On the surface, they look like completely different companies in completely different spaces. Legal tech and LinkedIn tools do not seem related.
 
-But to me, they are the same mission with different applications. Both are about empowering individuals to go direct. Court Buddy gave people direct access to legal help without needing to navigate a complicated system. TeamPost gives professionals direct access to their audience without needing a ghostwriter or a marketing team.
+But to me, they are the same mission with different applications. Both are about empowering individuals to go direct. Upsolve gave people direct access to debt relief without needing an expensive attorney. TeamPost gives professionals direct access to their audience without needing a ghostwriter or a marketing team.
 
-I am passionate about making complex tools simple. I believe that the best technology disappears into the background and just lets people do what they want to do. For Court Buddy, that was finding legal help. For TeamPost, that is sharing your expertise.
+I am passionate about making complex tools simple. I believe that the best technology disappears into the background and just lets people do what they want to do. For Upsolve, that was filing for bankruptcy. For TeamPost, that is sharing your expertise.
 
 ## The Vision for TeamPost
 
