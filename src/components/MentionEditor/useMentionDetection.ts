@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, RefObject, useCallback } from "react";
+import { useState, useEffect, useRef, RefObject, useCallback } from "react";
 import { getCaretCoordinates, getActiveMentionQuery } from "./mentionUtils";
 
 interface MentionDetectionState {
@@ -25,7 +25,12 @@ export function useMentionDetection(
     startIndex: -1,
   });
 
+  // Suppress re-detection briefly after closing autocomplete (e.g. after Enter selection)
+  // Without this, the keyup event fires before React re-renders and re-opens the dropdown
+  const suppressUntilRef = useRef<number>(0);
+
   const closeAutocomplete = useCallback(() => {
+    suppressUntilRef.current = Date.now() + 150;
     setState((prev) => ({ ...prev, showAutocomplete: false }));
   }, []);
 
@@ -34,6 +39,9 @@ export function useMentionDetection(
     if (!textarea) return;
 
     const handleSelectionChange = () => {
+      // Skip detection if recently suppressed (e.g. right after selecting a mention)
+      if (Date.now() < suppressUntilRef.current) return;
+
       const cursorPos = textarea.selectionStart;
       // Use textarea.value directly instead of React state to avoid stale closures
       const currentValue = textarea.value;
