@@ -34,22 +34,17 @@ export function MentionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [addingContact, setAddingContact] = useState(false);
-  // Track the internal value for uncontrolled behavior
-  const [internalValue, setInternalValue] = useState(value);
-  // Flag to prevent sync effect from interfering with internal changes (cursor fix)
-  const isInternalChange = useRef(false);
 
-  // Sync internal value when prop changes from outside (not from internal edits)
+  // Store pending cursor position to apply after React re-render
+  const pendingCursor = useRef<number | null>(null);
+
+  // Apply pending cursor position after value prop updates the textarea
   useEffect(() => {
-    if (isInternalChange.current) {
-      isInternalChange.current = false;
-      return;
-    }
-    if (value !== internalValue) {
-      setInternalValue(value);
-      if (textareaRef.current && textareaRef.current.value !== value) {
-        textareaRef.current.value = value;
-      }
+    if (pendingCursor.current !== null && textareaRef.current) {
+      const pos = pendingCursor.current;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(pos, pos);
+      pendingCursor.current = null;
     }
   }, [value]);
 
@@ -59,15 +54,11 @@ export function MentionEditor({
     position,
     startIndex,
     closeAutocomplete,
-  } = useMentionDetection(textareaRef, internalValue);
+  } = useMentionDetection(textareaRef, value);
 
-  // Handle input changes
-  const handleInput = useCallback((e: React.FormEvent<HTMLTextAreaElement>) => {
-    const target = e.target as HTMLTextAreaElement;
-    const newValue = target.value;
-    isInternalChange.current = true;
-    setInternalValue(newValue);
-    onChange(newValue);
+  // Handle input changes (user typing)
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
   }, [onChange]);
 
   // Handle selecting a contact from autocomplete
@@ -77,14 +68,14 @@ export function MentionEditor({
 
       const cursorPos = textareaRef.current.selectionStart;
       const { newContent, newCursorPosition } = insertMention(
-        internalValue,
+        value,
         contact.name,
         startIndex,
         cursorPos
       );
 
-      isInternalChange.current = true;
-      setInternalValue(newContent);
+      // Set pending cursor so it applies after React re-renders with new value
+      pendingCursor.current = newCursorPosition;
       onChange(newContent);
 
       // Add to selectedTags if not already present
@@ -93,17 +84,8 @@ export function MentionEditor({
       }
 
       closeAutocomplete();
-
-      // Restore focus and cursor position
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.value = newContent;
-          textareaRef.current.focus();
-          textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-        }
-      }, 0);
     },
-    [internalValue, startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
+    [value, startIndex, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
   // Handle adding a new contact
@@ -118,13 +100,12 @@ export function MentionEditor({
         // Capture current positions BEFORE awaiting, as state will reset during the modal
         const capturedStartIndex = startIndex;
         const capturedCursorPos = textareaRef.current?.selectionStart ?? 0;
-        const capturedValue = internalValue;
+        const capturedValue = value;
 
         setAddingContact(true);
         try {
           const newContact = await onAddContact(name.trim());
           if (newContact && textareaRef.current) {
-            // Use captured values to insert the mention at the correct position
             const { newContent, newCursorPosition } = insertMention(
               capturedValue,
               newContact.name,
@@ -132,25 +113,14 @@ export function MentionEditor({
               capturedCursorPos
             );
 
-            isInternalChange.current = true;
-            setInternalValue(newContent);
+            pendingCursor.current = newCursorPosition;
             onChange(newContent);
 
-            // Add to selectedTags if not already present
             if (!selectedTags.find((t) => t.id === newContact.id)) {
               onTagsChange([...selectedTags, newContact]);
             }
 
             closeAutocomplete();
-
-            // Restore focus and cursor position
-            setTimeout(() => {
-              if (textareaRef.current) {
-                textareaRef.current.value = newContent;
-                textareaRef.current.focus();
-                textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-              }
-            }, 0);
           }
         } catch (error) {
           console.error("Failed to add contact:", error);
@@ -158,18 +128,15 @@ export function MentionEditor({
           setAddingContact(false);
         }
       } else {
-        // Just close if no handler provided
         closeAutocomplete();
       }
     },
-    [onAddContact, startIndex, internalValue, selectedTags, onChange, onTagsChange, closeAutocomplete]
+    [onAddContact, startIndex, value, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
   // Helper: check if @Name appears as a proper mention at a given position
   const isMentionAtBoundary = useCallback((lowerContent: string, originalContent: string, mentionStr: string, idx: number) => {
-    // Check character before: must be start of string or non-word char
     if (idx > 0 && /\w/.test(originalContent[idx - 1])) return false;
-    // Check character after: must be end of string, whitespace, or non-word char
     const afterIdx = idx + mentionStr.length;
     if (afterIdx < originalContent.length && /\w/.test(originalContent[afterIdx])) return false;
     return true;
@@ -177,98 +144,83 @@ export function MentionEditor({
 
   // Auto-detect mentions in content and sync with selectedTags (add new + prune stale)
   useEffect(() => {
-    // Check which contacts have @Name present in the content
-    const lowerContent = internalValue.toLowerCase();
+    const lowerContent = value.toLowerCase();
     const matchedContacts = contacts.filter((c) => {
       const mentionStr = `@${c.name.toLowerCase()}`;
       const idx = lowerContent.indexOf(mentionStr);
       if (idx === -1) return false;
-      return isMentionAtBoundary(lowerContent, internalValue, mentionStr, idx);
+      return isMentionAtBoundary(lowerContent, value, mentionStr, idx);
     });
 
-    // Keep existing tags that still appear in content, add any new matches
-    const matchedIds = new Set(matchedContacts.map((c) => c.id));
     const tagsToKeep = selectedTags.filter((t) => {
       const mentionStr = `@${t.name.toLowerCase()}`;
       const idx = lowerContent.indexOf(mentionStr);
       if (idx === -1) return false;
-      return isMentionAtBoundary(lowerContent, internalValue, mentionStr, idx);
+      return isMentionAtBoundary(lowerContent, value, mentionStr, idx);
     });
     const currentTagIds = new Set(selectedTags.map((t) => t.id));
     const newTags = matchedContacts.filter((c) => !currentTagIds.has(c.id));
 
     const updatedTags = [...tagsToKeep, ...newTags];
 
-    // Only update if something actually changed
     if (updatedTags.length !== selectedTags.length || newTags.length > 0) {
       onTagsChange(updatedTags);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [internalValue, contacts]); // Intentionally not including selectedTags/onTagsChange to avoid loops
+  }, [value, contacts]);
 
   // Generate the highlighted overlay content
   const highlightedContent = useMemo(() => {
-    if (!internalValue) return null;
+    if (!value) return null;
 
     if (selectedTags.length === 0) {
-      return [{ text: internalValue, isMention: false }];
+      return [{ text: value, isMention: false }];
     }
 
-    // Build a regex that matches @ContactName for each known tag (sorted longest first to avoid partial matches)
     const sortedTags = [...selectedTags].sort((a, b) => b.name.length - a.name.length);
     const escapedNames = sortedTags.map((t) =>
       t.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     );
     const mentionRegex = new RegExp(`@(${escapedNames.join("|")})(?=\\s|$|[^\\w])`, "gi");
 
-    // Split content by known @mentions
     const parts: Array<{ text: string; isMention: boolean }> = [];
     let lastIndex = 0;
     let match;
 
-    while ((match = mentionRegex.exec(internalValue)) !== null) {
-      // Add text before the match
+    while ((match = mentionRegex.exec(value)) !== null) {
       if (match.index > lastIndex) {
-        const text = internalValue.slice(lastIndex, match.index);
+        const text = value.slice(lastIndex, match.index);
         parts.push({ text, isMention: false });
       }
-
-      // This is a known tagged mention
       parts.push({
         text: match[0],
         isMention: true,
       });
-
       lastIndex = match.index + match[0].length;
     }
 
-    // Add remaining text after last match
-    if (lastIndex < internalValue.length) {
-      const text = internalValue.slice(lastIndex);
+    if (lastIndex < value.length) {
+      const text = value.slice(lastIndex);
       parts.push({ text, isMention: false });
     }
 
     return parts;
-  }, [internalValue, selectedTags]);
+  }, [value, selectedTags]);
 
-  // Overlay ref for scroll sync
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Auto-resize textarea to fit content (prevents scroll mismatch with overlay)
+  // Auto-resize textarea to fit content
   const autoResize = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    // Reset height to allow shrinking, then set to scrollHeight
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, []);
 
-  // Auto-resize on content changes
   useEffect(() => {
     autoResize();
-  }, [internalValue, autoResize]);
+  }, [value, autoResize]);
 
-  // Also auto-resize on initial mount
   useEffect(() => {
     autoResize();
   }, [autoResize]);
@@ -285,9 +237,8 @@ export function MentionEditor({
         >
           {highlightedContent?.map((part, i) => {
             if (part.isMention) {
-              // Style the mention: hide @ visually but keep it for alignment
-              const atSymbol = part.text.charAt(0); // The @
-              const name = part.text.slice(1); // The name after @
+              const atSymbol = part.text.charAt(0);
+              const name = part.text.slice(1);
               return (
                 <span key={i}>
                   <span className="text-transparent">{atSymbol}</span>
@@ -297,17 +248,16 @@ export function MentionEditor({
             }
             return <span key={i}>{part.text}</span>;
           })}
-          {/* Placeholder when empty */}
-          {!internalValue && (
+          {!value && (
             <span className="text-gray-400">{placeholder}</span>
           )}
         </div>
 
-        {/* Textarea - transparent text, user types here */}
+        {/* Textarea - controlled, transparent text, user types here */}
         <textarea
           ref={textareaRef}
-          defaultValue={value}
-          onInput={(e) => { handleInput(e); autoResize(); }}
+          value={value}
+          onChange={handleChange}
           placeholder=""
           disabled={disabled || addingContact}
           className="w-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 overflow-hidden relative z-10"
