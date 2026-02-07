@@ -20,7 +20,7 @@ TeamPost is a LinkedIn post scheduling and ghostwriting platform with:
 ### Required in Vercel Production
 ```
 # Auth (CRITICAL - must be set correctly)
-NEXTAUTH_URL=https://teampost.vercel.app
+NEXTAUTH_URL=https://teampost.ai
 NEXTAUTH_SECRET=<secure-random-string>
 
 # Google OAuth
@@ -51,24 +51,24 @@ BLOB_READ_WRITE_TOKEN=<token>
 ### Google Cloud Console
 Add this exact redirect URI:
 ```
-https://teampost.vercel.app/api/auth/callback/google
+https://teampost.ai/api/auth/callback/google
 ```
 
 ### LinkedIn Developer Portal
 Add this exact redirect URL:
 ```
-https://teampost.vercel.app/api/auth/callback/linkedin
+https://teampost.ai/api/auth/callback/linkedin
 ```
 
 ### Slack App Settings
-- **Events URL**: `https://teampost.vercel.app/api/slack/events`
-- **Interactivity URL**: `https://teampost.vercel.app/api/slack/interactions`
-- **Redirect URL**: `https://teampost.vercel.app/api/slack/callback`
+- **Events URL**: `https://teampost.ai/api/slack/events`
+- **Interactivity URL**: `https://teampost.ai/api/slack/interactions`
+- **Redirect URL**: `https://teampost.ai/api/slack/callback`
 
 ## Common Auth Issues
 
 ### "error=Callback" on login
-1. Check `NEXTAUTH_URL` is exactly `https://teampost.vercel.app` in Vercel
+1. Check `NEXTAUTH_URL` is exactly `https://teampost.ai` in Vercel
 2. Check `NEXTAUTH_SECRET` is set in Vercel
 3. Verify redirect URIs are configured in OAuth provider console
 4. Ensure `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` or `LINKEDIN_CLIENT_ID`/`LINKEDIN_CLIENT_SECRET` are set in Vercel

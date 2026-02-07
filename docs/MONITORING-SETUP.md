@@ -69,13 +69,13 @@ Already integrated via `@vercel/speed-insights`.
 
 ### Setup
 1. Create account at https://betterstack.com/uptime
-2. Add monitor for `https://teampost.vercel.app`
+2. Add monitor for `https://teampost.ai`
 3. Set check interval to 3 minutes
 4. Add email/Slack alerts
 
 ### Recommended Monitors
-- `https://teampost.vercel.app` - Landing page
-- `https://teampost.vercel.app/api/health` - API health (you can create this)
+- `https://teampost.ai` - Landing page
+- `https://teampost.ai/api/health` - API health (you can create this)
 
 ## 6. Input Validation with Zod
 

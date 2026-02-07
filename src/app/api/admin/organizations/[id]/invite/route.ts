@@ -128,7 +128,7 @@ export async function POST(
     }
 
     // Generate invite URL
-    const baseUrl = process.env.NEXTAUTH_URL || "https://teampost.vercel.app";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://teampost.ai";
     const inviteUrl = `${baseUrl}/invite/${inviteToken}`;
 
     // Send email if requested
@@ -210,7 +210,7 @@ export async function GET(
     });
 
     // Generate URLs for each invite
-    const baseUrl = process.env.NEXTAUTH_URL || "https://teampost.vercel.app";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://teampost.ai";
     const invitesWithUrls = pendingInvites.map((invite) => ({
       ...invite,
       inviteUrl: `${baseUrl}/invite/${invite.inviteToken}`,

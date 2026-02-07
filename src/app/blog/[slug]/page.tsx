@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getPostBySlug, getAllPosts, AUTHOR_BIO } from "../posts";
 import type { Metadata } from "next";
 
-const SITE_URL = "https://teampost.vercel.app";
+const SITE_URL = "https://teampost.ai";
 
 interface PageProps {
   params: Promise<{ slug: string }>;

@@ -4,7 +4,7 @@
 This document outlines the automated QA testing flows that Claude can execute via browser automation.
 
 ## Test Account
-- URL: https://teampost.vercel.app
+- URL: https://teampost.ai
 - Test with fresh account creation OR existing test account
 
 ---
@@ -133,7 +133,7 @@ When bugs are found, they should be documented as:
 
 ### Session: February 5, 2026
 **Tester**: Claude (Automated)
-**Environment**: Production (teampost.vercel.app)
+**Environment**: Production (teampost.ai)
 
 #### Results:
 | Flow | Status | Notes |

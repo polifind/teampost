@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AUTHOR_BIO } from "./posts";
 
-const SITE_URL = "https://teampost.vercel.app";
+const SITE_URL = "https://teampost.ai";
 
 export const metadata: Metadata = {
   title: "TeamPost Blog | LinkedIn Strategy, Going Direct & Professional Branding",

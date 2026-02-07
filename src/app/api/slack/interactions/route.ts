@@ -656,7 +656,7 @@ async function handleApproveCadenceDraft(
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: "✅ *Draft approved and saved!*\n\nYou can view and schedule this draft in <https://teampost.vercel.app/posts|TeamPost>.",
+                text: "✅ *Draft approved and saved!*\n\nYou can view and schedule this draft in <https://teampost.ai/posts|TeamPost>.",
               },
             },
           ],

@@ -326,7 +326,7 @@ function buildCadenceDraftBlocks(
             text: "📝 View in TeamPost",
             emoji: true,
           },
-          url: `${process.env.NEXTAUTH_URL || "https://teampost.vercel.app"}/posts`,
+          url: `${process.env.NEXTAUTH_URL || "https://teampost.ai"}/posts`,
           action_id: "view_in_teampost",
         },
       ],

@@ -19,7 +19,7 @@ export const AUTHOR_BIO = {
   bio: "Rohan is the creator of TeamPost and CBO at Speechify. He co-founded Upsolve, a nonprofit that has relieved nearly $1B in debt for low-income families. Harvard and Y Combinator alum.",
   linkedinUrl: "https://www.linkedin.com/in/rohan-pavuluri-48811046/",
   twitterUrl: "https://x.com/RPavuluri",
-  websiteUrl: "https://teampost.vercel.app",
+  websiteUrl: "https://teampost.ai",
   image: "/rohan-pavuluri.jpg",
 };
 
@@ -2250,7 +2250,7 @@ Omniscient Digital is the agency that won't let you measure success in pageviews
 
 These three agencies are all great at what they do. But none of them do LinkedIn. If you're looking to build a consistent LinkedIn presence -- personal branding, executive thought leadership, team-wide social selling -- an SEO agency isn't the right tool for that job.
 
-That's actually why I built [TeamPost](https://teampost.vercel.app). It costs a fraction of an agency retainer and it's purpose-built for LinkedIn. AI-powered drafting from your own content library, scheduling, team management, Slack integration. For most professionals, that combo delivers way more LinkedIn ROI than outsourcing to a generalist content shop.
+That's actually why I built [TeamPost](https://teampost.ai). It costs a fraction of an agency retainer and it's purpose-built for LinkedIn. AI-powered drafting from your own content library, scheduling, team management, Slack integration. For most professionals, that combo delivers way more LinkedIn ROI than outsourcing to a generalist content shop.
 
 And honestly? There's no reason you can't use both. An SEO agency for your website content, TeamPost for LinkedIn. Different problems, different solutions.
 
@@ -2269,7 +2269,7 @@ If you're focused on LinkedIn specifically, check out the [top LinkedIn writing 
   category: "Product",
   tags: ["teampost", "product features", "linkedin tools", "ai writing", "content scheduling", "productivity"],
   faqItems: [
-    { question: "Is TeamPost free to use?", answer: "TeamPost offers a free tier that lets you try the core features. Paid plans unlock additional capabilities like bulk scheduling, team management, and higher usage limits for AI-powered drafting. Visit teampost.vercel.app to see current pricing." },
+    { question: "Is TeamPost free to use?", answer: "TeamPost offers a free tier that lets you try the core features. Paid plans unlock additional capabilities like bulk scheduling, team management, and higher usage limits for AI-powered drafting. Visit teampost.ai to see current pricing." },
     { question: "Does TeamPost work with my LinkedIn account?", answer: "Yes. TeamPost connects to your LinkedIn account through the official LinkedIn OAuth API. This allows you to schedule and publish posts directly from TeamPost. Your LinkedIn credentials are never stored -- the connection uses secure tokens that you can revoke at any time." },
     { question: "Can I use TeamPost for a team or company?", answer: "Absolutely. TeamPost has built-in organization and team management features. Admins can manage team members, review drafts, and coordinate posting schedules across multiple LinkedIn profiles. It is designed for both individual professionals and teams." },
   ],
@@ -2338,7 +2338,7 @@ If there's one thing connecting all of these features, it's this: they're built 
 
 That's what I'm most proud of about TeamPost. Not any single feature, but the fact that our users keep telling us it fits into their life instead of demanding they rearrange it.
 
-Haven't tried it yet? Go to [teampost.vercel.app](https://teampost.vercel.app) and see which feature hooks you first.
+Haven't tried it yet? Go to [teampost.ai](https://teampost.ai) and see which feature hooks you first.
 
 Want to understand the content approach behind TeamPost? Read about [the Magic Drafts feature](/blog/magic-drafts-feature-always-wanted) or see [how TeamPost compares to other LinkedIn tools](/blog/top-linkedin-writing-platforms).
 `,
@@ -3425,7 +3425,7 @@ And you can go way beyond new hires:
 - **Team events.** Group photo from an offsite or team dinner.
 - **Behind-the-scenes moments.** Someone presenting at all-hands, whiteboarding with the team, whatever.
 
-If you're using a tool like [TeamPost](https://teampost.vercel.app) to schedule your LinkedIn content, you can batch these ahead of time. Every time someone joins or hits a milestone, draft the post and toss it in your queue.
+If you're using a tool like [TeamPost](https://teampost.ai) to schedule your LinkedIn content, you can batch these ahead of time. Every time someone joins or hits a milestone, draft the post and toss it in your queue.
 
 ## Common Mistakes to Avoid
 
@@ -3469,7 +3469,7 @@ The hardest part of posting on LinkedIn isn't the writing. It's staring at that 
 
 So I put together 100 prompts to kill that problem for good. They're organized by category so you can find something that matches your mood, your expertise, and what your audience actually cares about. Bookmark this page. Come back whenever you're stuck.
 
-And if you use [TeamPost](https://teampost.vercel.app), you can feed any of these prompts into the AI draft generator to get a first draft, then make it sound like you.
+And if you use [TeamPost](https://teampost.ai), you can feed any of these prompts into the AI draft generator to get a first draft, then make it sound like you.
 
 ## Career and Professional Growth (20 Prompts)
 
@@ -3640,7 +3640,7 @@ This is one of the most effective LinkedIn strategies out there, and it's surpri
 
 Not all news reactions are created equal. Here's what separates the posts that get hundreds of comments from the ones that get ignored.
 
-**Be fast.** The window is roughly 24 hours. After that, the conversation has moved on. When you see a relevant story, draft your take quickly. Don't let perfect be the enemy of posted. If you're using [TeamPost](https://teampost.vercel.app) to manage your LinkedIn content, you can draft a quick reaction and schedule it for the optimal time slot within that window.
+**Be fast.** The window is roughly 24 hours. After that, the conversation has moved on. When you see a relevant story, draft your take quickly. Don't let perfect be the enemy of posted. If you're using [TeamPost](https://teampost.ai) to manage your LinkedIn content, you can draft a quick reaction and schedule it for the optimal time slot within that window.
 
 **Add genuine insight, not just a summary.** The worst news reaction posts are basically "Here's what happened" followed by a link. Your audience can read the news themselves. What they can't get elsewhere is your specific take. Ask yourself: What does this mean? Who does this affect? What is everyone missing? What happens next?
 
@@ -3773,7 +3773,7 @@ After studying all of them, a few patterns jump out:
 - **Strong hooks are non-negotiable.** The first line of every post has to earn the click on "see more." All 10 of these founders are masters of opening lines.
 - **They write in their own voice.** None of them sound like corporate press releases. They sound like themselves -- whether that's provocative, analytical, vulnerable, or high-energy.
 
-If you want to build a similar presence, start by following all 10. Study what they post for a few weeks. Then commit to your own consistent posting schedule. Tools like [TeamPost](https://teampost.vercel.app) can help you maintain that consistency by scheduling posts in advance and using AI to generate first drafts when you're short on time.
+If you want to build a similar presence, start by following all 10. Study what they post for a few weeks. Then commit to your own consistent posting schedule. Tools like [TeamPost](https://teampost.ai) can help you maintain that consistency by scheduling posts in advance and using AI to generate first drafts when you're short on time.
 
 The best time to start building your LinkedIn presence was a year ago. The second best time is right now.
 
@@ -3852,7 +3852,7 @@ If you want to experiment but you're nervous about it, here's a low-risk way to 
 - **Read it out loud before posting.** If it sounds like something you'd actually say in a conversation, it'll probably read well. If it sounds like you're doing a stand-up routine, dial it back.
 - **Don't make every post funny.** Even the most humorous LinkedIn creators mix in serious, substantive content. Humor should be a spice, not the main course.
 
-If you're using [TeamPost](https://teampost.vercel.app) to draft and schedule your posts, try drafting both a humorous version and a straight version of the same idea. See which one feels more natural. Over time, you'll develop an instinct for when humor helps your message and when it gets in the way.
+If you're using [TeamPost](https://teampost.ai) to draft and schedule your posts, try drafting both a humorous version and a straight version of the same idea. See which one feels more natural. Over time, you'll develop an instinct for when humor helps your message and when it gets in the way.
 
 If humor is genuinely part of who you are, bring it to LinkedIn. But if it doesn't come naturally, that's completely fine. Sincerity, depth, and expertise are just as compelling. Not every great LinkedIn creator is funny. But every great one is genuine.
 

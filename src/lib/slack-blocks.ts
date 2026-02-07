@@ -312,7 +312,7 @@ export function buildConfirmationMessage(
   isScheduled: boolean,
   scheduledFor?: string
 ): SlackMessage {
-  const dashboardUrl = `${process.env.NEXTAUTH_URL || "https://teampost.vercel.app"}/posts`;
+  const dashboardUrl = `${process.env.NEXTAUTH_URL || "https://teampost.ai"}/posts`;
 
   let statusText: string;
   if (isScheduled && scheduledFor) {

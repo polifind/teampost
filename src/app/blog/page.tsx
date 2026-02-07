@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { getAllPosts } from "./posts";
 
-const SITE_URL = "https://teampost.vercel.app";
+const SITE_URL = "https://teampost.ai";
 
 const CATEGORIES = [
   { key: "All", label: "All Articles" },

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "./blog/posts";
 
-const SITE_URL = "https://teampost.vercel.app";
+const SITE_URL = "https://teampost.ai";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const posts = getAllPosts();
