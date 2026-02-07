@@ -32,13 +32,15 @@ function buildContentWithMentions(
   // Find all inline mentions in the content and build attributes
   const attributes: MentionAttribute[] = [];
 
+  const lowerContent = content.toLowerCase();
   for (const contact of contactsWithUrns) {
-    // Look for the mention in the content (with @ prefix)
+    // Look for the mention in the content (with @ prefix), case-insensitive
     const mentionStr = `@${contact.name}`;
+    const lowerMentionStr = mentionStr.toLowerCase();
     let searchPos = 0;
 
     while (true) {
-      const mentionPos = content.indexOf(mentionStr, searchPos);
+      const mentionPos = lowerContent.indexOf(lowerMentionStr, searchPos);
       if (mentionPos === -1) break;
 
       const attr: MentionAttribute = {

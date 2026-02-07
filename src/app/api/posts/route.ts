@@ -29,11 +29,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { content, weekNumber, sourceNoteContent, imageUrl, autoSchedule, status } = await request.json();
+    const { content, weekNumber, sourceNoteContent, imageUrl, autoSchedule, status, taggedContacts } = await request.json();
 
     if (!content) {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
+
+    // Build taggedContactIds from taggedContacts array if provided
+    const taggedContactIds = taggedContacts && taggedContacts.length > 0
+      ? JSON.stringify(taggedContacts)
+      : null;
 
     // If no weekNumber provided, always create a new post (e.g., from Magic Drafts)
     if (!weekNumber) {
@@ -51,6 +56,7 @@ export async function POST(request: NextRequest) {
           content,
           weekNumber: nextWeekNum,
           imageUrl: imageUrl || null,
+          taggedContactIds,
           status: status || "DRAFT",
         },
       });
@@ -78,6 +84,7 @@ export async function POST(request: NextRequest) {
         data: {
           content,
           imageUrl: imageUrl || null,
+          taggedContactIds,
           status: autoSchedule ? "SCHEDULED" : existingPost.status,
         },
       });
@@ -115,6 +122,7 @@ export async function POST(request: NextRequest) {
         content,
         weekNumber: weekNum,
         imageUrl: imageUrl || null,
+        taggedContactIds,
         status: autoSchedule ? "SCHEDULED" : "DRAFT",
       },
     });

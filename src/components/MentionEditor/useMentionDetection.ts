@@ -35,7 +35,9 @@ export function useMentionDetection(
 
     const handleSelectionChange = () => {
       const cursorPos = textarea.selectionStart;
-      const mentionQuery = getActiveMentionQuery(value, cursorPos);
+      // Use textarea.value directly instead of React state to avoid stale closures
+      const currentValue = textarea.value;
+      const mentionQuery = getActiveMentionQuery(currentValue, cursorPos);
 
       if (mentionQuery) {
         const position = getCaretCoordinates(textarea, mentionQuery.startIndex);

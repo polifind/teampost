@@ -165,6 +165,16 @@ export function MentionEditor({
     [onAddContact, startIndex, internalValue, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
+  // Helper: check if @Name appears as a proper mention at a given position
+  const isMentionAtBoundary = useCallback((lowerContent: string, originalContent: string, mentionStr: string, idx: number) => {
+    // Check character before: must be start of string or non-word char
+    if (idx > 0 && /\w/.test(originalContent[idx - 1])) return false;
+    // Check character after: must be end of string, whitespace, or non-word char
+    const afterIdx = idx + mentionStr.length;
+    if (afterIdx < originalContent.length && /\w/.test(originalContent[afterIdx])) return false;
+    return true;
+  }, []);
+
   // Auto-detect mentions in content and sync with selectedTags (add new + prune stale)
   useEffect(() => {
     // Check which contacts have @Name present in the content
@@ -173,16 +183,16 @@ export function MentionEditor({
       const mentionStr = `@${c.name.toLowerCase()}`;
       const idx = lowerContent.indexOf(mentionStr);
       if (idx === -1) return false;
-      // Ensure it's at a word boundary (preceded by start/non-word char)
-      if (idx > 0 && /\w/.test(internalValue[idx - 1])) return false;
-      return true;
+      return isMentionAtBoundary(lowerContent, internalValue, mentionStr, idx);
     });
 
     // Keep existing tags that still appear in content, add any new matches
     const matchedIds = new Set(matchedContacts.map((c) => c.id));
     const tagsToKeep = selectedTags.filter((t) => {
       const mentionStr = `@${t.name.toLowerCase()}`;
-      return lowerContent.includes(mentionStr);
+      const idx = lowerContent.indexOf(mentionStr);
+      if (idx === -1) return false;
+      return isMentionAtBoundary(lowerContent, internalValue, mentionStr, idx);
     });
     const currentTagIds = new Set(selectedTags.map((t) => t.id));
     const newTags = matchedContacts.filter((c) => !currentTagIds.has(c.id));
