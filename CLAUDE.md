@@ -299,6 +299,24 @@ const handleAddNew = useCallback(async (name: string) => {
 
 **Rule**: In React callbacks with async operations, always capture any state/ref values you need BEFORE the await.
 
+#### Never Use Transparent Textarea + Overlay for Rich Text
+**Problem**: MentionEditor used a transparent textarea (z-10) layered on top of an overlay div that rendered visible text with highlighted @mentions. This approach catastrophically broke with scrolling — content disappeared when editing long posts, users couldn't type, and overlay/textarea heights desynced.
+
+**Root cause**: An `absolute inset-0` overlay cannot match a scrollable textarea's content area. `overflow: hidden` on the overlay clips content. Height synchronization between JS-set textarea height and CSS-constrained containers is inherently fragile and impossible to get right.
+
+**Solution**: Replaced with a plain visible textarea (real text, normal colors) with mention chips displayed below. The @mention autocomplete dropdown still works.
+
+**Rule**: NEVER use the transparent-textarea-over-overlay pattern for rich text editing. If inline highlighting is needed, use a contentEditable div or a real rich text editor library (Slate, TipTap, ProseMirror) — not a layered textarea hack. The overlay approach WILL break with scrolling, resizing, or any content taller than the viewport.
+
+#### Never Use Controlled Textareas (`value` + `onChange`) for the MentionEditor
+**Problem**: Switching MentionEditor from `defaultValue`/`onInput` (uncontrolled) to `value`/`onChange` (controlled) made typing completely stop working. Keystrokes were silently swallowed — the cursor appeared, the textarea had focus, but no characters were inserted.
+
+**Root cause**: With a controlled textarea, React resets the DOM value on every re-render. If competing effects (like mention auto-detection calling `onTagsChange`) trigger parent re-renders during the input cycle, the browser's pending keystroke gets wiped before it commits. This is especially bad when multiple `useEffect` hooks run on `[value]` changes.
+
+**Solution**: Use an **uncontrolled textarea** with `defaultValue` + `onInput`. The browser manages text input natively. An `internalValue` state tracks the content for mention detection, and an `isInternalChange` ref prevents the parent's value prop from overwriting user input.
+
+**Rule**: The MentionEditor textarea MUST remain uncontrolled (`defaultValue` + `onInput`). NEVER change it to controlled (`value` + `onChange`). If you need to update the textarea programmatically (e.g. inserting a mention), set `textareaRef.current.value` directly and then sync with `setInternalValue()` + `isInternalChange.current = true` + `onChange()`. Browser undo/redo works natively with uncontrolled textareas — do NOT add custom undo/redo handlers.
+
 #### Slack Duplicate Messages
 **Problem**: Using `sendSlackMessage` when updating feedback caused duplicate "Post saved" messages.
 
