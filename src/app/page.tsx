@@ -181,17 +181,17 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-coral-light text-accent-coral text-sm font-medium mb-6">
             <SparklesIcon />
-            <span>A $20,000/year Ghostwriter for Every Employee</span>
+            <span>An AI Agent That Ghostwrites for Your Entire Team</span>
           </div>
 
           <h1 className="text-5xl font-bold text-claude-text mb-6 leading-tight text-balance">
-            Turn Your Entire Company Into a
+            Hire an AI Agent to Turn Your Company Into a
             <span className="gradient-text"> LinkedIn Content Machine</span>
           </h1>
 
           <p className="text-xl text-claude-text-secondary mb-8 max-w-2xl mx-auto text-balance">
-            Give every employee the white-glove ghostwriting experience. Generate more pipeline, amplify your brand,
-            and attract top talent. All through authentic employee content that posts automatically.
+            TeamPost is an AI agent that gives every employee a white-glove ghostwriting experience. It generates pipeline, amplifies your brand,
+            and attracts top talent — all through authentic employee content that posts automatically.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 text-sm text-claude-text-tertiary mb-10">

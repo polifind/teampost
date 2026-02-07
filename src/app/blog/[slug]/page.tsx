@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPostBySlug, getAllPosts } from "../posts";
+import { getPostBySlug, getAllPosts, AUTHOR_BIO } from "../posts";
+import type { Metadata } from "next";
+
+const SITE_URL = "https://teampost.vercel.app";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -14,7 +17,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) {
@@ -22,10 +25,53 @@ export async function generateMetadata({ params }: PageProps) {
       title: "Post Not Found | TeamPost Blog",
     };
   }
+  const canonicalUrl = `${SITE_URL}/blog/${post.slug}`;
   return {
     title: `${post.title} | TeamPost Blog`,
     description: post.excerpt,
+    keywords: post.tags,
+    authors: [{ name: AUTHOR_BIO.name, url: AUTHOR_BIO.linkedinUrl }],
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: "article",
+      url: canonicalUrl,
+      siteName: "TeamPost Blog",
+      publishedTime: post.publishedAt,
+      modifiedTime: post.dateModified || post.publishedAt,
+      authors: [AUTHOR_BIO.name],
+      tags: post.tags,
+      images: [
+        {
+          url: `${SITE_URL}/rohan-pavuluri.jpg`,
+          width: 400,
+          height: 400,
+          alt: AUTHOR_BIO.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+    },
   };
+}
+
+function extractHeadings(content: string): Array<{ text: string; id: string }> {
+  const headings: Array<{ text: string; id: string }> = [];
+  const lines = content.trim().split("\n");
+  for (const line of lines) {
+    if (line.startsWith("## ")) {
+      const text = line.slice(3);
+      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      headings.push({ text, id });
+    }
+  }
+  return headings;
 }
 
 // Simple markdown-like rendering for the content
@@ -39,9 +85,11 @@ function renderContent(content: string) {
 
     // Headers
     if (line.startsWith("## ")) {
+      const text = line.slice(3);
+      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
       elements.push(
-        <h2 key={i} className="text-2xl font-bold text-claude-text mt-10 mb-4">
-          {line.slice(3)}
+        <h2 key={i} id={id} className="text-2xl font-bold text-claude-text mt-10 mb-4 scroll-mt-20">
+          {text}
         </h2>
       );
       i++;
@@ -62,6 +110,44 @@ function renderContent(content: string) {
         >
           {quoteLines.join(" ")}
         </blockquote>
+      );
+      continue;
+    }
+
+    // List items (- text)
+    if (line.startsWith("- ")) {
+      const listItems: string[] = [];
+      while (i < lines.length && lines[i].startsWith("- ")) {
+        listItems.push(lines[i].slice(2));
+        i++;
+      }
+      elements.push(
+        <ul key={`list-${i}`} className="list-disc list-inside space-y-2 mb-4 text-gray-700">
+          {listItems.map((item, idx) => (
+            <li key={idx} className="leading-relaxed">
+              {renderInlineFormatting(item)}
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // Numbered list items (1. text)
+    if (/^\d+\.\s/.test(line)) {
+      const listItems: string[] = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+        listItems.push(lines[i].replace(/^\d+\.\s/, ""));
+        i++;
+      }
+      elements.push(
+        <ol key={`olist-${i}`} className="list-decimal list-inside space-y-2 mb-4 text-gray-700">
+          {listItems.map((item, idx) => (
+            <li key={idx} className="leading-relaxed">
+              {renderInlineFormatting(item)}
+            </li>
+          ))}
+        </ol>
       );
       continue;
     }
@@ -160,8 +246,91 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
+  const allPosts = getAllPosts();
+  const relatedPosts = allPosts
+    .filter((p) => p.slug !== post.slug && p.category === post.category)
+    .slice(0, 3);
+
+  const headings = extractHeadings(post.content);
+  const canonicalUrl = `${SITE_URL}/blog/${post.slug}`;
+
+  // JSON-LD: BlogPosting
+  const blogPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    image: `${SITE_URL}/rohan-pavuluri.jpg`,
+    datePublished: post.publishedAt,
+    dateModified: post.dateModified || post.publishedAt,
+    author: {
+      "@type": "Person",
+      name: AUTHOR_BIO.name,
+      url: AUTHOR_BIO.linkedinUrl,
+      jobTitle: AUTHOR_BIO.role,
+      sameAs: [AUTHOR_BIO.linkedinUrl, AUTHOR_BIO.twitterUrl, AUTHOR_BIO.websiteUrl],
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "TeamPost",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/rohan-pavuluri.jpg`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    keywords: post.tags?.join(", "),
+    wordCount: post.content.split(/\s+/).length,
+    articleSection: post.category,
+  };
+
+  // JSON-LD: FAQPage
+  const faqSchema = post.faqItems && post.faqItems.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: post.faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  } : null;
+
+  // JSON-LD: BreadcrumbList
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      { "@type": "ListItem", position: 3, name: post.title, item: canonicalUrl },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-claude-bg">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
       {/* Navigation */}
       <nav className="border-b border-claude-border bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -202,16 +371,20 @@ export default async function BlogPostPage({ params }: PageProps) {
 
       {/* Article */}
       <article className="max-w-3xl mx-auto px-6 py-12">
-        {/* Back link */}
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-2 text-sm text-claude-text-secondary hover:text-claude-text mb-8"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Blog
-        </Link>
+        {/* Breadcrumbs */}
+        <nav aria-label="Breadcrumb" className="mb-8">
+          <ol className="flex items-center gap-2 text-sm text-claude-text-tertiary">
+            <li>
+              <Link href="/" className="hover:text-claude-text">Home</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/blog" className="hover:text-claude-text">Blog</Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-claude-text-secondary truncate max-w-[300px]">{post.title}</li>
+          </ol>
+        </nav>
 
         {/* Header */}
         <header className="mb-10">
@@ -244,8 +417,91 @@ export default async function BlogPostPage({ params }: PageProps) {
           </div>
         </header>
 
+        {/* Table of Contents */}
+        {headings.length > 3 && (
+          <div className="mb-10 p-6 bg-white rounded-xl border border-claude-border">
+            <h2 className="text-sm font-semibold text-claude-text-secondary uppercase tracking-wide mb-3">
+              In this article
+            </h2>
+            <ul className="space-y-2">
+              {headings.map((heading) => (
+                <li key={heading.id}>
+                  <a
+                    href={`#${heading.id}`}
+                    className="text-sm text-claude-text-secondary hover:text-accent-coral transition-colors"
+                  >
+                    {heading.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Content */}
         <div className="prose prose-lg max-w-none">{renderContent(post.content)}</div>
+
+        {/* FAQ Section */}
+        {post.faqItems && post.faqItems.length > 0 && (
+          <section className="mt-12 pt-8 border-t border-claude-border">
+            <h2 className="text-2xl font-bold text-claude-text mb-6">Frequently Asked Questions</h2>
+            <div className="space-y-6">
+              {post.faqItems.map((item, idx) => (
+                <div key={idx} className="bg-white rounded-lg border border-claude-border p-6">
+                  <h3 className="text-lg font-semibold text-claude-text mb-3">{item.question}</h3>
+                  <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Author Bio */}
+        <section className="mt-12 pt-8 border-t border-claude-border">
+          <div className="flex gap-5 items-start bg-white rounded-xl border border-claude-border p-6">
+            <Image
+              src={AUTHOR_BIO.image}
+              alt={AUTHOR_BIO.name}
+              width={80}
+              height={80}
+              className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+            />
+            <div>
+              <p className="text-xs font-semibold text-claude-text-tertiary uppercase tracking-wide mb-1">
+                Written by
+              </p>
+              <h3 className="text-lg font-bold text-claude-text mb-1">{AUTHOR_BIO.name}</h3>
+              <p className="text-sm text-claude-text-secondary mb-3">{AUTHOR_BIO.role}</p>
+              <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                {AUTHOR_BIO.bio}
+              </p>
+              <div className="flex gap-3">
+                <a
+                  href={AUTHOR_BIO.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-accent-coral hover:underline flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                  </svg>
+                  LinkedIn
+                </a>
+                <a
+                  href={AUTHOR_BIO.twitterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-accent-coral hover:underline flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  X / Twitter
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Share section */}
         <div className="mt-12 pt-8 border-t border-claude-border">
@@ -253,7 +509,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           <div className="flex gap-3">
             <a
               href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                `https://teampost.vercel.app/blog/${post.slug}`
+                `${SITE_URL}/blog/${post.slug}`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -266,7 +522,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             </a>
             <a
               href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                `https://teampost.vercel.app/blog/${post.slug}`
+                `${SITE_URL}/blog/${post.slug}`
               )}&text=${encodeURIComponent(post.title)}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -298,6 +554,32 @@ export default async function BlogPostPage({ params }: PageProps) {
             </svg>
           </Link>
         </div>
+
+        {/* Related Posts */}
+        {relatedPosts.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-2xl font-bold text-claude-text mb-6">Related Articles</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {relatedPosts.map((relatedPost) => (
+                <Link
+                  key={relatedPost.slug}
+                  href={`/blog/${relatedPost.slug}`}
+                  className="bg-white rounded-xl border border-claude-border p-5 hover:shadow-lg transition-shadow"
+                >
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-violet-100 text-violet-700">
+                    {relatedPost.category}
+                  </span>
+                  <h3 className="text-base font-semibold text-claude-text mt-3 mb-2 line-clamp-2">
+                    {relatedPost.title}
+                  </h3>
+                  <p className="text-sm text-claude-text-secondary line-clamp-2">
+                    {relatedPost.excerpt}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </article>
 
       {/* Footer */}
