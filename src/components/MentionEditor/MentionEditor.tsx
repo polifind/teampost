@@ -226,66 +226,11 @@ export function MentionEditor({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, contacts]);
 
-  // Generate the highlighted overlay content
-  const highlightedContent = useMemo(() => {
-    if (!value) return null;
-
-    if (selectedTags.length === 0) {
-      return [{ text: value, isMention: false }];
-    }
-
-    const sortedTags = [...selectedTags].sort((a, b) => b.name.length - a.name.length);
-    const escapedNames = sortedTags.map((t) =>
-      t.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    );
-    const mentionRegex = new RegExp(`@(${escapedNames.join("|")})(?=\\s|$|[^\\w])`, "gi");
-
-    const parts: Array<{ text: string; isMention: boolean }> = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = mentionRegex.exec(value)) !== null) {
-      if (match.index > lastIndex) {
-        const text = value.slice(lastIndex, match.index);
-        parts.push({ text, isMention: false });
-      }
-      parts.push({
-        text: match[0],
-        isMention: true,
-      });
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < value.length) {
-      const text = value.slice(lastIndex);
-      parts.push({ text, isMention: false });
-    }
-
-    return parts;
-  }, [value, selectedTags]);
-
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  // Auto-resize textarea to fit content (up to maxHeight), then scroll
-  const autoResize = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = "auto";
-    const scrollHeight = textarea.scrollHeight;
-    const maxH = 400;
-    const nextHeight = Math.min(scrollHeight, maxH);
-    textarea.style.height = `${nextHeight}px`;
-    // Enable scrolling only when content exceeds maxHeight
-    textarea.style.overflowY = scrollHeight > maxH ? "auto" : "hidden";
-  }, []);
-
-  useEffect(() => {
-    autoResize();
-  }, [value, autoResize]);
-
-  useEffect(() => {
-    autoResize();
-  }, [autoResize]);
+  // Build list of mention names for display indicator
+  const mentionNames = useMemo(() => {
+    if (selectedTags.length === 0) return [];
+    return selectedTags.map((t) => t.name);
+  }, [selectedTags]);
 
   const scrollTop = textareaRef.current?.scrollTop ?? 0;
   const scrollLeft = textareaRef.current?.scrollLeft ?? 0;
@@ -294,72 +239,47 @@ export function MentionEditor({
     left: Math.max(0, position.left - scrollLeft),
   };
 
-  // Sync overlay scroll position with textarea
-  const handleScroll = useCallback(() => {
-    if (textareaRef.current && overlayRef.current) {
-      overlayRef.current.scrollTop = textareaRef.current.scrollTop;
-      overlayRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  }, []);
-
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Container for textarea and overlay */}
-      <div className="relative" style={{ minHeight }}>
-        {/* Highlight overlay - shows formatted text, scrolls in sync with textarea */}
-        <div
-          ref={overlayRef}
-          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-hidden border border-transparent rounded-lg"
-          aria-hidden="true"
-        >
-          {highlightedContent?.map((part, i) => {
-            if (part.isMention) {
-              const atSymbol = part.text.charAt(0);
-              const name = part.text.slice(1);
-              return (
-                <span key={i}>
-                  <span className="text-transparent">{atSymbol}</span>
-                  <span className="font-semibold text-blue-600">{name}</span>
-                </span>
-              );
-            }
-            return <span key={i}>{part.text}</span>;
-          })}
-          {!value && (
-            <span className="text-gray-400">{placeholder}</span>
-          )}
-          <span className="invisible">|</span>
+      {/* Simple textarea - no overlay, just a real textarea */}
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        disabled={disabled || addingContact}
+        className="w-full p-3 text-sm leading-relaxed border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900"
+        style={{
+          minHeight,
+          maxHeight: "400px",
+        }}
+      />
+
+      {/* Show tagged contacts as chips below the textarea */}
+      {mentionNames.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {selectedTags.map((tag) => (
+            <span
+              key={tag.id}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-full"
+            >
+              @{tag.name}
+            </span>
+          ))}
         </div>
+      )}
 
-        {/* Textarea - controlled, transparent text, user types here */}
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={handleChange}
-          onScroll={handleScroll}
-          placeholder=""
-          disabled={disabled || addingContact}
-          className="w-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 relative z-10"
-          style={{
-            minHeight,
-            maxHeight: "400px",
-            color: "transparent",
-            caretColor: "#111827",
-          }}
+      {/* Autocomplete dropdown */}
+      {showAutocomplete && !addingContact && (
+        <MentionAutocomplete
+          query={query}
+          position={adjustedPosition}
+          contacts={contacts}
+          onSelect={handleSelectContact}
+          onAddNew={handleAddNew}
+          onClose={closeAutocomplete}
         />
-
-        {/* Autocomplete dropdown */}
-        {showAutocomplete && !addingContact && (
-          <MentionAutocomplete
-            query={query}
-            position={adjustedPosition}
-            contacts={contacts}
-            onSelect={handleSelectContact}
-            onAddNew={handleAddNew}
-            onClose={closeAutocomplete}
-          />
-        )}
-      </div>
+      )}
 
       {/* Loading indicator when adding contact */}
       {addingContact && (
