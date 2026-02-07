@@ -144,7 +144,8 @@ export function MentionAutocomplete({
             <button
               key={contact.id}
               type="button"
-              onClick={(e) => {
+              onMouseDown={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onSelect(contact);
               }}
@@ -188,9 +189,9 @@ export function MentionAutocomplete({
       {/* Add new contact option */}
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
+        onMouseDown={(e) => {
           e.preventDefault();
+          e.stopPropagation();
           onAddNew(query);
         }}
         className={`w-full p-3 text-left border-t border-claude-border flex items-center gap-2 transition-colors cursor-pointer ${

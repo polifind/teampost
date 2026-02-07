@@ -251,24 +251,36 @@ export function MentionEditor({
     return parts;
   }, [internalValue, selectedTags]);
 
-  // Sync scroll between textarea and overlay
+  // Overlay ref for scroll sync
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = useCallback(() => {
-    if (textareaRef.current && overlayRef.current) {
-      overlayRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
+  // Auto-resize textarea to fit content (prevents scroll mismatch with overlay)
+  const autoResize = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    // Reset height to allow shrinking, then set to scrollHeight
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
   }, []);
+
+  // Auto-resize on content changes
+  useEffect(() => {
+    autoResize();
+  }, [internalValue, autoResize]);
+
+  // Also auto-resize on initial mount
+  useEffect(() => {
+    autoResize();
+  }, [autoResize]);
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Container for textarea and overlay */}
-      <div className="relative" style={{ minHeight }}>
+      {/* Scrollable container for textarea and overlay */}
+      <div className="relative overflow-auto" style={{ minHeight, maxHeight: "400px" }}>
         {/* Highlight overlay - shows formatted text */}
         <div
           ref={overlayRef}
-          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-auto border border-transparent rounded-lg"
-          style={{ minHeight }}
+          className="absolute inset-0 p-3 text-sm leading-relaxed pointer-events-none whitespace-pre-wrap break-words overflow-hidden border border-transparent rounded-lg"
           aria-hidden="true"
         >
           {highlightedContent?.map((part, i) => {
@@ -295,11 +307,10 @@ export function MentionEditor({
         <textarea
           ref={textareaRef}
           defaultValue={value}
-          onInput={handleInput}
-          onScroll={handleScroll}
+          onInput={(e) => { handleInput(e); autoResize(); }}
           placeholder=""
           disabled={disabled || addingContact}
-          className="w-full h-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 overflow-auto"
+          className="w-full p-3 text-sm leading-relaxed bg-transparent border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900 overflow-hidden relative z-10"
           style={{
             minHeight,
             color: "transparent",
