@@ -36,9 +36,15 @@ export function MentionEditor({
   const [addingContact, setAddingContact] = useState(false);
   // Track the internal value for uncontrolled behavior
   const [internalValue, setInternalValue] = useState(value);
+  // Flag to prevent sync effect from interfering with internal changes (cursor fix)
+  const isInternalChange = useRef(false);
 
-  // Sync internal value when prop changes from outside
+  // Sync internal value when prop changes from outside (not from internal edits)
   useEffect(() => {
+    if (isInternalChange.current) {
+      isInternalChange.current = false;
+      return;
+    }
     if (value !== internalValue) {
       setInternalValue(value);
       if (textareaRef.current && textareaRef.current.value !== value) {
@@ -59,6 +65,7 @@ export function MentionEditor({
   const handleInput = useCallback((e: React.FormEvent<HTMLTextAreaElement>) => {
     const target = e.target as HTMLTextAreaElement;
     const newValue = target.value;
+    isInternalChange.current = true;
     setInternalValue(newValue);
     onChange(newValue);
   }, [onChange]);
@@ -76,6 +83,7 @@ export function MentionEditor({
         cursorPos
       );
 
+      isInternalChange.current = true;
       setInternalValue(newContent);
       onChange(newContent);
 
@@ -124,6 +132,7 @@ export function MentionEditor({
               capturedCursorPos
             );
 
+            isInternalChange.current = true;
             setInternalValue(newContent);
             onChange(newContent);
 
@@ -156,7 +165,7 @@ export function MentionEditor({
     [onAddContact, startIndex, internalValue, selectedTags, onChange, onTagsChange, closeAutocomplete]
   );
 
-  // Auto-detect mentions in content and sync with selectedTags
+  // Auto-detect mentions in content and sync with selectedTags (add new + prune stale)
   useEffect(() => {
     // Find all @mentions in content
     const mentionRegex = /@([\w][\w\s]*[\w]|[\w]+)/g;
@@ -171,12 +180,18 @@ export function MentionEditor({
       mentionsInContent.has(c.name.toLowerCase())
     );
 
-    // If there are new matches not in selectedTags, add them
+    // Keep existing tags that still appear in content, add any new matches
+    const tagsToKeep = selectedTags.filter((t) =>
+      mentionsInContent.has(t.name.toLowerCase())
+    );
     const currentTagIds = new Set(selectedTags.map((t) => t.id));
     const newTags = matchedContacts.filter((c) => !currentTagIds.has(c.id));
 
-    if (newTags.length > 0) {
-      onTagsChange([...selectedTags, ...newTags]);
+    const updatedTags = [...tagsToKeep, ...newTags];
+
+    // Only update if something actually changed
+    if (updatedTags.length !== selectedTags.length || newTags.length > 0) {
+      onTagsChange(updatedTags);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [internalValue, contacts]); // Intentionally not including selectedTags/onTagsChange to avoid loops

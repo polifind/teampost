@@ -157,6 +157,7 @@ export async function GET(request: NextRequest) {
         id: true,
         content: true,
         imageUrl: true,
+        taggedContactIds: true,
         weekNumber: true,
         status: true,
         createdAt: true,

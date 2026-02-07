@@ -49,10 +49,10 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { content, imageUrl } = body;
+    const { content, imageUrl, taggedContacts } = body;
 
     // Build update data object - at least one field must be provided
-    const updateData: { content?: string; imageUrl?: string | null; updatedAt: Date } = {
+    const updateData: { content?: string; imageUrl?: string | null; taggedContactIds?: string | null; updatedAt: Date } = {
       updatedAt: new Date(),
     };
 
@@ -71,10 +71,16 @@ export async function PATCH(
       updateData.imageUrl = imageUrl;
     }
 
+    if (taggedContacts !== undefined) {
+      updateData.taggedContactIds = taggedContacts && taggedContacts.length > 0
+        ? JSON.stringify(taggedContacts)
+        : null;
+    }
+
     // Check that at least one field is being updated
-    if (updateData.content === undefined && updateData.imageUrl === undefined) {
+    if (updateData.content === undefined && updateData.imageUrl === undefined && updateData.taggedContactIds === undefined) {
       return NextResponse.json(
-        { error: "Content or imageUrl is required" },
+        { error: "Content, imageUrl, or taggedContacts is required" },
         { status: 400 }
       );
     }

@@ -18,6 +18,7 @@ interface Post {
   id: string;
   content: string;
   imageUrl?: string;
+  taggedContactIds?: string | null;
   weekNumber: number;
   status: "DRAFT" | "SCHEDULED" | "POSTED" | "FAILED";
   createdAt: string;
@@ -260,6 +261,53 @@ export default function PostsPage() {
   // Tab state
   const [activeTab, setActiveTab] = useState<"scheduled" | "drafts" | "posted">("scheduled");
 
+  // Helper: get LinkedInContact[] for a post's taggedContactIds
+  const getPostTags = (post: Post): LinkedInContact[] => {
+    if (!post.taggedContactIds) return [];
+    try {
+      const tagIds = JSON.parse(post.taggedContactIds) as string[];
+      return contacts.filter(c => tagIds.includes(c.id));
+    } catch {
+      return [];
+    }
+  };
+
+  // Render post content with mentions highlighted (for display mode)
+  const renderContentWithMentions = (post: Post, isExpanded: boolean) => {
+    const postTags = getPostTags(post);
+    const clampClass = !isExpanded ? "line-clamp-3" : "";
+
+    if (postTags.length === 0) {
+      return (
+        <p className={`text-claude-text whitespace-pre-wrap leading-relaxed ${clampClass}`}>
+          {post.content}
+        </p>
+      );
+    }
+
+    const mentionNames = new Set(postTags.map(t => t.name.toLowerCase()));
+    const parts: Array<{ text: string; isMention: boolean }> = [];
+    let lastIdx = 0;
+    const regex = /@([\w][\w\s]*[\w]|[\w]+)/g;
+    let m;
+    while ((m = regex.exec(post.content)) !== null) {
+      if (m.index > lastIdx) parts.push({ text: post.content.slice(lastIdx, m.index), isMention: false });
+      parts.push({ text: m[0], isMention: mentionNames.has(m[1].toLowerCase()) });
+      lastIdx = m.index + m[0].length;
+    }
+    if (lastIdx < post.content.length) parts.push({ text: post.content.slice(lastIdx), isMention: false });
+
+    return (
+      <p className={`text-claude-text whitespace-pre-wrap leading-relaxed ${clampClass}`}>
+        {parts.map((part, i) =>
+          part.isMention
+            ? <span key={i} className="text-blue-600 font-semibold">{part.text}</span>
+            : <span key={i}>{part.text}</span>
+        )}
+      </p>
+    );
+  };
+
   const handleBulkSchedule = async () => {
     if (!linkedInConnected) {
       alert("Please connect your LinkedIn account first.");
@@ -320,6 +368,19 @@ export default function PostsPage() {
   const handleEdit = (post: Post) => {
     setEditingPost(post.id);
     setEditContent(post.content);
+
+    // Initialize selectedTags from saved taggedContactIds
+    if (post.taggedContactIds) {
+      try {
+        const tagIds = JSON.parse(post.taggedContactIds) as string[];
+        const matchedTags = contacts.filter(c => tagIds.includes(c.id));
+        setSelectedTags(matchedTags);
+      } catch {
+        setSelectedTags([]);
+      }
+    } else {
+      setSelectedTags([]);
+    }
   };
 
   const handlePostNow = async (postId: string) => {
@@ -361,14 +422,24 @@ export default function PostsPage() {
       const response = await fetch(`/api/posts/${postId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: editContent }),
+        body: JSON.stringify({
+          content: editContent,
+          taggedContacts: selectedTags.map(t => t.id),
+        }),
       });
 
       if (response.ok) {
         setPosts((prev) =>
-          prev.map((p) => (p.id === postId ? { ...p, content: editContent } : p))
+          prev.map((p) => (p.id === postId ? {
+            ...p,
+            content: editContent,
+            taggedContactIds: selectedTags.length > 0
+              ? JSON.stringify(selectedTags.map(t => t.id))
+              : null,
+          } : p))
         );
         setEditingPost(null);
+        setSelectedTags([]);
       }
     } catch (error) {
       console.error("Failed to save post:", error);
@@ -1242,7 +1313,7 @@ export default function PostsPage() {
                         Save Changes
                       </button>
                       <button
-                        onClick={() => setEditingPost(null)}
+                        onClick={() => { setEditingPost(null); setSelectedTags([]); }}
                         className="btn-ghost text-sm"
                       >
                         Cancel
@@ -1251,9 +1322,7 @@ export default function PostsPage() {
                   </div>
                 ) : (
                   <div className="prose prose-sm max-w-none">
-                    <p className={`text-claude-text whitespace-pre-wrap leading-relaxed ${!expandedPosts.has(post.id) ? "line-clamp-3" : ""}`}>
-                      {post.content}
-                    </p>
+                    {renderContentWithMentions(post, expandedPosts.has(post.id))}
                     {post.content.length > 200 && (
                       <button
                         onClick={() => {
