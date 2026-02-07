@@ -232,6 +232,20 @@ export function MentionEditor({
     return selectedTags.map((t) => t.name);
   }, [selectedTags]);
 
+  // Auto-resize textarea to fit content (capped at 400px, then scroll)
+  const autoResize = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const scrollH = textarea.scrollHeight;
+    const maxH = 400;
+    textarea.style.height = `${Math.min(scrollH, maxH)}px`;
+    textarea.style.overflowY = scrollH > maxH ? "auto" : "hidden";
+  }, []);
+
+  useEffect(() => { autoResize(); }, [value, autoResize]);
+  useEffect(() => { autoResize(); }, [autoResize]);
+
   const scrollTop = textareaRef.current?.scrollTop ?? 0;
   const scrollLeft = textareaRef.current?.scrollLeft ?? 0;
   const adjustedPosition = {
@@ -251,7 +265,6 @@ export function MentionEditor({
         className="w-full p-3 text-sm leading-relaxed border border-claude-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent-coral focus:border-transparent caret-gray-900"
         style={{
           minHeight,
-          maxHeight: "400px",
         }}
       />
 
